@@ -2,35 +2,99 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:treehouse/models/category_model.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class HomePage extends StatefulWidget {
+  HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  List<CategoryModel> categories = [];
+
+  void _getCategories() {
+    categories = CategoryModel.getCategories();
+  }
+
+  @override
+  void initState() {
+    _getCategories();
+  }
 
   @override
   Widget build(BuildContext context) {
+    _getCategories();
     return Scaffold(
       appBar: appBar(),
       body: Column (
+
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            margin: EdgeInsets.only(top: 10, left: 20, right: 20), //creates search box dimensions
-            decoration: BoxDecoration(
-              boxShadow: [
-              BoxShadow (
-                color: Colors.black.withOpacity(0.11),
-                blurRadius: 40,
-                spreadRadius: 20,
-              )
-              ]
-                
-            ),
-            child: searchbar(),
-          )
-        ]
-      )
+          searchbar(),
+
+          SizedBox(height: 20,), //creates distance between searcbar and column
+
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start, //moves categoreis title to left
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 20.0),
+                child: Text(
+                "Categories",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600
+                  ),
+                ),
+              ),
+              
+              //light green box underneath categories
+              SizedBox(height: 10),
+              Container(
+                height: 150,
+                color: Color.fromARGB(255, 196, 235, 177),
+                child: ListView.builder(
+                  itemCount: categories.length,
+                  scrollDirection: Axis.vertical,
+                  itemBuilder: (context, index) {
+                    return Container(
+                      height: 15,
+                      width: 50,
+                      decoration: BoxDecoration(
+                        color: categories[index].boxColor
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+            ],
+          ),
+        ],
+      ),
 
           
     );
+  }
+
+  Container searchba() {
+    return Container(
+          margin: EdgeInsets.only(top: 10, left: 20, right: 20), //creates search box dimensions
+          decoration: BoxDecoration(
+            boxShadow: [
+            BoxShadow (
+              color: Colors.black.withOpacity(0.11),
+              blurRadius: 40,
+              spreadRadius: 20,
+            )
+            ]
+              
+          ),
+          child: searchbar(),
+        );
   }
 
   TextField searchbar() {
@@ -39,7 +103,7 @@ class HomePage extends StatelessWidget {
               filled: true,
               fillColor: Colors.white,
               
-              hintText: "categories",
+              hintText: "search categories",
               hintStyle: TextStyle(
                 color: Colors.grey.withOpacity(0.5)
               ),

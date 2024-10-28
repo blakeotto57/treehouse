@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(fontFamily: "expressway"),
-      home: const HomePage(), //links the home page in 'pages' folder
+      home: HomePage(), //links the home page in 'pages' folder
     );
   }
 }
