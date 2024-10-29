@@ -27,7 +27,7 @@ class CategoryModel {
 
     //Photography box
     categories.add(
-      CategoryModel(name: "Photography & Media", iconPath: "assets/icons/camera-icon.svg", boxColor: Color.fromRGBO(57, 210, 192, 1),),);
+      CategoryModel(name: "Photography", iconPath: "assets/icons/camera-icon.svg", boxColor: Color.fromRGBO(57, 210, 192, 1),),);
 
     //Academic assitance box
     categories.add(
