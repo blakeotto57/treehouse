@@ -20,6 +20,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    super.initState();
     _getCategories();
   }
 
@@ -63,11 +64,42 @@ class _HomePageState extends State<HomePage> {
                   separatorBuilder: (context, index) => SizedBox(height: 25),//Creates space between categories
                   itemBuilder: (context, index) {
                     return Container(
-                      height: 50,
-                      width: 50,
+                      height: 120, //adjusts the height of the category boxes
                       decoration: BoxDecoration(
-                        color: categories[index].boxColor.withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(16)
+                        color: categories[index].boxColor.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+
+                      //padding for category text
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              categories[index].name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                                fontSize: 25,
+                                 ),
+                               ),
+                              ),
+                            ),
+
+                          //padding for category icon
+                          Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SvgPicture.asset(
+                              categories[index].iconPath,
+                              width: 50,
+
+
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   },
