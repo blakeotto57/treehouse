@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           searchbar(),
 
-          SizedBox(height: 20,), //creates distance between searcbar and column
+          SizedBox(height: 10,), //creates distance between searcbar and column
 
           Column(
             crossAxisAlignment: CrossAxisAlignment.start, //moves categoreis title to left
@@ -52,19 +52,22 @@ class _HomePageState extends State<HomePage> {
               ),
               
               //light green box underneath categories
-              SizedBox(height: 10),
+              SizedBox(height: 10), //distance between categories word and light green box
               Container(
-                height: 150,
+                height: 400,
                 color: Color.fromARGB(255, 196, 235, 177),
-                child: ListView.builder(
+                child: ListView.separated(
                   itemCount: categories.length,
                   scrollDirection: Axis.vertical,
+                  padding: EdgeInsets.all(15),
+                  separatorBuilder: (context, index) => SizedBox(height: 25),//Creates space between categories
                   itemBuilder: (context, index) {
                     return Container(
-                      height: 15,
+                      height: 50,
                       width: 50,
                       decoration: BoxDecoration(
-                        color: categories[index].boxColor
+                        color: categories[index].boxColor.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16)
                       ),
                     );
                   },
