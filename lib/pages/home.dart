@@ -1,4 +1,4 @@
-// ignore_for_file: sort_child_properties_last, duplicate_ignore
+// ignore_for_file: sort_child_properties_last, duplicate_ignore, prefer_const_constructors, prefer_const_literals_to_create_immutables
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -13,6 +13,9 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   List<CategoryModel> categories = [];
+  int _currentIndex = 0; //keeps track of current page
+  final PageController _pageController = PageController();
+
 
   void _getCategories() {
     categories = CategoryModel.getCategories();
@@ -25,13 +28,25 @@ class _HomePageState extends State<HomePage> {
   }
 
   @override
+
+
+
+  //START OF SCAFFOLD CODE
   Widget build(BuildContext context) {
     _getCategories();
     return Scaffold(
       appBar: appBar(),
-      body: PageView(
+      body: PageView( //the page view is covered of the body of the screen
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            int _currentIndex = index; //updates the bottom bar to reflect current page
+
+          });
+        },
+        
         children: [
-        HomeContent(categories: categories),
+        HomeContent(categories: categories), 
         Center(
           child: Text(
             "User Profile Page",
@@ -42,88 +57,32 @@ class _HomePageState extends State<HomePage> {
           )
         ]
       ),
-    );
-  }
-  
-  AppBar appBar() {
-    return AppBar(
-      title: const Text(
-        "Treehouse",
-        style: TextStyle(
-          color: Color.fromARGB(255, 174, 90, 65),
-          fontSize: 40,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 2,
-          shadows: [
-            Shadow(
-              offset: Offset(2, 2),
-              blurRadius: 4,
-              color: Colors.black,
-            )
+  bottomNavigationBar: SizedBox(
+    height: 58,
+    child: BottomNavigationBar(
+      currentIndex: _currentIndex,
+      onTap: (index) {
+        setState(() {
+          _currentIndex = index;
+          _pageController.jumpToPage(index);
+          });
+        },
+        items: [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: ""),
+          BottomNavigationBarItem(icon: Icon(Icons.verified_user_outlined), label: ""),
           ],
         ),
-      ),
-  
-
-      centerTitle: true,
-      backgroundColor: const Color.fromARGB(255, 106, 145, 87),
-      elevation: 100, // creates shadow for appbar
-
-
-
-    //BACK ARROW BUTTON
-      leading: GestureDetector(
-        onTap: () {},
-        child: Container( // creates left back button
-          margin: const EdgeInsets.all(10),
-          alignment: Alignment.center,
-          width: 35,
-          height: 35,
-          // ignore: sort_child_properties_last
-          child: SvgPicture.asset('assets/icons/back-arrow.svg', height: 30, width: 30),
-          decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 156, 195, 137),
-            borderRadius: BorderRadius.circular(15), // makes box have curved edges
-          ),
-        ),
-      ),
-
-
-
-      // PROFILE BUTTON
-      actions: [
-        SizedBox(
-     
-          
-          child: InkWell( //does something when container is pressed
-            onTap: () {
-          
-              print("tapped!");
-              
-            },
-
-            borderRadius: BorderRadius.circular(15),
-
-          
-          
-            //normal look of profile
-            child: Container( // creates right top button
-              margin: const EdgeInsets.all(10),
-              alignment: Alignment.center,
-              width: 35,
-              height: 35,
-              child: SvgPicture.asset('assets/icons/profile-icon.svg', height: 20, width: 20),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 156, 195, 137),
-                borderRadius: BorderRadius.circular(15), // makes box have curved edges
-              ),
-            ),
-          ),
-        ),
-      ],
+  ),
     );
   }
 }
+//END OF SCAFFOLD CODE
+
+
+
+
+
+//HOME PAGE CONTENT STARTS HERE
 
 class HomeContent extends StatelessWidget {
 final List<CategoryModel> categories;
@@ -131,6 +90,10 @@ final List<CategoryModel> categories;
 HomeContent({required this.categories});
 
 @override
+
+
+//START OF CATEGORIES CODE
+
 Widget build(BuildContext context) {
   return Column(
   crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,8 +117,9 @@ Widget build(BuildContext context) {
 
         // light green box underneath categories
         SizedBox(height: 10), // distance between categories word and light green box
+        
         Container(
-          height: 400, // height of the light green box/category list view
+          height: 384, // height of the light green box/category list view
           color: Color.fromARGB(255, 196, 235, 177),
           child: ListView.separated(
             itemCount: categories.length,
@@ -206,9 +170,15 @@ Widget build(BuildContext context) {
         ],
       ),
     ],
-  );     
+  );  
 }
+//END OF CATEGORIES CODE
 
+
+
+
+
+//START OF SEARCHBAR CODE
 
 TextField searchbar() {
     return TextField(
@@ -232,3 +202,72 @@ TextField searchbar() {
     );
   }
 }
+
+//END OF APP BAR CODE
+
+
+
+
+//START OF APP BAR CODE
+AppBar appBar() {
+    return AppBar(
+      title: const Text(
+        "Treehouse",
+        style: TextStyle(
+          color: Color.fromARGB(255, 174, 90, 65),
+          fontSize: 40,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 2,
+          shadows: [
+            Shadow(
+              offset: Offset(2, 2),
+              blurRadius: 4,
+              color: Colors.black,
+            )
+          ],
+        ),
+      ),
+  
+
+      centerTitle: true,
+      backgroundColor: const Color.fromARGB(255, 106, 145, 87),
+      elevation: 100, // creates shadow for appbar
+
+      leading: GestureDetector(
+        onTap: () {},
+        child: Container( // creates left back button
+          margin: const EdgeInsets.all(10),
+          alignment: Alignment.center,
+          width: 35,
+          height: 35,
+          // ignore: sort_child_properties_last
+          child: SvgPicture.asset('assets/icons/back-arrow.svg', height: 30, width: 30),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 156, 195, 137),
+            borderRadius: BorderRadius.circular(15), // makes box have curved edges
+          ),
+        ),
+      ),
+
+
+      // right top button
+      actions: [
+        GestureDetector(
+          onTap: () {},
+          child: Container( // creates right top button
+            margin: const EdgeInsets.all(10),
+            alignment: Alignment.center,
+            width: 35,
+            height: 35,
+            child: SvgPicture.asset('assets/icons/profile-icon.svg', height: 20, width: 20),
+            decoration: BoxDecoration(
+              color: const Color.fromARGB(255, 156, 195, 137),
+              borderRadius: BorderRadius.circular(15), // makes box have curved edges
+          ),
+        ),
+      ),
+    ],
+  );
+}
+//END OF APP BAR CODE
+
