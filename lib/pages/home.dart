@@ -69,6 +69,9 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: const Color.fromARGB(255, 106, 145, 87),
       elevation: 100, // creates shadow for appbar
 
+
+
+    //BACK ARROW BUTTON
       leading: GestureDetector(
         onTap: () {},
         child: Container( // creates left back button
@@ -86,19 +89,34 @@ class _HomePageState extends State<HomePage> {
       ),
 
 
-      // right top button
+
+      // PROFILE BUTTON
       actions: [
-        GestureDetector(
-          onTap: () {},
-          child: Container( // creates right top button
-            margin: const EdgeInsets.all(10),
-            alignment: Alignment.center,
-            width: 35,
-            height: 35,
-            child: SvgPicture.asset('assets/icons/profile-icon.svg', height: 20, width: 20),
-            decoration: BoxDecoration(
-              color: const Color.fromARGB(255, 156, 195, 137),
-              borderRadius: BorderRadius.circular(15), // makes box have curved edges
+        SizedBox(
+     
+          
+          child: InkWell( //does something when container is pressed
+            onTap: () {
+          
+              print("tapped!");
+              
+            },
+
+            borderRadius: BorderRadius.circular(15),
+
+          
+          
+            //normal look of profile
+            child: Container( // creates right top button
+              margin: const EdgeInsets.all(10),
+              alignment: Alignment.center,
+              width: 35,
+              height: 35,
+              child: SvgPicture.asset('assets/icons/profile-icon.svg', height: 20, width: 20),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 156, 195, 137),
+                borderRadius: BorderRadius.circular(15), // makes box have curved edges
+              ),
             ),
           ),
         ),
