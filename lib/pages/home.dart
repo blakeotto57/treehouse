@@ -127,7 +127,10 @@ Widget build(BuildContext context) {
             padding: EdgeInsets.all(15),
             separatorBuilder: (context, index) => SizedBox(height: 25), // Creates space between categories
             itemBuilder: (context, index) {
-              return Container(
+              return InkWell(
+                onTap: () => categories[index].onTap(),
+
+                child: Container(
                 height: 50, // adjusts the height of the category boxes
                 decoration: BoxDecoration(
                   color: categories[index].boxColor.withOpacity(0.5),
@@ -163,6 +166,7 @@ Widget build(BuildContext context) {
                       ),
                     ],
                   ),
+                ),
                 );
               },
             ),
