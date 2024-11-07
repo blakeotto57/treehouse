@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:treehouse/models/category_model.dart';
 
+
 class HomePage extends StatefulWidget {
   HomePage({super.key});
 
@@ -60,59 +61,48 @@ class _HomePageState extends State<HomePage> {
         ]
       ),
 
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-            Divider(color: Colors.white, //white line dividing 
-              thickness: 2.0,
+
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey, // Black border color
+              width: 1.0, // Width of the border
             ),
-
-        Container(
-          height: 40,
-          color: Color.fromARGB(255, 196, 235, 177),
-
-          child: BottomNavigationBar(
-            
-            currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-                _pageController.jumpToPage(index);
-                });
-              },
-              items: [
-                BottomNavigationBarItem(
-                  icon: Container(
-                    height: 10,
-                    child: Icon(Icons.home),
-                  ), label: ""),
-
-
-
-                BottomNavigationBarItem(
-                  icon: Container(
-                    height: 20,
-                    child: Icon(Icons.verified_user_outlined),
-                  ), label: ""),
-                ],
-
-
-
-
-                showSelectedLabels: false,
-                showUnselectedLabels: false,
-                backgroundColor: Colors.transparent,
-
-                selectedItemColor: Colors.black,
-                unselectedItemColor: Colors.white,
-
-                elevation: 0, //removes space if no label
-                ),
-              ),
-            ],
           ),
         ),
-     );
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+              _pageController.jumpToPage(index);
+            });
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: Center( // Center the icon
+                child: Icon(Icons.home),
+              ),
+              label: "",
+            ),
+            BottomNavigationBarItem(
+              icon: Center( // Center the icon
+                child: Icon(Icons.verified_user_outlined),
+              ),
+              label: "",
+            ),
+          ],
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          backgroundColor: Colors.white, // Background color
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey,
+          elevation: 0, // Removes space if no label
+          ),
+       ),
+      ),
+   );
   }
 }
 //END OF SCAFFOLD CODE
@@ -128,106 +118,111 @@ final List<CategoryModel> categories;
 
 HomeContent({required this.categories});
 
-@override
 
 
 //START OF CATEGORIES CODE
-
-Widget build(BuildContext context) {
-return Container(
-  color: Color.fromARGB(255, 196, 235, 177),
-  child: Column(
-
-  crossAxisAlignment: CrossAxisAlignment.start,
-  children: [
-    searchbar(),
-    SizedBox(height: 10), 
-    Container(
-          color: Color.fromARGB(255, 196, 235, 177),
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // moves categories title to left
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
-          const Padding(
-            padding: EdgeInsets.only(left: 20.0),
-            child: Text(
-              "Categories",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-      
-
-          const Padding(
-            padding:EdgeInsets.symmetric(horizontal: 10),
-            child: Divider(
-              color: Colors.grey,
-              thickness: 2.0,
-            ),
-          ),
-
-
-          // light green box underneath categories
-          SizedBox(height: 1), // distance between categories word and light green box
+          // Add a SizedBox to create space between the AppBar and the search bar
+          SizedBox(height: 10), // Adjust the height as needed
+          searchbar(),
+          SizedBox(height: 10), 
           Container(
-            height: 361, // height of the light green box/category list view
-            color: Color.fromARGB(255, 196, 235, 177),
-            child: ListView.separated(
-              itemCount: categories.length,
-              scrollDirection: Axis.vertical, // change which way the categories are displayed
-              padding: EdgeInsets.all(10),
-              separatorBuilder: (context, index) => SizedBox(height: 25), // Creates space between categories
-              itemBuilder: (context, index) {
-                return Container(
-                  height: 50, // adjusts the height of the category boxes
-                  decoration: BoxDecoration(
-                    color: categories[index].boxColor.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-      
-                  // padding for category text
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            categories[index].name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-      
-                      // padding for category icon
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: SvgPicture.asset(
-                          categories[index].iconPath,
-                          width: 40,
-                          ),
-                        ),
-                      ],
+            color: Colors.white,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, // Moves categories title to left
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(left: 20.0),
+                  child: Text(
+                    "Categories",
+                    style: TextStyle(
+                      color: Colors.black, //color of categories text
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
                     ),
-                  );
-                },
-              ),
+                  ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Divider(
+                    color: Colors.grey,
+                    thickness: 2.0,
+                  ),
+                ),
+                // Light green box underneath categories
+                SizedBox(height: 1),
+                
+                 // Distance between categories word and light green box
+                Container(
+                  height: 361, // Height of the light green box/category list view
+                  color: Colors.white, //background color of category scroll
+                  child: ListView.separated(
+                    itemCount: categories.length,
+                    scrollDirection: Axis.vertical,
+
+                    padding: EdgeInsets.all(10),
+                    separatorBuilder: (context, index) => SizedBox(height: 25), // Creates space between categories
+                    itemBuilder: (context, index) {
+
+
+                      //goes to category_model page
+                      return InkWell(
+                        onTap: () => categories[index].onTap(context),
+
+                        child: Container(
+                        height: 50, // Adjusts the height of the category boxes
+                        decoration: BoxDecoration(
+                          color: categories[index].boxColor.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        // Padding for category text
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(10.0),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  categories[index].name,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white, //font color of text in category bocxs
+                                    fontSize: 15,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Padding for category icon
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: SvgPicture.asset(
+                                categories[index].iconPath,
+                                width: 40,
+                              ),
+                            ),
+                          ],
+                        ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    ],
-  ),
-  );  
+    );
+  }
 }
+
 //END OF CATEGORIES CODE
 
 
@@ -257,7 +252,7 @@ TextField searchbar() {
       ),
     );
   }
-}
+
 
 //END OF APP BAR CODE
 
