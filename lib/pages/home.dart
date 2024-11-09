@@ -52,7 +52,7 @@ class _HomePageState extends State<HomePage> {
         HomeContent(categories: categories), 
         Center(
           child: Text(
-            "User Profile Page",
+            "Marketplace",
             style: TextStyle(
               fontSize: 24,
             )
@@ -88,7 +88,7 @@ class _HomePageState extends State<HomePage> {
             ),
             BottomNavigationBarItem(
               icon: Center( // Center the icon
-                child: Icon(Icons.verified_user_outlined),
+                child: Icon(Icons.store),
               ),
               label: "",
             ),

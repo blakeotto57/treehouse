@@ -24,7 +24,9 @@ class PersonalCarePage extends StatelessWidget {
 class PersonalCareContent extends StatelessWidget {
   final List<CategoryModel> categories;
 
+
   PersonalCareContent({required this.categories});
+
 
   @override
   Widget build(BuildContext context) {
@@ -115,19 +117,4 @@ class PersonalCareContent extends StatelessWidget {
       ),
     );
   }
-}
-
-// Placeholder for CategoryModel class
-class CategoryModel {
-  final String name;
-  final String iconPath;
-  final Color boxColor;
-  final Function(BuildContext) onTap;
-
-  CategoryModel({
-    required this.name,
-    required this.iconPath,
-    required this.boxColor,
-    required this.onTap,
-  });
 }
