@@ -45,7 +45,7 @@ class PersonalCareContent extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.only(left: 20.0),
                   child: Text(
-                    "Categories",
+                    "Personal Care Options",
                     style: TextStyle(
                       color: Colors.black, // Color of categories text
                       fontSize: 18,
@@ -72,11 +72,26 @@ class PersonalCareContent extends StatelessWidget {
                     itemBuilder: (context, index) {
                       return InkWell(
                         onTap: () => categories[index].onTap(context),
+
+
+                        //creates personal care options buttons
                         child: Container(
                           height: 50, // Height of each category box
                           decoration: BoxDecoration(
-                            color: categories[index].boxColor.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(16),
+                          color: categories[index].boxColor.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1.5,
+                            ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),//creates shadown color
+                              spreadRadius: 2, //how big the shadow is
+                              blurRadius: 2,
+                              offset: Offset(3, 3)//shadow position
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,

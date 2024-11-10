@@ -38,7 +38,7 @@ class PersonalCareOptions {
       CategoryModel(
         name: "Haircut & Styling",
         iconPath: "assets/icons/style-icon.svg",
-        boxColor: Color.fromRGBO(75, 57, 239, 1),
+        boxColor: Color.fromRGBO(239, 215, 57, 1),
         onTap: (context) {
           Navigator.push(
             context,
@@ -56,7 +56,7 @@ class PersonalCareOptions {
       CategoryModel(
         name: "Makeup & Beauty",
         iconPath: "assets/icons/makeup-icon.svg",
-        boxColor: Color.fromRGBO(215, 57, 239, 1),
+        boxColor: Color.fromRGBO(239, 57, 96, 1),
         onTap: (context) {
           Navigator.push(
             context,
