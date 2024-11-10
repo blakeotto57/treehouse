@@ -175,11 +175,25 @@ HomeContent({required this.categories});
                       return InkWell(
                         onTap: () => categories[index].onTap(context),
 
+
+                        //creates category containers
                         child: Container(
                         height: 50, // Adjusts the height of the category boxes
                         decoration: BoxDecoration(
                           color: categories[index].boxColor.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.grey,
+                            width: 1.5,
+                            ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),//creates shadown color
+                              spreadRadius: 2, //how big the shadow is
+                              blurRadius: 2,
+                              offset: Offset(3, 3)//shadow position
+                            )
+                          ]
                         ),
                         // Padding for category text
                         child: Row(

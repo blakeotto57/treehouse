@@ -13,9 +13,8 @@ class PersonalCarePage extends StatelessWidget {
         title: Text('Personal Care Page'),
       ),
       body: PersonalCareContent(
-        categories: [
+        categories: PersonalCareOptions.getpersonalcareoptions(),
           // Add CategoryModel objects here as needed
-        ],
       ),
     );
   }
