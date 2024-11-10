@@ -45,7 +45,7 @@ class PersonalCareContent extends StatelessWidget {
                 const Padding(
                   padding: EdgeInsets.only(left: 20.0),
                   child: Text(
-                    "Personal Care Options",
+                    "Personal Care Profiles",
                     style: TextStyle(
                       color: Colors.black, // Color of categories text
                       fontSize: 18,
