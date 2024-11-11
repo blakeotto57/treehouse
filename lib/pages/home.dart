@@ -148,7 +148,7 @@ class HomeContent extends StatelessWidget {
                               color: Colors.black.withOpacity(0.2),
                               spreadRadius: 2,
                               blurRadius: 2,
-                              offset: Offset(3, 3),
+                              offset: Offset(0, 3),
                             ),
                           ],
                         ),
@@ -192,23 +192,40 @@ class HomeContent extends StatelessWidget {
 }
 
 // Search Bar
-TextField searchbar() {
-  return TextField(
-    decoration: InputDecoration(
-      filled: true,
-      fillColor: Colors.white,
-      hintText: "search categories",
-      hintStyle: TextStyle(
-        color: Colors.grey.withOpacity(0.5),
-      ),
-      contentPadding: const EdgeInsets.all(10),
-      prefixIcon: Padding(
-        padding: const EdgeInsets.all(10),
-        child: SvgPicture.asset('assets/icons/search-icon.svg', height: 10, width: 10),
-      ),
-      border: OutlineInputBorder(
+Widget searchbar() {
+  return Padding(
+    padding: const EdgeInsets.all(12.0),
+    child: Container(decoration: BoxDecoration(
+        color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide.none,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            spreadRadius: 2, 
+            blurRadius: 2, 
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      
+      child: TextField(
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: Colors.white,
+          hintText: "search categories",
+          hintStyle: TextStyle(
+            color: Colors.grey.withOpacity(0.5),
+          ),
+          contentPadding: const EdgeInsets.all(10),
+          prefixIcon: Padding(
+            padding: const EdgeInsets.all(10),
+            child: SvgPicture.asset('assets/icons/search-icon.svg', height: 10, width: 10),
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide.none,
+          ),
+        ),
       ),
     ),
   );
@@ -226,7 +243,7 @@ AppBar appBar() {
         letterSpacing: 2,
         shadows: [
           Shadow(
-            offset: Offset(2, 2),
+            offset: Offset(0, 3),
             blurRadius: 4,
             color: Colors.black,
           )
