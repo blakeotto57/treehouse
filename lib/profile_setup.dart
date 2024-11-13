@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileSetupPage extends StatefulWidget {
+  const ProfileSetupPage({super.key});
+
   @override
   _ProfileSetupPageState createState() => _ProfileSetupPageState();
 }

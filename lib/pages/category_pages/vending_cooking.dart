@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class VendingCookingPage extends StatelessWidget {
+  const VendingCookingPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

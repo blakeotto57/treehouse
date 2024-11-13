@@ -6,6 +6,8 @@ import 'package:treehouse/models/personal_care_options.dart';
 
 
 class PersonalCarePage extends StatelessWidget {
+  const PersonalCarePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,7 +26,7 @@ class PersonalCareContent extends StatelessWidget {
   final List<CategoryModel> categories;
 
 
-  PersonalCareContent({required this.categories});
+  const PersonalCareContent({super.key, required this.categories});
 
 
   @override

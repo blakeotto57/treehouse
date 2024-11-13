@@ -43,7 +43,7 @@ class _CheckProfileState extends State<CheckProfile> {
       if (userName == null) { 
         Navigator.pushReplacementNamed(context, '/profileSetup');
       } else {
-        Navigator.pushReplacementNamed(context, '/profileSetup');//ALWAYS MAKES YOUR RUN THE PROFILE SETUP EACH TIME, CHANGE TO "/home" IN ORDER TO AVE IT AND SKKIP PROCESS
+        Navigator.pushReplacementNamed(context, '/home');//ALWAYS MAKES YOUR RUN THE PROFILE SETUP EACH TIME, CHANGE TO "/home" IN ORDER TO AVE IT AND SKKIP PROCESS
       }
     });
   }

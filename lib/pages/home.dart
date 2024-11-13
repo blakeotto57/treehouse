@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:treehouse/models/category_model.dart';
+import 'package:treehouse/models/marketplace.dart'; // Correct import for Marketplace
 import 'package:treehouse/pages/user_profile.dart'; // Import the user profile page
 
 class HomePage extends StatefulWidget {
@@ -33,7 +34,7 @@ class _HomePageState extends State<HomePage> {
 
     return SafeArea(
       child: Scaffold(
-        appBar: appBar(),
+        appBar: _currentIndex == 0 ? appBar(context) : null, // Only show appBar for the Home page
         body: PageView(
           controller: _pageController,
           onPageChanged: (index) {
@@ -43,7 +44,7 @@ class _HomePageState extends State<HomePage> {
           },
           children: [
             HomeContent(categories: categories), // Home content page
-            UserProfilePage(), // User profile page
+            Marketplace(), // Marketplace page
           ],
         ),
         bottomNavigationBar: Container(
@@ -69,7 +70,7 @@ class _HomePageState extends State<HomePage> {
                 label: "",
               ),
               BottomNavigationBarItem(
-                icon: Center(child: Icon(Icons.person)),
+                icon: Center(child: Icon(Icons.store)), // Market icon leading to the Marketplace page
                 label: "",
               ),
             ],
@@ -110,7 +111,7 @@ class HomeContent extends StatelessWidget {
                   "Categories",
                   style: TextStyle(
                     color: Colors.black,
-                    fontSize: 18,
+                    fontSize: 28,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -118,14 +119,14 @@ class HomeContent extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10),
                 child: Divider(
-                  color: Colors.grey,
+                  color: Color.fromARGB(255, 0, 0, 0),
                   thickness: 2.0,
                 ),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 9),
               Container(
                 height: 361,
-                color: Colors.white,
+                color: const Color.fromARGB(156, 241, 235, 235),
                 child: ListView.separated(
                   itemCount: categories.length,
                   scrollDirection: Axis.vertical,
@@ -135,20 +136,20 @@ class HomeContent extends StatelessWidget {
                     return InkWell(
                       onTap: () => categories[index].onTap(context),
                       child: Container(
-                        height: 50,
+                        height: 62,
                         decoration: BoxDecoration(
                           color: categories[index].boxColor.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: Colors.grey,
-                            width: 1.5,
+                            width: 2,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.2),
                               spreadRadius: 2,
                               blurRadius: 2,
-                              offset: Offset(0, 3),
+                              offset: Offset(0, 5),
                             ),
                           ],
                         ),
@@ -163,8 +164,8 @@ class HomeContent extends StatelessWidget {
                                   categories[index].name,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 15,
+                                    color: const Color.fromARGB(255, 255, 255, 255),
+                                    fontSize: 18,
                                   ),
                                 ),
                               ),
@@ -173,7 +174,7 @@ class HomeContent extends StatelessWidget {
                               padding: const EdgeInsets.all(8.0),
                               child: SvgPicture.asset(
                                 categories[index].iconPath,
-                                width: 40,
+                                width: 55,
                               ),
                             ),
                           ],
@@ -195,26 +196,26 @@ class HomeContent extends StatelessWidget {
 Widget searchbar() {
   return Padding(
     padding: const EdgeInsets.all(12.0),
-    child: Container(decoration: BoxDecoration(
+    child: Container(
+      decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
-            spreadRadius: 2, 
-            blurRadius: 2, 
+            spreadRadius: 2,
+            blurRadius: 2,
             offset: Offset(0, 3),
           ),
         ],
       ),
-      
       child: TextField(
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
-          hintText: "search categories",
+          hintText: "Search Categories",
           hintStyle: TextStyle(
-            color: Colors.grey.withOpacity(0.5),
+            color: const Color.fromARGB(255, 136, 11, 11).withOpacity(0.5),
           ),
           contentPadding: const EdgeInsets.all(10),
           prefixIcon: Padding(
@@ -227,23 +228,22 @@ Widget searchbar() {
           ),
         ),
       ),
-    ),
+    )
   );
 }
 
-// App Bar
-AppBar appBar() {
+AppBar appBar(BuildContext context) {
   return AppBar(
     title: const Text(
-      "Treehouse",
+      "TreeHouse",
       style: TextStyle(
-        color: Color.fromARGB(255, 174, 90, 65),
-        fontSize: 40,
+        color: Color.fromARGB(255, 238, 236, 235),
+        fontSize:45,
         fontWeight: FontWeight.bold,
-        letterSpacing: 2,
+        letterSpacing: 1.5,
         shadows: [
           Shadow(
-            offset: Offset(0, 3),
+            offset: Offset(2, 3),
             blurRadius: 4,
             color: Colors.black,
           )
@@ -251,33 +251,24 @@ AppBar appBar() {
       ),
     ),
     centerTitle: true,
-    backgroundColor: const Color.fromARGB(255, 106, 145, 87),
+    backgroundColor: const Color.fromARGB(255, 66, 93, 52),
     elevation: 100,
-    leading: GestureDetector(
-      onTap: () {},
-      child: Container(
-        margin: const EdgeInsets.all(10),
-        alignment: Alignment.center,
-        width: 35,
-        height: 35,
-        child: SvgPicture.asset('assets/icons/back-arrow.svg', height: 30, width: 30),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 156, 195, 137),
-          borderRadius: BorderRadius.circular(15),
-        ),
-      ),
-    ),
     actions: [
       GestureDetector(
-        onTap: () {},
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => UserProfilePage()),
+          );
+        },
         child: Container(
           margin: const EdgeInsets.all(10),
           alignment: Alignment.center,
           width: 35,
-          height: 35,
+          height: 40,
           child: SvgPicture.asset('assets/icons/profile-icon.svg', height: 20, width: 20),
           decoration: BoxDecoration(
-            color: const Color.fromARGB(255, 156, 195, 137),
+            color: const Color.fromARGB(212, 179, 162, 7),
             borderRadius: BorderRadius.circular(15),
           ),
         ),

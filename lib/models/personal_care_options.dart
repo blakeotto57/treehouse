@@ -1,13 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:treehouse/pages/category_pages/personal_care.dart';
-import 'package:treehouse/pages/category_pages/academic_assistance.dart';
-import 'package:treehouse/pages/category_pages/cleaning.dart';
-import 'package:treehouse/pages/category_pages/errands_moving.dart';
-import 'package:treehouse/pages/category_pages/pet_care.dart';
-import 'package:treehouse/pages/category_pages/photography.dart';
-import 'package:treehouse/pages/category_pages/technical_services.dart';
 import 'package:treehouse/pages/category_pages/vending_cooking.dart';
 
 // Placeholder for CategoryModel if it's not defined elsewhere
