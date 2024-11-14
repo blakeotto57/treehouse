@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 import 'pages/home.dart'; // Your home page file
 import 'profile_setup.dart'; // Profile setup file
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart'; // Firebase options (you need to configure this from Firebase console)
 
-void main() => runApp(MyApp());
+
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized(); // Ensures widget binding is initialized
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // Initialize Firebase with options
+  );
+  runApp(MyApp()); // Run the app after Firebase is initialized
+}
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -40,10 +50,12 @@ class _CheckProfileState extends State<CheckProfile> {
     final userName = prefs.getString('userName');
 
     Future.delayed(Duration.zero, () {
-      if (userName == null) { 
+      if (userName == null) {
+        // If no profile is set, navigate to profile setup
         Navigator.pushReplacementNamed(context, '/profileSetup');
       } else {
-        Navigator.pushReplacementNamed(context, '/home');//ALWAYS MAKES YOUR RUN THE PROFILE SETUP EACH TIME, CHANGE TO "/home" IN ORDER TO AVE IT AND SKKIP PROCESS
+        // If profile exists, navigate to home
+        Navigator.pushReplacementNamed(context, '/home');
       }
     });
   }
@@ -51,6 +63,7 @@ class _CheckProfileState extends State<CheckProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Center(child: CircularProgressIndicator()),
     );
   }

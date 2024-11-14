@@ -1,5 +1,3 @@
-// ignore_for_file: sort_child_properties_last, duplicate_ignore, prefer_const_constructors, prefer_const_literals_to_create_immutables
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:treehouse/models/category_model.dart';
@@ -57,12 +55,15 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           child: BottomNavigationBar(
-            currentIndex: _currentIndex,
+            currentIndex: _currentIndex,  // Keep track of the selected tab
             onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-                _pageController.jumpToPage(index); // Switches to the selected page
-              });
+              // Only update the page index if it's different
+              if (_currentIndex != index) {
+                setState(() {
+                  _currentIndex = index;
+                });
+                _pageController.jumpToPage(index);  // Update the PageView page
+              }
             },
             items: [
               BottomNavigationBarItem(
@@ -111,7 +112,7 @@ class HomeContent extends StatelessWidget {
                   "Categories",
                   style: TextStyle(
                     color: Colors.black,
-                    fontSize: 28,
+                    fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -119,14 +120,14 @@ class HomeContent extends StatelessWidget {
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10),
                 child: Divider(
-                  color: Color.fromARGB(255, 0, 0, 0),
+                  color: Colors.grey,
                   thickness: 2.0,
                 ),
               ),
-              SizedBox(height: 9),
+              SizedBox(height: 10),
               Container(
                 height: 361,
-                color: const Color.fromARGB(156, 241, 235, 235),
+                color: Colors.white,
                 child: ListView.separated(
                   itemCount: categories.length,
                   scrollDirection: Axis.vertical,
@@ -136,20 +137,20 @@ class HomeContent extends StatelessWidget {
                     return InkWell(
                       onTap: () => categories[index].onTap(context),
                       child: Container(
-                        height: 62,
+                        height: 50,
                         decoration: BoxDecoration(
                           color: categories[index].boxColor.withOpacity(0.5),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: Colors.grey,
-                            width: 2,
+                            width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withOpacity(0.2),
                               spreadRadius: 2,
                               blurRadius: 2,
-                              offset: Offset(0, 5),
+                              offset: Offset(0, 3),
                             ),
                           ],
                         ),
@@ -164,8 +165,8 @@ class HomeContent extends StatelessWidget {
                                   categories[index].name,
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: const Color.fromARGB(255, 255, 255, 255),
-                                    fontSize: 18,
+                                    color: Colors.white,
+                                    fontSize: 15,
                                   ),
                                 ),
                               ),
@@ -174,7 +175,7 @@ class HomeContent extends StatelessWidget {
                               padding: const EdgeInsets.all(8.0),
                               child: SvgPicture.asset(
                                 categories[index].iconPath,
-                                width: 55,
+                                width: 40,
                               ),
                             ),
                           ],

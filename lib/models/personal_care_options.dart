@@ -5,13 +5,13 @@ import 'package:treehouse/pages/category_pages/vending_cooking.dart';
 
 // Placeholder for CategoryModel if it's not defined elsewhere
 class CategoryModel {
-  final String name;
+  final Widget text;
   final String iconPath;
   final Color boxColor;
   final Function(BuildContext) onTap;
 
   CategoryModel({
-    required this.name,
+    required this.text,
     required this.iconPath,
     required this.boxColor,
     required this.onTap,
@@ -29,7 +29,13 @@ class PersonalCareOptions {
     // HAIRCUT & STYLING category
     categories.add(
       CategoryModel(
-        name: "Haircut & Styling",
+        text: Text(
+          "Tyler A.", 
+          style: TextStyle(
+            color: Colors.black,
+          fontWeight: FontWeight.bold,
+          ),
+        ),
         iconPath: "assets/icons/style-icon.svg",
         boxColor: Color.fromRGBO(239, 215, 57, 1),
         onTap: (context) {
@@ -47,7 +53,12 @@ class PersonalCareOptions {
     // MAKEUP & BEAUTY category
     categories.add(
       CategoryModel(
-        name: "Makeup & Beauty",
+        text: Text(
+          "Max B.", 
+          style: TextStyle(color: Colors.black,
+          fontWeight: FontWeight.bold,
+          ),
+        ),
         iconPath: "assets/icons/makeup-icon.svg",
         boxColor: Color.fromRGBO(239, 57, 96, 1),
         onTap: (context) {
