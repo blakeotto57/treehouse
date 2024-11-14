@@ -215,7 +215,7 @@ Widget searchbar() {
           fillColor: Colors.white,
           hintText: "Search Categories",
           hintStyle: TextStyle(
-            color: const Color.fromARGB(255, 136, 11, 11).withOpacity(0.5),
+            color: const Color.fromRGBO(23, 22, 22, 1).withOpacity(0.5),
           ),
           contentPadding: const EdgeInsets.all(10),
           prefixIcon: Padding(
@@ -237,7 +237,7 @@ AppBar appBar(BuildContext context) {
     title: const Text(
       "TreeHouse",
       style: TextStyle(
-        color: Color.fromARGB(255, 238, 236, 235),
+        color: Color.fromARGB(255, 216, 219, 212),
         fontSize:45,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.5,
@@ -251,7 +251,7 @@ AppBar appBar(BuildContext context) {
       ),
     ),
     centerTitle: true,
-    backgroundColor: const Color.fromARGB(255, 66, 93, 52),
+    backgroundColor: const Color.fromARGB(255, 69, 131, 36),
     elevation: 100,
     actions: [
       GestureDetector(
