@@ -1,137 +1,157 @@
 import 'package:flutter/material.dart';
 
 class Marketplace extends StatelessWidget {
-  const Marketplace({super.key});
+  final String dateToday = DateTime.now().toString().split(' ')[0]; // Get current date in YYYY-MM-DD format
+
+  final List<Seller> sellers = [
+    Seller(name: "John", goods: "Personal Care", promotionText: "Selling croissants today", imageUrl: "https://via.placeholder.com/150"),
+    Seller(name: "Sahittya", goods: "Cock Care", promotionText: "Free cock care at 4pm!", imageUrl: "https://via.placeholder.com/150"),
+    Seller(name: "Mateo", goods: "fortnie", promotionText: "Selling battlepass at McHenry from 8am-3pm", imageUrl: "https://via.placeholder.com/150"),
+  ];
+
+  final List<String> categories = ["Electronics", "Furniture", "Clothing", "Toys", "Sports", "Books"];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('TreeHouse'),
-        centerTitle: true,
+        title: Text('Explore Promotions'),
+        backgroundColor: Colors.green,
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Marketplace Title with Cool Effects
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 25.0),
-                decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 10, 9, 6), // Background color
-                  borderRadius: BorderRadius.circular(12.0), // Rounded corners
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color.fromARGB(255, 10, 31, 0).withOpacity(0.3), // Shadow color
-                      blurRadius: 8,
-                      offset: Offset(4, 4), // Shadow position
-                    ),
-                  ],
-                  gradient: LinearGradient(
-                    colors: [const Color.fromARGB(255, 112, 219, 96), const Color.fromARGB(255, 219, 68, 30)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: const Text(
-                  'Welcome to the MarketPlace!',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white, // Text color
-                    shadows: [
-                      Shadow(
-                        color: Colors.black45,
-                        offset: Offset(1, 2),
-                        blurRadius: 0,
-                      ),
-                    ],
-                  ),
-                ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ListView(
+          children: [
+            // Date header
+            Text(
+              'Promotions for $dateToday',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
               ),
             ),
-          ),
-          // Seller Listings Grid
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: GridView.builder(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3, // Adjust to 3-4 boxes per row as desired
-                  crossAxisSpacing: 8.0,
-                  mainAxisSpacing: 8.0,
-                  childAspectRatio: 4 / 5, // Adjust the aspect ratio as needed
+            SizedBox(height: 20),
+
+            // Search Bar
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Search for products or sellers...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(15),
+                  borderSide: BorderSide.none,
                 ),
-                itemCount: 12, // Replace with the dynamic count of services
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
+            ),
+            SizedBox(height: 20),
+            // Featured Sellers (Horizontal Scrollable)
+            Text(
+              'Featured Sellers',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 10),
+            SizedBox(
+              height: 200,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: sellers.length,
                 itemBuilder: (context, index) {
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 0, 0, 0),
-                      borderRadius: BorderRadius.circular(12.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.3),
-                          blurRadius: 4,
-                          offset: Offset(10, 4), // Shadow position
-                        ),
-                      ],
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Shop Name
-                          Text(
-                            'Shop Name  ${index + 1}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: const Color.fromARGB(221, 181, 235, 1),
-                            ),
-                          ),
-                          SizedBox(height: 8.0),
-                          // Placeholder Icon for the Picture
-                          Expanded(
-                            child: Center(
-                              child: Icon(
-                                Icons.image, // Use any icon or image widget
-                                size: 70,
-                                color: const Color.fromARGB(255, 128, 120, 120), // Customize color if needed
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 10.0),
-                          // Hashtags TextBox
-                          Container(
-                            padding: const EdgeInsets.all(4.0),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8.0),
-                              border: Border.all(color: Colors.grey),
-                            ),
-                            child: SingleChildScrollView(
-                              child: Text(
-                                '#hastags and description',
-                                style: TextStyle(
-                                  color: const Color.fromARGB(255, 207, 5, 5),
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
+                  return PromotionCard(seller: sellers[index]);
                 },
               ),
             ),
-          ),
-        ],
+            SizedBox(height: 20),
+
+            // List of Promotions (Vertical Scrollable)
+            Text(
+              'Today’s Promotions',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            ),
+            SizedBox(height: 10),
+            ListView.builder(
+              shrinkWrap: true,
+              itemCount: sellers.length,
+              itemBuilder: (context, index) {
+                return PromotionCard(seller: sellers[index]);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class Seller {
+  final String name;
+  final String goods;
+  final String promotionText;
+  final String imageUrl;
+
+  Seller({required this.name, required this.goods, required this.promotionText, required this.imageUrl});
+}
+
+class PromotionCard extends StatelessWidget {
+  final Seller seller;
+
+  const PromotionCard({required this.seller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 5,
+      margin: EdgeInsets.only(right: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            // Image for the seller's goods
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                seller.imageUrl,
+                width: 80,
+                height: 80,
+                fit: BoxFit.cover,
+              ),
+            ),
+            SizedBox(width: 16),
+            // Seller information
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  seller.name,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                Text(
+                  seller.goods,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[700],
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  seller.promotionText,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.green,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

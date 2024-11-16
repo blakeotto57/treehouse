@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:treehouse/models/category_model.dart';
@@ -96,102 +97,116 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          searchbar(),
-          SizedBox(height: 10),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(left: 20.0),
-                child: Text(
-                  "Categories",
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+    return SingleChildScrollView(
+      child: Container(
+        color: const Color.fromARGB(255, 255, 255, 255), //top container background color
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            searchbar(),
+            SizedBox(height: 5),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(left: 20.0),
+                  child: Text(
+                    "Categories",
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10),
-                child: Divider(
-                  color: Colors.grey,
-                  thickness: 2.0,
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Divider(
+                    color: Colors.grey,
+                    thickness: 2.0,
+                  ),
                 ),
-              ),
-              SizedBox(height: 10),
-              Container(
-                height: 361,
-                color: Colors.white,
-                child: ListView.separated(
-                  itemCount: categories.length,
-                  scrollDirection: Axis.vertical,
-                  padding: EdgeInsets.all(10),
-                  separatorBuilder: (context, index) => SizedBox(height: 25),
-                  itemBuilder: (context, index) {
-                    return InkWell(
-                      onTap: () => categories[index].onTap(context),
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: categories[index].boxColor.withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.grey,
-                            width: 1.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
-                              spreadRadius: 2,
-                              blurRadius: 2,
-                              offset: Offset(0, 3),
+                SizedBox(height: 10),
+                Container(
+                  height: 400,
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                  child: GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2, // Two items per row
+                      crossAxisSpacing: 20, // Space between columns
+                      mainAxisSpacing: 15, // Space between rows
+                      mainAxisExtent: 75, // Height of each category box
+                    ),
+                    itemCount: categories.length,
+                    padding: EdgeInsets.only(left: 5, right: 5, bottom: 75), // Added bottom padding here
+                    itemBuilder: (context, index) {
+                      return InkWell(
+                        onTap: () => categories[index].onTap(context),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: categories[index].boxColor.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: Colors.grey,
+                              width: 1.5,
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  categories[index].name,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    fontSize: 15,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                spreadRadius: 2,
+                                blurRadius: 2,
+                                offset: Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(left: 5.0, right: 5.0),
+                                child: Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    categories[index].name,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color.fromRGBO(255, 255, 255, 1),
+                                      fontSize: 15,
+                                      letterSpacing: 1.0,
+                                      shadows: [
+                                        Shadow(
+                                          offset: Offset(0, 0), // Horizontal and vertical offset of the shadow
+                                          blurRadius: 3, // The blur effect for the shadow
+                                          color: Colors.black.withOpacity(0.4), // Shadow color
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: SvgPicture.asset(
-                                categories[index].iconPath,
-                                width: 40,
+                              Padding(
+                                padding: const EdgeInsets.all(1.0),
+                                child: SvgPicture.asset(
+                                  categories[index].iconPath,
+                                  width: 30, // Shrinks icon
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
+
 
 // Search Bar
 Widget searchbar() {
@@ -216,7 +231,7 @@ Widget searchbar() {
           fillColor: Colors.white,
           hintText: "Search Categories",
           hintStyle: TextStyle(
-            color: const Color.fromARGB(255, 136, 11, 11).withOpacity(0.5),
+            color:  Colors.grey,
           ),
           contentPadding: const EdgeInsets.all(10),
           prefixIcon: Padding(
@@ -252,7 +267,7 @@ AppBar appBar(BuildContext context) {
       ),
     ),
     centerTitle: true,
-    backgroundColor: const Color.fromARGB(255, 66, 93, 52),
+    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
     elevation: 100,
     actions: [
       GestureDetector(
@@ -267,9 +282,9 @@ AppBar appBar(BuildContext context) {
           alignment: Alignment.center,
           width: 35,
           height: 40,
-          child: SvgPicture.asset('assets/icons/profile-icon.svg', height: 20, width: 20),
+          child: SvgPicture.asset('assets/icons/profile-icon.svg', height: 20, width: 20, color: Colors.white,),
           decoration: BoxDecoration(
-            color: const Color.fromARGB(212, 179, 162, 7),
+            color:Colors.transparent,
             borderRadius: BorderRadius.circular(15),
           ),
         ),
