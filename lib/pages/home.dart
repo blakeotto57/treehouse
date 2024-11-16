@@ -1,9 +1,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+
 import 'package:treehouse/models/category_model.dart';
+import 'package:treehouse/models/seller_setup.dart';
+
+
 import 'package:treehouse/models/marketplace.dart'; // Correct import for Marketplace
 import 'package:treehouse/pages/user_profile.dart'; // Import the user profile page
+
+
 
 class HomePage extends StatefulWidget {
   HomePage({super.key});
@@ -250,11 +256,34 @@ Widget searchbar() {
 
 AppBar appBar(BuildContext context) {
   return AppBar(
+    leading: GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SellerSetupPage(), // Replace with your desired page
+          ),
+        );
+      },
+      
+      child: Container(
+        margin: const EdgeInsets.all(10),
+        alignment: Alignment.center,
+        width: 35,
+        height: 40,
+        child: Icon(Icons.money, color: Colors.white), // Example icon
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(15),
+        ),
+      ),
+    ),
+
     title: const Text(
-      "TreeHouse",
+      "Treehouse",
       style: TextStyle(
         color: Color.fromARGB(255, 238, 236, 235),
-        fontSize:45,
+        fontSize:40,
         fontWeight: FontWeight.bold,
         letterSpacing: 1.5,
         shadows: [
@@ -269,16 +298,18 @@ AppBar appBar(BuildContext context) {
     centerTitle: true,
     backgroundColor: const Color.fromARGB(255, 0, 0, 0),
     elevation: 100,
+    
     actions: [
       GestureDetector(
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => UserProfilePage()),
+            MaterialPageRoute(builder: (context) => UserProfilePage()
+            ),
           );
         },
         child: Container(
-          margin: const EdgeInsets.all(10),
+          margin: const EdgeInsets.only(right: 10),
           alignment: Alignment.center,
           width: 35,
           height: 40,

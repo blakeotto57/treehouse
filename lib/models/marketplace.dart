@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Marketplace extends StatelessWidget {
   final String dateToday = DateTime.now().toString().split(' ')[0]; // Get current date in YYYY-MM-DD format
-
-  final List<Seller> sellers = [
-    Seller(name: "John", goods: "Personal Care", promotionText: "Selling croissants today", imageUrl: "https://via.placeholder.com/150"),
-    Seller(name: "Sahittya", goods: "Cock Care", promotionText: "Free cock care at 4pm!", imageUrl: "https://via.placeholder.com/150"),
-    Seller(name: "Mateo", goods: "fortnie", promotionText: "Selling battlepass at McHenry from 8am-3pm", imageUrl: "https://via.placeholder.com/150"),
-  ];
 
   final List<String> categories = ["Electronics", "Furniture", "Clothing", "Toys", "Sports", "Books"];
 
@@ -15,7 +10,7 @@ class Marketplace extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Explore Promotions'),
+        title: const Text('Explore Promotions'),
         backgroundColor: Colors.green,
       ),
       body: Padding(
@@ -25,19 +20,19 @@ class Marketplace extends StatelessWidget {
             // Date header
             Text(
               'Promotions for $dateToday',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
             // Search Bar
             TextField(
               decoration: InputDecoration(
                 hintText: 'Search for products or sellers...',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(15),
                   borderSide: BorderSide.none,
@@ -46,38 +41,59 @@ class Marketplace extends StatelessWidget {
                 fillColor: Colors.grey[200],
               ),
             ),
-            SizedBox(height: 20),
-            // Featured Sellers (Horizontal Scrollable)
-            Text(
+            const SizedBox(height: 20),
+
+            // Featured Sellers (Horizontal Scrollable from Firestore)
+            const Text(
               'Featured Sellers',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             SizedBox(
               height: 200,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: sellers.length,
-                itemBuilder: (context, index) {
-                  return PromotionCard(seller: sellers[index]);
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance.collection('sellers').snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
+
+                  final sellers = snapshot.data?.docs ?? [];
+
+                  if (sellers.isEmpty) {
+                    return const Center(child: Text('No featured sellers available.'));
+                  }
+
+                  return ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: sellers.length,
+                    itemBuilder: (context, index) {
+                      final sellerData = sellers[index].data() as Map<String, dynamic>;
+                      final seller = Seller(
+                        name: sellerData['name'] ?? 'No Name',
+                        goods: sellerData['goods'] ?? 'No Goods',
+                        promotionText: sellerData['promotionText'] ?? 'No Promotion',
+                        imageUrl: sellerData['imageUrl'] ?? 'https://via.placeholder.com/150',
+                      );
+                      return PromotionCard(seller: seller);
+                    },
+                  );
                 },
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-            // List of Promotions (Vertical Scrollable)
-            Text(
+            // Placeholder List of Promotions (Vertical Scrollable)
+            const Text(
               'Today’s Promotions',
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
             ),
-            SizedBox(height: 10),
-            ListView.builder(
-              shrinkWrap: true,
-              itemCount: sellers.length,
-              itemBuilder: (context, index) {
-                return PromotionCard(seller: sellers[index]);
-              },
-            ),
+            const SizedBox(height: 10),
+            const Center(child: Text('Promotions will be listed here.')), // Replace with actual logic
           ],
         ),
       ),
@@ -103,7 +119,7 @@ class PromotionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 5,
-      margin: EdgeInsets.only(right: 16),
+      margin: const EdgeInsets.only(right: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -119,14 +135,14 @@ class PromotionCard extends StatelessWidget {
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             // Seller information
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   seller.name,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Colors.black,
@@ -139,10 +155,10 @@ class PromotionCard extends StatelessWidget {
                     color: Colors.grey[700],
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Text(
                   seller.promotionText,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
                     color: Colors.green,
