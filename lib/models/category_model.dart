@@ -89,7 +89,7 @@ class CategoryModel {
     //Academic assitance box
     categories.add(
       CategoryModel(
-        name: "Academic Assistance", 
+        name: "Academic Help", 
         iconPath: "assets/icons/school-icon.svg", 
         boxColor: Color.fromRGBO(238, 138, 96, 1),
 
