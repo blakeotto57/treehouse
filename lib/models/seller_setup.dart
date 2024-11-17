@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:treehouse/models/seller_profile.dart';
 
+String? globalSellerId;
 
 class SellerSetupPage extends StatefulWidget {
   const SellerSetupPage({super.key});
@@ -15,40 +18,71 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  bool _isSubmitting = false;
 
-Future<void> _submitForm() async {
+  Future<void> _saveSellerId(String sellerId) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('sellerId', sellerId);
+    globalSellerId = sellerId; // Update global variable
+  }
+
+  Future<bool> _isSellerIdUnique(String sellerId) async {
+    final doc = await FirebaseFirestore.instance.collection('sellers').doc(sellerId).get();
+    return !doc.exists;
+  }
+
+  Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      final sellerId = _nameController.text.trim();
+
+      // Check if sellerId is unique
+      final isUnique = await _isSellerIdUnique(sellerId);
+      if (!isUnique) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Seller ID already exists. Please choose a different name.')),
+        );
+        setState(() {
+          _isSubmitting = false;
+        });
+        return;
+      }
+
       try {
-        // Save seller data to Firestore
-        FirebaseFirestore firestore = FirebaseFirestore.instance;
-        await firestore.collection('sellers').doc(_nameController.text).set({
-          'name': _nameController.text,
-          'email': _emailController.text,
-          'phone': _phoneController.text,
-          'description': _descriptionController.text,
-          'timestamp': FieldValue.serverTimestamp(), // For sorting or tracking
+        // Save data to Firestore
+        await FirebaseFirestore.instance.collection('sellers').doc(sellerId).set({
+          'name': sellerId,
+          'email': _emailController.text.trim(),
+          'phone': _phoneController.text.trim(),
+          'description': _descriptionController.text.trim(),
+          'profilePicture': null,
+          'timestamp': FieldValue.serverTimestamp(),
         });
 
-        // Show a confirmation message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Seller registration submitted!')),
-        );
+        await _saveSellerId(sellerId);
 
-        // Clear form after submission
         _nameController.clear();
         _emailController.clear();
         _phoneController.clear();
         _descriptionController.clear();
 
-        //Go to Home Page after submitted
-        Navigator.pushReplacementNamed(context, '/home');
-
-
-      //If error do below
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SellerProfilePage(sellerId: sellerId),
+          ),
+        );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error submitting data: $e')),
         );
+      } finally {
+        setState(() {
+          _isSubmitting = false;
+        });
       }
     }
   }
@@ -128,8 +162,12 @@ Future<void> _submitForm() async {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: _submitForm,
-                child: const Text('Submit'),
+                onPressed: _isSubmitting ? null : _submitForm,
+                child: _isSubmitting
+                    ? const CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      )
+                    : const Text('Submit'),
               ),
             ],
           ),
