@@ -45,8 +45,13 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   }
 
   Future<bool> _isSellerIdUnique(String sellerId) async {
-    final doc = await FirebaseFirestore.instance.collection('sellers').doc(sellerId).get();
-    return !doc.exists;
+    try {
+      final doc = await FirebaseFirestore.instance.collection('sellers').doc(sellerId).get();
+      return !doc.exists;
+    } catch (e) {
+      print("Error checking Seller ID uniqueness: $e");
+      return false;
+    }
   }
 
   Future<List<String>> _uploadImages() async {
@@ -85,7 +90,10 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
       }
 
       try {
-        List<String> imageUrls = await _uploadImages();
+        List<String> imageUrls = [];
+        if (_images.isNotEmpty) {
+          imageUrls = await _uploadImages(); // Upload images only if present
+        }
 
         await FirebaseFirestore.instance.collection('sellers').doc(sellerId).set({
           'name': sellerId,
@@ -93,22 +101,25 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
           'phone': _phoneController.text.trim(),
           'category': selectedCategory,
           'description': _descriptionController.text.trim(),
-          'workImages': imageUrls, // Save image URLs
+          'workImages': imageUrls, // Save image URLs (empty if no images uploaded)
           'timestamp': FieldValue.serverTimestamp(),
         });
 
         await _saveSellerId(sellerId);
 
-        _nameController.clear();
-        _emailController.clear();
-        _phoneController.clear();
-        _descriptionController.clear();
+        _formKey.currentState?.reset();
         _images.clear();
+        setState(() {
+          selectedCategory = null;
+        });
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => SellerProfilePage(sellerId: sellerId),
+            builder: (context) => SellerProfilePage(
+              sellerId: sellerId,
+              currentUserId: globalSellerId ?? 'guest', // Use globalSellerId or a default value
+            ),
           ),
         );
       } catch (e) {
@@ -124,11 +135,15 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _images.add(File(image.path));
-      });
+    try {
+      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        setState(() {
+          _images.add(File(image.path));
+        });
+      }
+    } catch (e) {
+      print("Error picking image: $e");
     }
   }
 
@@ -202,7 +217,7 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
                 hint: const Text('Select a Market'),
                 onChanged: (value) {
                   setState(() {
-                    selectedCategory = value!;
+                    selectedCategory = value;
                   });
                 },
                 items: serviceCategories.map((service) {
@@ -243,7 +258,7 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Upload Images of Past Work',
+                'Upload Images of Past Work (Optional)',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),

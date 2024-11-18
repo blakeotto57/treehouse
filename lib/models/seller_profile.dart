@@ -1,17 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/models/seller_setup.dart';
+import 'chat_page.dart';
 
 class SellerProfilePage extends StatelessWidget {
   final String sellerId;
+  final String currentUserId;
 
-  const SellerProfilePage({super.key, required this.sellerId});
+  const SellerProfilePage({
+    required this.sellerId,
+    required this.currentUserId,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Seller Profile'),
+        actions: sellerId == currentUserId
+            ? null
+            : [
+                IconButton(
+                  icon: const Icon(Icons.message),
+                  onPressed: () async {
+                    try {
+                      final chatRoomId = await _getOrCreateChatRoom();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatPage(
+                            currentUserId: currentUserId,
+                            chatRoomId: chatRoomId,
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: $e')),
+                      );
+                    }
+                  },
+                ),
+              ],
       ),
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance.collection('sellers').doc(sellerId).get(),
@@ -21,7 +52,7 @@ class SellerProfilePage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            // If seller profile is not found
+            // Seller not found
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -33,10 +64,11 @@ class SellerProfilePage extends StatelessWidget {
                   const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      // Navigate to Seller Setup Page
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SellerSetupPage()),
+                        MaterialPageRoute(
+                          builder: (context) => const SellerSetupPage(),
+                        ),
                       );
                     },
                     child: const Text('Become a Seller'),
@@ -46,13 +78,17 @@ class SellerProfilePage extends StatelessWidget {
             );
           }
 
-          final sellerData = snapshot.data!.data() as Map<String, dynamic>;
+          final sellerData = snapshot.data!.data() as Map<String, dynamic>?;
+
+          if (sellerData == null) {
+            return const Center(child: Text('No seller data available.'));
+          }
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                // Profile Picture (if available)
+                // Profile Picture
                 Center(
                   child: CircleAvatar(
                     radius: 50,
@@ -68,7 +104,7 @@ class SellerProfilePage extends StatelessWidget {
 
                 // Seller Name
                 Text(
-                  sellerData['name'] ?? 'No Name',
+                  sellerData['name'] ?? 'No Name Provided',
                   style: const TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -77,7 +113,7 @@ class SellerProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Description
+                // About the Seller
                 const Text(
                   'About the Seller:',
                   style: TextStyle(
@@ -87,14 +123,83 @@ class SellerProfilePage extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  sellerData['description'] ?? 'No Description',
+                  sellerData['description'] ?? 'No Description Provided',
                   style: const TextStyle(fontSize: 16),
                 ),
+                const SizedBox(height: 16),
+
+                // Uploaded Images
+                const Text(
+                  'Past Work:',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                sellerData['workImages'] != null && (sellerData['workImages'] as List).isNotEmpty
+                    ? Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: (sellerData['workImages'] as List)
+                            .map((imageUrl) => ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    imageUrl,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ))
+                            .toList(),
+                      )
+                    : const Text('No images uploaded yet.'),
               ],
             ),
           );
         },
       ),
     );
+  }
+
+  Future<String> _getOrCreateChatRoom() async {
+    final chatRoomCollection = FirebaseFirestore.instance.collection('chats');
+
+    // Query for an existing chat room
+    final existingChat = await chatRoomCollection
+        .where('participants', arrayContains: currentUserId)
+        .get();
+
+    for (var doc in existingChat.docs) {
+      final participants = doc.data()['participants'] as List;
+      if (participants.contains(sellerId)) {
+        return doc.id; // Return existing chat room ID
+      }
+    }
+
+    // Fetch participant names
+    final sellerSnapshot =
+        await FirebaseFirestore.instance.collection('sellers').doc(sellerId).get();
+    final customerSnapshot =
+        await FirebaseFirestore.instance.collection('users').doc(currentUserId).get();
+
+    final sellerName = sellerSnapshot.exists && sellerSnapshot.data() != null
+        ? sellerSnapshot.data()!['name'] ?? 'Seller'
+        : 'Seller';
+    final customerName = customerSnapshot.exists && customerSnapshot.data() != null
+        ? customerSnapshot.data()!['name'] ?? 'Customer'
+        : 'Customer';
+
+    // Create a new chat room
+    final newChat = await chatRoomCollection.add({
+      'participants': [currentUserId, sellerId],
+      'participantNames': {
+        currentUserId: customerName,
+        sellerId: sellerName,
+      },
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    return newChat.id; // Return the new chat room ID
   }
 }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:treehouse/pages/category_pages/personal_care.dart';
+import 'package:treehouse/pages/category_pages/personal_care_sellers.dart';
 import 'package:treehouse/pages/category_pages/academic_assistance.dart';
 import 'package:treehouse/pages/category_pages/cleaning.dart';
 import 'package:treehouse/pages/category_pages/errands_moving.dart';
@@ -41,7 +41,7 @@ class CategoryModel {
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => PersonalCarePage()),
+            MaterialPageRoute(builder: (context) => PersonalCareSellersPage()),
            );
           }
         ),
@@ -60,7 +60,7 @@ class CategoryModel {
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => VendingCookingPage()),
+            MaterialPageRoute(builder: (context) => VendingCookingSellersPage()),
             );
           }
         ),

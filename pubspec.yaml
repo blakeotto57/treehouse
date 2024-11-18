@@ -17,6 +17,8 @@ dependencies:
   cloud_firestore: ^4.0.0
   firebase_core: ^2.32.0
   firebase_database: ^10.5.7
+  intl: ^0.18.0 # Add the latest version here
+
 
   # Cupertino Icons for iOS
   cupertino_icons: ^1.0.8

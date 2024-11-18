@@ -10,11 +10,10 @@ import 'package:treehouse/models/marketplace.dart'; // Correct import for Market
 import 'package:treehouse/pages/user_profile.dart'; // Import the user profile page
 import 'package:treehouse/pages/feedback.dart'; // Adjust path if necessary
 
-
 String? globalSellerId; // Persistent global variable for Seller ID
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -44,22 +43,32 @@ class _HomePageState extends State<HomePage> {
       child: Scaffold(
         appBar: _currentIndex == 0
             ? appBar(context)
-            : null, // Only show appBar for the Home page
+            : null, // Only show AppBar for the Home page
         body: IndexedStack(
           index: _currentIndex,
           children: [
             HomeContent(categories: categories), // Home content page
             Marketplace(), // Marketplace page
-            ChatPage(currentUserId: 'exampleUserId'), // Chat page
-            globalSellerId != null && globalSellerId!.isNotEmpty
-                ? SellerProfilePage(sellerId: globalSellerId!)
+            globalSellerId != null
+                ? ChatPage(
+                    currentUserId: globalSellerId!,
+                    chatRoomId: 'defaultRoom', // Replace with actual logic for chat room
+                  )
+                : const Center(
+                    child: Text('Please set up your seller profile to use chat.'),
+                  ), // Show message if globalSellerId is null
+            globalSellerId != null
+                ? SellerProfilePage(
+                    sellerId: globalSellerId!,
+                    currentUserId: globalSellerId!,
+                  )
                 : Center(
                     child: ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => SellerSetupPage(),
+                            builder: (context) => const SellerSetupPage(),
                           ),
                         ).then((_) => _loadSellerId()); // Reload sellerId after setup
                       },
@@ -68,47 +77,35 @@ class _HomePageState extends State<HomePage> {
                   ),
           ],
         ),
-        bottomNavigationBar: Container(
-          decoration: const BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: Colors.grey,
-                width: 1.0,
-              ),
+
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex, // Keep track of the selected tab
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: "Home",
             ),
-          ),
-          child: BottomNavigationBar(
-            currentIndex: _currentIndex, // Keep track of the selected tab
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-            items: const [
-              BottomNavigationBarItem(
-                icon: Center(child: Icon(Icons.home)),
-                label: "",
-              ),
-              BottomNavigationBarItem(
-                icon: Center(child: Icon(Icons.store)), // Marketplace page
-                label: "",
-              ),
-              BottomNavigationBarItem(
-                icon: Center(child: Icon(Icons.message)), // Chat page
-                label: "",
-              ),
-              BottomNavigationBarItem(
-                icon: Center(child: Icon(Icons.person_outlined)),
-                label: "",
-              ),
-            ],
-            showSelectedLabels: false,
-            showUnselectedLabels: false,
-            backgroundColor: Colors.white,
-            selectedItemColor: Colors.black,
-            unselectedItemColor: Colors.grey,
-            elevation: 0,
-          ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.store),
+              label: "Marketplace",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.message),
+              label: "Messages",
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: "Profile",
+            ),
+          ],
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey,
+          elevation: 5,
         ),
       ),
     );
@@ -119,115 +116,77 @@ class _HomePageState extends State<HomePage> {
 class HomeContent extends StatelessWidget {
   final List<CategoryModel> categories;
 
-  HomeContent({required this.categories});
+  const HomeContent({required this.categories});
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      child: Container(
-        color: const Color.fromARGB(255, 255, 255, 255), //top container background color
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            searchbar(),
-            const SizedBox(height: 5),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.only(left: 20.0),
-                  child: Text(
-                    "Categories",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Divider(
-                    color: Colors.grey,
-                    thickness: 2.0,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  height: 400,
-                  color: const Color.fromARGB(255, 255, 255, 255),
-                  child: GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // Two items per row
-                      crossAxisSpacing: 20, // Space between columns
-                      mainAxisSpacing: 15, // Space between rows
-                      mainAxisExtent: 75, // Height of each category box
-                    ),
-                    itemCount: categories.length,
-                    padding: const EdgeInsets.only(left: 5, right: 5, bottom: 75),
-                    itemBuilder: (context, index) {
-                      return InkWell(
-                        onTap: () => categories[index].onTap(context),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: categories[index].boxColor.withOpacity(0.5),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: Colors.grey,
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                spreadRadius: 2,
-                                blurRadius: 2,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(left: 5.0, right: 5.0),
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    categories[index].name,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                      color: Color.fromRGBO(255, 255, 255, 1),
-                                      fontSize: 15,
-                                      letterSpacing: 1.0,
-                                      shadows: [
-                                        Shadow(
-                                          offset: Offset(0, 0),
-                                          blurRadius: 3,
-                                          color: Colors.black,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(1.0),
-                                child: SvgPicture.asset(
-                                  categories[index].iconPath,
-                                  width: 30, // Shrinks icon
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          searchbar(),
+          const SizedBox(height: 10),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20.0),
+            child: Text(
+              "Categories",
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-          ],
-        ),
+          ),
+          const Divider(
+            color: Colors.grey,
+            thickness: 1.5,
+          ),
+          GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+              mainAxisExtent: 100,
+            ),
+            itemCount: categories.length,
+            padding: const EdgeInsets.all(10),
+            shrinkWrap: true,
+            physics: const ClampingScrollPhysics(), // Allow scrolling
+            itemBuilder: (context, index) {
+              return InkWell(
+                onTap: () => categories[index].onTap(context),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: categories[index].boxColor.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.grey,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      SvgPicture.asset(
+                        categories[index].iconPath,
+                        width: 40,
+                        height: 40,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        categories[index].name,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -237,107 +196,49 @@ class HomeContent extends StatelessWidget {
 Widget searchbar() {
   return Padding(
     padding: const EdgeInsets.all(12.0),
-    child: Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            spreadRadius: 2,
-            blurRadius: 2,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: TextField(
-        decoration: InputDecoration(
-          filled: true,
-          fillColor: Colors.white,
-          hintText: "Search Categories",
-          hintStyle: const TextStyle(
-            color: Colors.grey,
-          ),
-          contentPadding: const EdgeInsets.all(10),
-          prefixIcon: Padding(
-            padding: const EdgeInsets.all(10),
-            child: SvgPicture.asset('assets/icons/search-icon.svg', height: 10, width: 10),
-          ),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide.none,
-          ),
+    child: TextField(
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        hintText: "Search Categories",
+        prefixIcon: const Icon(Icons.search),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
         ),
       ),
-    )
+    ),
   );
 }
 
 // AppBar
 AppBar appBar(BuildContext context) {
   return AppBar(
-    leading: GestureDetector(
-      onTap: () {
+    leading: IconButton(
+      icon: const Icon(Icons.feedback),
+      onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => FeedbackPage()), // Navigate to feedback.dart page
+          MaterialPageRoute(builder: (context) => FeedbackPage()), // Navigate to FeedbackPage
         );
       },
-      child: Container(
-        margin: const EdgeInsets.all(10),
-        alignment: Alignment.center,
-        width: 35,
-        height: 40,
-        child: const Icon(Icons.feedback, color: Colors.white), // Feedback icon
-        decoration: BoxDecoration(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(15),
-        ),
-      ),
     ),
     title: const Text(
       "TreeHouse",
       style: TextStyle(
-        color: Color.fromARGB(255, 238, 236, 235),
-        fontSize: 40,
+        fontSize: 24,
         fontWeight: FontWeight.bold,
-        letterSpacing: 1.5,
-        shadows: [
-          Shadow(
-            offset: Offset(2, 3),
-            blurRadius: 4,
-            color: Colors.black,
-          )
-        ],
       ),
     ),
     centerTitle: true,
-    backgroundColor: const Color.fromARGB(255, 0, 0, 0),
-    elevation: 100,
     actions: [
-      GestureDetector(
-        onTap: () {
+      IconButton(
+        icon: const Icon(Icons.person_outline),
+        onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => UserProfilePage()), // Navigate to user_profile.dart page
+            MaterialPageRoute(builder: (context) => const UserProfilePage()),
           );
         },
-        child: Container(
-          margin: const EdgeInsets.only(right: 10),
-          alignment: Alignment.center,
-          width: 35,
-          height: 40,
-          child: SvgPicture.asset(
-            'assets/icons/profile-icon.svg',
-            height: 20,
-            width: 20,
-            color: Colors.white,
-          ),
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(15),
-          ),
-        ),
       ),
     ],
   );

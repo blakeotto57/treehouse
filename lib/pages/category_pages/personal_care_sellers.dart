@@ -3,19 +3,22 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:treehouse/models/seller_profile.dart';
 
-class VendingCookingSellersPage extends StatelessWidget {
-  const VendingCookingSellersPage({Key? key}) : super(key: key);
+
+
+
+class PersonalCareSellersPage extends StatelessWidget {
+  const PersonalCareSellersPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vending & Cooking Sellers'),
+        title: const Text('Personal Care Sellers'),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('sellers')
-            .where('category', isEqualTo: 'Vending & Cooking')
+            .where('category', isEqualTo: 'Personal Care')
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -61,7 +64,7 @@ class VendingCookingSellersPage extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
                           sellerId: sellerId,
-                          currentUserId: '<CUSTOMER_ID>', // Replace with dynamic customer ID
+                          currentUserId: '<CUSTOMER_ID>', // Pass customer ID dynamically
                         ),
                       ),
                     );
