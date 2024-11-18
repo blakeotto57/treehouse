@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:treehouse/models/seller_setup.dart';
 
 class SellerProfilePage extends StatelessWidget {
   final String sellerId;
 
-  // Ensure sellerId is passed correctly via the constructor
   const SellerProfilePage({super.key, required this.sellerId});
 
   @override
@@ -21,7 +21,29 @@ class SellerProfilePage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(child: Text('Seller profile not found.'));
+            // If seller profile is not found
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text(
+                    'Seller profile not found.',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Navigate to Seller Setup Page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SellerSetupPage()),
+                      );
+                    },
+                    child: const Text('Become a Seller'),
+                  ),
+                ],
+              ),
+            );
           }
 
           final sellerData = snapshot.data!.data() as Map<String, dynamic>;
@@ -54,24 +76,6 @@ class SellerProfilePage extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
-
-                // Email
-                ListTile(
-                  leading: const Icon(Icons.email),
-                  title: Text(
-                    sellerData['email'] ?? 'No Email',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-
-                // Phone
-                ListTile(
-                  leading: const Icon(Icons.phone),
-                  title: Text(
-                    sellerData['phone'] ?? 'No Phone',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
 
                 // Description
                 const Text(

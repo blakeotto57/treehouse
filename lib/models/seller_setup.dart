@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:treehouse/models/seller_profile.dart';
 
 String? globalSellerId;
@@ -20,15 +23,46 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   final TextEditingController _descriptionController = TextEditingController();
   bool _isSubmitting = false;
 
+  final List<String> serviceCategories = [
+    'Personal Care',
+    'Vending & Cooking',
+    'Photography',
+    'Academic Help',
+    'Technical Services',
+    'Errands & Moving',
+    'Pet Care',
+    'Cleaning',
+  ];
+  String? selectedCategory;
+
+  List<File> _images = [];
+  final ImagePicker _picker = ImagePicker();
+
   Future<void> _saveSellerId(String sellerId) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString('sellerId', sellerId);
-    globalSellerId = sellerId; // Update global variable
+    globalSellerId = sellerId;
   }
 
   Future<bool> _isSellerIdUnique(String sellerId) async {
     final doc = await FirebaseFirestore.instance.collection('sellers').doc(sellerId).get();
     return !doc.exists;
+  }
+
+  Future<List<String>> _uploadImages() async {
+    List<String> imageUrls = [];
+    try {
+      for (File image in _images) {
+        String fileName = 'sellers/${DateTime.now().millisecondsSinceEpoch}.jpg';
+        UploadTask uploadTask = FirebaseStorage.instance.ref(fileName).putFile(image);
+        TaskSnapshot snapshot = await uploadTask;
+        String downloadUrl = await snapshot.ref.getDownloadURL();
+        imageUrls.add(downloadUrl);
+      }
+    } catch (e) {
+      print("Error uploading images: $e");
+    }
+    return imageUrls;
   }
 
   Future<void> _submitForm() async {
@@ -39,7 +73,6 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
 
       final sellerId = _nameController.text.trim();
 
-      // Check if sellerId is unique
       final isUnique = await _isSellerIdUnique(sellerId);
       if (!isUnique) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -52,13 +85,15 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
       }
 
       try {
-        // Save data to Firestore
+        List<String> imageUrls = await _uploadImages();
+
         await FirebaseFirestore.instance.collection('sellers').doc(sellerId).set({
           'name': sellerId,
           'email': _emailController.text.trim(),
           'phone': _phoneController.text.trim(),
+          'category': selectedCategory,
           'description': _descriptionController.text.trim(),
-          'profilePicture': null,
+          'workImages': imageUrls, // Save image URLs
           'timestamp': FieldValue.serverTimestamp(),
         });
 
@@ -68,6 +103,7 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
         _emailController.clear();
         _phoneController.clear();
         _descriptionController.clear();
+        _images.clear();
 
         Navigator.pushReplacement(
           context,
@@ -87,6 +123,15 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
     }
   }
 
+  Future<void> _pickImage() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _images.add(File(image.path));
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,9 +146,11 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
             children: [
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Name',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -115,9 +162,11 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _emailController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Email',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
@@ -133,9 +182,11 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: _phoneController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Phone Number',
-                  border: OutlineInputBorder(),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 keyboardType: TextInputType.phone,
                 validator: (value) {
@@ -146,11 +197,41 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
                 },
               ),
               const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedCategory,
+                hint: const Text('Select a Market'),
+                onChanged: (value) {
+                  setState(() {
+                    selectedCategory = value!;
+                  });
+                },
+                items: serviceCategories.map((service) {
+                  return DropdownMenuItem(
+                    value: service,
+                    child: Text(service),
+                  );
+                }).toList(),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+                validator: (value) {
+                  if (value == null) {
+                    return 'Please select a category';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Products/Services Description',
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: 'Market yourself here!',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 maxLines: 3,
                 validator: (value) {
@@ -160,6 +241,51 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
                   return null;
                 },
               ),
+              const SizedBox(height: 16),
+              const Text(
+                'Upload Images of Past Work',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: _pickImage,
+                icon: const Icon(Icons.photo),
+                label: const Text('Add Images'),
+              ),
+              const SizedBox(height: 8),
+              _images.isNotEmpty
+                  ? Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _images
+                          .map((image) => Stack(
+                                children: [
+                                  Image.file(
+                                    image,
+                                    width: 100,
+                                    height: 100,
+                                    fit: BoxFit.cover,
+                                  ),
+                                  Positioned(
+                                    top: 0,
+                                    right: 0,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _images.remove(image);
+                                        });
+                                      },
+                                      child: const Icon(
+                                        Icons.remove_circle,
+                                        color: Colors.red,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ))
+                          .toList(),
+                    )
+                  : const Text('No images added yet.'),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitForm,
