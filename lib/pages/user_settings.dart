@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'login_page.dart'; // Import the login page
 
 class UserProfilePage extends StatelessWidget {
   const UserProfilePage({super.key});
@@ -9,6 +11,15 @@ class UserProfilePage extends StatelessWidget {
       appBar: AppBar(
         title: Text('User Profile'),
         centerTitle: true,
+        actions: [
+          // Log out button in the top right corner
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () {
+              _showLogoutDialog(context);
+            },
+          ),
+        ],
       ),
       body: ListView(
         padding: EdgeInsets.all(16.0),
@@ -111,6 +122,45 @@ class UserProfilePage extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  // This method shows a dialog when the logout button is pressed
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Log Out'),
+          content: Text('Do you want to log out or log in with a different account?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Log Out'),
+              onPressed: () async {
+                // Log out the user
+                await FirebaseAuth.instance.signOut();
+                Navigator.pop(context); // Close the dialog
+                // Navigate to login page after logout
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+            ),
+            TextButton(
+              child: Text('Log In with Different Account'),
+              onPressed: () {
+                Navigator.pop(context); // Close the dialog
+                // Navigate to login page for a different account
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
