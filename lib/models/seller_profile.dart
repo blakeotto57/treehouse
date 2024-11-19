@@ -30,8 +30,9 @@ class SellerProfilePage extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => ChatPage(
-                            currentUserId: currentUserId,
-                            chatRoomId: chatRoomId,
+                            currentUserId: currentUserId, // Your current user ID
+                            chatRoomId: chatRoomId,      // The chat room ID created or retrieved
+                            recipientId: sellerId,       // The seller ID as the recipient ID
                           ),
                         ),
                       );
@@ -42,6 +43,7 @@ class SellerProfilePage extends StatelessWidget {
                     }
                   },
                 ),
+
               ],
       ),
       body: FutureBuilder<DocumentSnapshot>(
@@ -52,7 +54,6 @@ class SellerProfilePage extends StatelessWidget {
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            // Seller not found
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -162,44 +163,45 @@ class SellerProfilePage extends StatelessWidget {
     );
   }
 
-  Future<String> _getOrCreateChatRoom() async {
-    final chatRoomCollection = FirebaseFirestore.instance.collection('chats');
+Future<String> _getOrCreateChatRoom() async {
+  final chatRoomCollection = FirebaseFirestore.instance.collection('chats');
 
-    // Query for an existing chat room
-    final existingChat = await chatRoomCollection
-        .where('participants', arrayContains: currentUserId)
-        .get();
+  // Query for an existing chat room
+  final existingChat = await chatRoomCollection
+      .where('participants', arrayContains: currentUserId)
+      .get();
 
-    for (var doc in existingChat.docs) {
-      final participants = doc.data()['participants'] as List;
-      if (participants.contains(sellerId)) {
-        return doc.id; // Return existing chat room ID
-      }
+  for (var doc in existingChat.docs) {
+    final participants = doc.data()['participants'] as List;
+    if (participants.contains(sellerId)) {
+      return doc.id; // Return existing chat room ID
     }
-
-    // Fetch participant names
-    final sellerSnapshot =
-        await FirebaseFirestore.instance.collection('sellers').doc(sellerId).get();
-    final customerSnapshot =
-        await FirebaseFirestore.instance.collection('users').doc(currentUserId).get();
-
-    final sellerName = sellerSnapshot.exists && sellerSnapshot.data() != null
-        ? sellerSnapshot.data()!['name'] ?? 'Seller'
-        : 'Seller';
-    final customerName = customerSnapshot.exists && customerSnapshot.data() != null
-        ? customerSnapshot.data()!['name'] ?? 'Customer'
-        : 'Customer';
-
-    // Create a new chat room
-    final newChat = await chatRoomCollection.add({
-      'participants': [currentUserId, sellerId],
-      'participantNames': {
-        currentUserId: customerName,
-        sellerId: sellerName,
-      },
-      'timestamp': FieldValue.serverTimestamp(),
-    });
-
-    return newChat.id; // Return the new chat room ID
   }
+
+  // Fetch participant names for metadata
+  final sellerSnapshot =
+      await FirebaseFirestore.instance.collection('sellers').doc(sellerId).get();
+  final customerSnapshot =
+      await FirebaseFirestore.instance.collection('users').doc(currentUserId).get();
+
+  final sellerName = sellerSnapshot.exists && sellerSnapshot.data() != null
+      ? sellerSnapshot.data()!['name'] ?? sellerId
+      : sellerId;
+  final customerName = customerSnapshot.exists && customerSnapshot.data() != null
+      ? customerSnapshot.data()!['name'] ?? currentUserId
+      : currentUserId;
+
+  // Create a new chat room
+  final newChat = await chatRoomCollection.add({
+    'participants': [currentUserId, sellerId],
+    'participantNames': {
+      currentUserId: customerName,
+      sellerId: sellerName,
+    },
+    'lastMessage': '',
+    'lastUpdated': FieldValue.serverTimestamp(),
+  });
+
+  return newChat.id; // Return the new chat room ID
+}
 }

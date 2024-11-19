@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/home.dart'; // Your home page file
-import 'profile_setup.dart'; // Profile setup file
+import 'user_setup.dart'; // Profile setup file
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // Firebase options (you need to configure this from Firebase console)

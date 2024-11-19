@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/models/chat_page.dart';
 import 'package:treehouse/models/seller_setup.dart';
 import 'package:treehouse/models/seller_profile.dart';
 import 'package:treehouse/models/marketplace.dart'; // Correct import for Marketplace
-import 'package:treehouse/pages/user_profile.dart'; // Import the user profile page
+import 'package:treehouse/pages/user_settings.dart'; // Import the user profile page
 import 'package:treehouse/pages/feedback.dart'; // Adjust path if necessary
+import 'package:treehouse/models/messages_page.dart'; // Correct import for Marketplace
+
+
+
 
 String? globalSellerId; // Persistent global variable for Seller ID
 
@@ -50,13 +55,10 @@ class _HomePageState extends State<HomePage> {
             HomeContent(categories: categories), // Home content page
             Marketplace(), // Marketplace page
             globalSellerId != null
-                ? ChatPage(
-                    currentUserId: globalSellerId!,
-                    chatRoomId: 'defaultRoom', // Replace with actual logic for chat room
-                  )
+                ? ConversationsPage(currentUserId: globalSellerId!)
                 : const Center(
                     child: Text('Please set up your seller profile to use chat.'),
-                  ), // Show message if globalSellerId is null
+                  ), // Dynamically show conversations if logged in
             globalSellerId != null
                 ? SellerProfilePage(
                     sellerId: globalSellerId!,
@@ -77,7 +79,6 @@ class _HomePageState extends State<HomePage> {
                   ),
           ],
         ),
-
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex, // Keep track of the selected tab
           onTap: (index) {
@@ -109,6 +110,18 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+}
+
+// Conversations Page for Messages Tab
+class ConversationsPage extends StatelessWidget {
+  final String currentUserId;
+
+  const ConversationsPage({required this.currentUserId, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MessagesList(currentUserId: currentUserId); // Use MessagesList directly
   }
 }
 

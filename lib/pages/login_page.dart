@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
-import 'package:treehouse/pages/user_profile.dart'; // Adjust path if necessary
+import 'package:treehouse/pages/user_settings.dart'; // Adjust path if necessary
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
