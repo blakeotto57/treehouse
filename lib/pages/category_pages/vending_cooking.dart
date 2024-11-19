@@ -3,8 +3,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:treehouse/models/seller_profile.dart';
 
-class VendingCookingSellersPage extends StatelessWidget {
+class VendingCookingSellersPage extends StatefulWidget {
   const VendingCookingSellersPage({Key? key}) : super(key: key);
+
+  @override
+  State<VendingCookingSellersPage> createState() => _VendingCookingSellersPageState();
+}
+
+class _VendingCookingSellersPageState extends State<VendingCookingSellersPage> {
+  late Stream<QuerySnapshot> _sellersStream;
+
+  @override
+  void initState() {
+    super.initState();
+    _sellersStream = FirebaseFirestore.instance
+        .collection('sellers')
+        .where('category', isEqualTo: 'Vending & Cooking')
+        .snapshots();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,10 +29,7 @@ class VendingCookingSellersPage extends StatelessWidget {
         title: const Text('Vending & Cooking Sellers'),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('sellers')
-            .where('category', isEqualTo: 'Vending & Cooking')
-            .snapshots(),
+        stream: _sellersStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -32,6 +45,7 @@ class VendingCookingSellersPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final seller = sellers[index].data() as Map<String, dynamic>;
               final sellerId = sellers[index].id;
+
               return Card(
                 margin: const EdgeInsets.all(10),
                 shape: RoundedRectangleBorder(
