@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:treehouse/pages/category_pages/personal_care_sellers.dart';
+import 'package:treehouse/pages/category_pages/personal_care.dart';
 import 'package:treehouse/pages/category_pages/academic_assistance.dart';
 import 'package:treehouse/pages/category_pages/cleaning.dart';
 import 'package:treehouse/pages/category_pages/errands_moving.dart';
@@ -96,7 +96,7 @@ class CategoryModel {
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AcademicAssistancePage()),
+            MaterialPageRoute(builder: (context) => AcademicAssistanceSellersPage()),
             );
 
           }
@@ -133,7 +133,7 @@ class CategoryModel {
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => ErrandsMovingPage()),
+            MaterialPageRoute(builder: (context) => ErrandsMovingSellersPage()),
             );
           }
         ),
@@ -169,7 +169,7 @@ class CategoryModel {
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => CleaningPage()),
+            MaterialPageRoute(builder: (context) => CleaningSellersPage()),
             );
           }
         ),
