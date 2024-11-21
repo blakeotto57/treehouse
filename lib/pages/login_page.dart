@@ -1,123 +1,96 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import Firestore
-import 'package:treehouse/pages/user_settings.dart'; // Adjust path if necessary
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:treehouse/models/seller_profile.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
-  @override
-  _LoginPageState createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  // Function to handle login logic
-  Future<void> _login() async {
-    try {
-      // Get the username and password entered by the user
-      String username = _usernameController.text;
-      String password = _passwordController.text;
-
-      if (username.isEmpty || password.isEmpty) {
-        _showErrorDialog("Please enter both username and password.");
-        return;
-      }
-
-      // Retrieve the user's document from Firestore using the username
-      QuerySnapshot userQuery = await _firestore
-          .collection('users')
-          .where('username', isEqualTo: username)
-          .get();
-
-      if (userQuery.docs.isEmpty) {
-        _showErrorDialog("User not found.");
-        return;
-      }
-
-      // Assuming usernames are unique and there's only one result
-      DocumentSnapshot userDoc = userQuery.docs.first;
-
-      // Check if the password matches the one stored in Firestore
-      String storedPassword = userDoc['password'];
-
-      if (storedPassword != password) {
-        _showErrorDialog("Incorrect password.");
-        return;
-      }
-
-      // Navigate to the UserProfilePage after successful login
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const UserProfilePage()),
-      );
-    } catch (e) {
-      _showErrorDialog("Login failed: ${e.toString()}");
-    }
-  }
-
-  // Function to show an error dialog
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Error"),
-          content: Text(message),
-          actions: [
-            TextButton(
-              child: Text("OK"),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+class LoginPage extends StatelessWidget {
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Login'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text('Login')),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(16.0),
         child: Column(
           children: [
-            // Username input field
             TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                labelText: 'Username',
-                border: OutlineInputBorder(),
-              ),
+              controller: usernameController,
+              decoration: InputDecoration(labelText: 'Username'),
             ),
-            SizedBox(height: 16),
-            // Password input field
             TextField(
-              controller: _passwordController,
+              controller: passwordController,
+              decoration: InputDecoration(labelText: 'Password'),
               obscureText: true,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
             ),
-            SizedBox(height: 32),
-            // Login button
             ElevatedButton(
-              onPressed: _login,
-              child: Text('Log In'),
+              onPressed: () async {
+                String username = usernameController.text.trim();
+                String password = passwordController.text.trim();
+
+                // Validate login credentials
+                bool isValidUser = await _checkUsernameAndPassword(username, password);
+
+                if (isValidUser) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Login successful!')),
+                  );
+                  // Navigate to the user's profile page after successful login
+                  String userId = await _getUserIdByUsername(username); // Get the user ID from Firestore
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => SellerProfilePage(userId: userId),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Invalid username or password.')),
+                  );
+                }
+              },
+              child: Text('Login'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  // Check if the username and password match in Firestore
+  Future<bool> _checkUsernameAndPassword(String username, String password) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('users') // Assuming 'users' is your Firestore collection
+          .where('username', isEqualTo: username)
+          .where('password', isEqualTo: password)
+          .get();
+
+      return querySnapshot.docs.isNotEmpty; // Return true if user exists
+    } catch (e) {
+      print("Error checking username and password: $e");
+      return false;
+    }
+  }
+
+  // Fetch the userId based on the username
+  Future<String> _getUserIdByUsername(String username) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('users') // Assuming 'users' is your Firestore collection
+          .where('username', isEqualTo: username)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        return querySnapshot.docs.first.id; // Return the userId (document ID)
+      } else {
+        throw Exception("User not found");
+      }
+    } catch (e) {
+      print("Error fetching userId: $e");
+      throw e;
+    }
   }
 }

@@ -34,6 +34,8 @@ class _ProfileSetupPageState extends State<ProfileSetupPage> {
       _isLoading = true;
     });
 
+    String username = _nameController.text.trim(); //trims leading spaces at end
+
     try {
       // Save the user data to Firestore
       FirebaseFirestore firestore = FirebaseFirestore.instance;

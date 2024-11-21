@@ -34,7 +34,7 @@ class PersonalCareSellersPage extends StatelessWidget {
             itemCount: sellers.length,
             itemBuilder: (context, index) {
               final seller = sellers[index].data() as Map<String, dynamic>;
-              final sellerId = sellers[index].id;
+              final userId = sellers[index].id;
               return Card(
                 margin: const EdgeInsets.all(10),
                 shape: RoundedRectangleBorder(
@@ -63,8 +63,7 @@ class PersonalCareSellersPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          sellerId: sellerId,
-                          currentUserId: '<CUSTOMER_ID>', // Pass customer ID dynamically
+                          userId: userId,
                         ),
                       ),
                     );

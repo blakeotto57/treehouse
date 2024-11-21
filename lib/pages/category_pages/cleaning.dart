@@ -43,7 +43,7 @@ class _CleaningSellersPageState extends State<CleaningSellersPage> {
             itemCount: sellers.length,
             itemBuilder: (context, index) {
               final seller = sellers[index].data() as Map<String, dynamic>;
-              final sellerId = sellers[index].id;
+              final userId = sellers[index].id;
 
               return Card(
                 margin: const EdgeInsets.all(10),
@@ -73,8 +73,7 @@ class _CleaningSellersPageState extends State<CleaningSellersPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          sellerId: sellerId,
-                          currentUserId: '<CUSTOMER_ID>', // Replace with dynamic customer ID
+                          userId: userId,
                         ),
                       ),
                     );

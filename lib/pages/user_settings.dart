@@ -143,18 +143,7 @@ class UserProfilePage extends StatelessWidget {
                 // Navigate to login page after logout
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-              },
-            ),
-            TextButton(
-              child: Text('Log In with Different Account'),
-              onPressed: () {
-                Navigator.pop(context); // Close the dialog
-                // Navigate to login page for a different account
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
+                  MaterialPageRoute(builder: (context) => LoginPage()),
                 );
               },
             ),

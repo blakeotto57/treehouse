@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:treehouse/models/seller_profile.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:treehouse/models/seller_profile.dart'; // Import the Seller Profile Page
 
-String? globalSellerId;
+String? globaluserid;
 
 class SellerSetupPage extends StatefulWidget {
   const SellerSetupPage({super.key});
@@ -17,133 +14,60 @@ class SellerSetupPage extends StatefulWidget {
 
 class _SellerSetupPageState extends State<SellerSetupPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isSubmitting = false;
 
-  final List<String> serviceCategories = [
-    'Personal Care',
-    'Vending & Cooking',
-    'Photography',
-    'Academic Help',
-    'Technical Services',
-    'Errands & Moving',
-    'Pet Care',
-    'Cleaning',
-  ];
-  String? selectedCategory;
-
-  List<File> _images = [];
-  final ImagePicker _picker = ImagePicker();
-
-  Future<void> _saveSellerId(String sellerId) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('sellerId', sellerId);
-    globalSellerId = sellerId;
-  }
-
-  Future<bool> _isSellerIdUnique(String sellerId) async {
+  // Verify if the username and password match a seller in Firestore
+  Future<bool> _checkUsernameAndPassword(String username, String password) async {
     try {
-      final doc = await FirebaseFirestore.instance.collection('sellers').doc(sellerId).get();
-      return !doc.exists;
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('sellers')  // Querying the 'sellers' collection
+          .where('username', isEqualTo: username)
+          .where('password', isEqualTo: password)
+          .get();
+      return querySnapshot.docs.isNotEmpty;  // Return true if matching seller found
     } catch (e) {
-      print("Error checking Seller ID uniqueness: $e");
-      return false;
+      print("Error checking username and password: $e");
+      return false;  // Return false in case of error or no match
     }
   }
 
-  Future<List<String>> _uploadImages() async {
-    List<String> imageUrls = [];
-    try {
-      for (File image in _images) {
-        String fileName = 'sellers/${DateTime.now().millisecondsSinceEpoch}.jpg';
-        UploadTask uploadTask = FirebaseStorage.instance.ref(fileName).putFile(image);
-        TaskSnapshot snapshot = await uploadTask;
-        String downloadUrl = await snapshot.ref.getDownloadURL();
-        imageUrls.add(downloadUrl);
-      }
-    } catch (e) {
-      print("Error uploading images: $e");
-    }
-    return imageUrls;
-  }
-
+  // Submit the form and check login credentials
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isSubmitting = true;
       });
 
-      final sellerId = _nameController.text.trim();
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text.trim();
 
-      final isUnique = await _isSellerIdUnique(sellerId);
-      if (!isUnique) {
+      // Check if the username and password match a seller's profile in Firestore
+      bool isValidUser = await _checkUsernameAndPassword(username, password);
+
+      if (isValidUser) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Seller ID already exists. Please choose a different name.')),
+          const SnackBar(content: Text('Login successful!')),
         );
-        setState(() {
-          _isSubmitting = false;
-        });
-        return;
-      }
 
-      try {
-        List<String> imageUrls = [];
-        if (_images.isNotEmpty) {
-          imageUrls = await _uploadImages(); // Upload images only if present
-        }
-
-        await FirebaseFirestore.instance.collection('sellers').doc(sellerId).set({
-          'name': sellerId,
-          'email': _emailController.text.trim(),
-          'phone': _phoneController.text.trim(),
-          'category': selectedCategory,
-          'description': _descriptionController.text.trim(),
-          'workImages': imageUrls, // Save image URLs (empty if no images uploaded)
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-
-        await _saveSellerId(sellerId);
-
-        _formKey.currentState?.reset();
-        _images.clear();
-        setState(() {
-          selectedCategory = null;
-        });
-
+        // After login, navigate to the Seller Profile Page
+        globaluserid = username;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => SellerProfilePage(
-              sellerId: sellerId,
-              currentUserId: globalSellerId ?? 'guest', // Use globalSellerId or a default value
-            ),
+            builder: (context) => SellerProfilePage(userId: username),  // Pass userId as the document ID in Firestore
           ),
         );
-      } catch (e) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error submitting data: $e')),
+          const SnackBar(content: Text('Invalid username or password.')),
         );
-      } finally {
-        setState(() {
-          _isSubmitting = false;
-        });
       }
-    }
-  }
 
-  Future<void> _pickImage() async {
-    try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      if (image != null) {
-        setState(() {
-          _images.add(File(image.path));
-        });
-      }
-    } catch (e) {
-      print("Error picking image: $e");
+      setState(() {
+        _isSubmitting = false;
+      });
     }
   }
 
@@ -151,7 +75,7 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Become a Seller'),
+        title: const Text('Seller Login'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -160,155 +84,45 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
           child: ListView(
             children: [
               TextFormField(
-                controller: _nameController,
+                controller: _usernameController,
                 decoration: InputDecoration(
-                  labelText: 'Name',
+                  labelText: 'Username',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
+                    return 'Please enter your username';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: _emailController,
+                controller: _passwordController,
                 decoration: InputDecoration(
-                  labelText: 'Email',
+                  labelText: 'Password',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                keyboardType: TextInputType.emailAddress,
+                obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Please enter a valid email';
+                    return 'Please enter your password';
                   }
                   return null;
                 },
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _phoneController,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: selectedCategory,
-                hint: const Text('Select a Market'),
-                onChanged: (value) {
-                  setState(() {
-                    selectedCategory = value;
-                  });
-                },
-                items: serviceCategories.map((service) {
-                  return DropdownMenuItem(
-                    value: service,
-                    child: Text(service),
-                  );
-                }).toList(),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                ),
-                validator: (value) {
-                  if (value == null) {
-                    return 'Please select a category';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Market yourself here!',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                maxLines: 3,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please describe your products or services';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Upload Images of Past Work (Optional)',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              ElevatedButton.icon(
-                onPressed: _pickImage,
-                icon: const Icon(Icons.photo),
-                label: const Text('Add Images'),
-              ),
-              const SizedBox(height: 8),
-              _images.isNotEmpty
-                  ? Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _images
-                          .map((image) => Stack(
-                                children: [
-                                  Image.file(
-                                    image,
-                                    width: 100,
-                                    height: 100,
-                                    fit: BoxFit.cover,
-                                  ),
-                                  Positioned(
-                                    top: 0,
-                                    right: 0,
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _images.remove(image);
-                                        });
-                                      },
-                                      child: const Icon(
-                                        Icons.remove_circle,
-                                        color: Colors.red,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ))
-                          .toList(),
-                    )
-                  : const Text('No images added yet.'),
-              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isSubmitting ? null : _submitForm,
                 child: _isSubmitting
                     ? const CircularProgressIndicator(
                         valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                       )
-                    : const Text('Submit'),
+                    : const Text('Log In'),
               ),
             ],
           ),

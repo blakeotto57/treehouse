@@ -1,16 +1,75 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PhotopgraphyPage extends StatelessWidget {
-  const PhotopgraphyPage({super.key});
+import 'package:treehouse/models/seller_profile.dart';
+
+class PhotographySellersPage extends StatelessWidget {
+  const PhotographySellersPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Photography Page'),
+        title: const Text('Photography Sellers'),
       ),
-      body: Center(
-        child: Text('Welcome to My New Page!'),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('sellers')
+            .where('category', isEqualTo: 'Photography') // Adjust category to 'Photography'
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return const Center(child: Text('No sellers found in this category.'));
+          }
+
+          final sellers = snapshot.data!.docs;
+
+          return ListView.builder(
+            itemCount: sellers.length,
+            itemBuilder: (context, index) {
+              final seller = sellers[index].data() as Map<String, dynamic>;
+              final userId = sellers[index].id;
+              return Card(
+                margin: const EdgeInsets.all(10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundImage: seller['profilePicture'] != null
+                        ? NetworkImage(seller['profilePicture'])
+                        : null,
+                    child: seller['profilePicture'] == null
+                        ? const Icon(Icons.person)
+                        : null,
+                  ),
+                  title: Text(
+                    seller['name'] ?? 'Unknown',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(seller['description'] ?? 'No description provided.'),
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () {
+                    // Navigate to seller profile page
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => SellerProfilePage(
+                          userId: userId,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

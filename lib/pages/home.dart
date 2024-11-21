@@ -15,7 +15,7 @@ import 'package:treehouse/models/messages_page.dart'; // Correct import for Mark
 
 
 
-String? globalSellerId; // Persistent global variable for Seller ID
+String? globaluserid; // Persistent global variable for Seller ID
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -31,14 +31,14 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadSellerId();
+    _loaduserid();
     categories = CategoryModel.getCategories(); // Load categories only once
   }
 
-  Future<void> _loadSellerId() async {
+  Future<void> _loaduserid() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      globalSellerId = prefs.getString('sellerId');
+      globaluserid = prefs.getString('userId');
     });
   }
 
@@ -54,15 +54,14 @@ class _HomePageState extends State<HomePage> {
           children: [
             HomeContent(categories: categories), // Home content page
             Marketplace(), // Marketplace page
-            globalSellerId != null
-                ? ConversationsPage(currentUserId: globalSellerId!)
+            globaluserid != null
+                ? ConversationsPage(currentUserId: globaluserid!)
                 : const Center(
                     child: Text('Please set up your seller profile to use chat.'),
                   ), // Dynamically show conversations if logged in
-            globalSellerId != null
+            globaluserid != null
                 ? SellerProfilePage(
-                    sellerId: globalSellerId!,
-                    currentUserId: globalSellerId!,
+                    userId: globaluserid!,
                   )
                 : Center(
                     child: ElevatedButton(
@@ -72,7 +71,7 @@ class _HomePageState extends State<HomePage> {
                           MaterialPageRoute(
                             builder: (context) => const SellerSetupPage(),
                           ),
-                        ).then((_) => _loadSellerId()); // Reload sellerId after setup
+                        ).then((_) => _loaduserid()); // Reload userId after setup
                       },
                       child: const Text('Set Up Seller Profile'),
                     ),

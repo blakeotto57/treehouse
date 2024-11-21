@@ -78,7 +78,7 @@ class CategoryModel {
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => PhotopgraphyPage()),
+            MaterialPageRoute(builder: (context) => PhotographySellersPage()),
             );
           }
         ),
@@ -115,7 +115,7 @@ class CategoryModel {
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => TechnicalServicesPage()),
+            MaterialPageRoute(builder: (context) => TechnicalServicesSellersPage()),
             );
           }
         ),
@@ -151,7 +151,7 @@ class CategoryModel {
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => PetCarePage()),
+            MaterialPageRoute(builder: (context) => PetCareSellersPage()),
             );
           }
         ),
