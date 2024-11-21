@@ -42,7 +42,7 @@ class LoginPage extends StatelessWidget {
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SellerProfilePage(userId: userId),
+                      builder: (context) => SellerProfilePage(userId: username),
                     ),
                   );
                 } else {
