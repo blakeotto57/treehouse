@@ -60,7 +60,6 @@ class PhotographySellersPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          userId: userId,
                         ),
                       ),
                     );

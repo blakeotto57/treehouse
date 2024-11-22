@@ -74,7 +74,6 @@ class _VendingCookingSellersPageState extends State<VendingCookingSellersPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          userId: userId,
                         ),
                       ),
                     );

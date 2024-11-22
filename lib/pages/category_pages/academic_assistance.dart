@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/models/seller_profile.dart';
 
+String? globaluserid;
+
+
 class AcademicAssistanceSellersPage extends StatefulWidget {
   const AcademicAssistanceSellersPage({Key? key}) : super(key: key);
 
@@ -73,7 +76,6 @@ class _AcademicAssistanceSellersPageState extends State<AcademicAssistanceSeller
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          userId: userId,
                         ),
                       ),
                     );

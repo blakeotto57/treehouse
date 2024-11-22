@@ -60,7 +60,6 @@ class TechnicalServicesSellersPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          userId: userId,
                         ),
                       ),
                     );

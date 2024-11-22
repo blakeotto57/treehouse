@@ -60,7 +60,6 @@ class PetCareSellersPage extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          userId: userId,
                         ),
                       ),
                     );

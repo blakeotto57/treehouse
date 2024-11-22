@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loaduserid() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      globaluserid = prefs.getString('userId');
+      globaluserid = globaluserid;
     });
   }
 
@@ -54,37 +54,17 @@ class _HomePageState extends State<HomePage> {
           children: [
             HomeContent(categories: categories), // Home content page
             Marketplace(), // Marketplace page
-            globaluserid != null
-                ? ConversationsPage(currentUserId: globaluserid!)
-                : const Center(
-                    child: Text('Please set up your seller profile to use chat.'),
-                  ), // Dynamically show conversations if logged in
-            globaluserid != null
-                ? SellerProfilePage(
-                    userId: globaluserid!,
-                  )
-                : Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SellerSetupPage(),
-                          ),
-                        ).then((_) => _loaduserid()); // Reload userId after setup
-                      },
-                      child: const Text('Set Up Seller Profile'),
-                    ),
-                  ),
+            ChatPage(currentUserId: "hi", chatRoomId: '1', recipientId: '1',), ///fix later
+            SellerProfilePage(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex, // Keep track of the selected tab
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
+        currentIndex: _currentIndex, // Keep track of the selected tab
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -120,7 +100,7 @@ class ConversationsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MessagesList(currentUserId: currentUserId); // Use MessagesList directly
+    return MessagesPage(userId: currentUserId); // Use MessagesList directly
   }
 }
 

@@ -1,43 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class SellerProfilePage extends StatelessWidget {
-  final String userId;  // Passed as an argument to the page
+// Global user ID
+String? globaluserid;
 
-  const SellerProfilePage({Key? key, required this.userId}) : super(key: key);
+class SellerProfilePage extends StatelessWidget {
+  const SellerProfilePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    if (globaluserid == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Seller Profile')),
+        body: const Center(
+          child: Text('No user logged in. Please log in to view the profile.'),
+          
+        ),
+      );
+    }
+
+
     return Scaffold(
-      appBar: AppBar(title: Text('Seller Profile')),
+      appBar: AppBar(title: const Text('Seller Profile')),
       body: FutureBuilder<DocumentSnapshot>(
-        future: loadSellerProfile(userId),  // Fetch the profile data
+        future: loadSellerProfile(globaluserid!), // Fetch the profile data
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator()); // Loading indicator
+            return const Center(child: CircularProgressIndicator()); // Loading indicator
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Text('Error loading profile: ${snapshot.error}'),
+            ); // Display error message
           }
 
           if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text("Seller profile not found."));  // No data found
+            return const Center(
+              child: Text('Seller profile not found.'),
+            ); // No data found
           }
 
           // Extracting data from the seller profile document
-          var sellerData = snapshot.data!.data() as Map<String, dynamic>?;
+          final sellerData = snapshot.data!.data() as Map<String, dynamic>?;
 
           if (sellerData == null) {
-            return Center(child: Text('No profile data available.'));
+            return const Center(
+              child: Text('No profile data available.'),
+            );
           }
 
-          // Print the seller data to debug and ensure it's correctly loaded
-          print("Seller data: $sellerData");
-
           // Extract individual fields with null checks
-          String name = sellerData['name'] ?? 'No Name Provided';
-          String email = sellerData['email'] ?? 'No Email Provided';
-          String bio = sellerData['bio'] ?? 'No Bio Provided';
-          String profilePicture = sellerData['profilePicture'] ?? ''; // Empty string if not available
+          final String name = sellerData['name'] ?? 'No Name Provided';
+          final String email = sellerData['email'] ?? 'No Email Provided';
+          final String bio = sellerData['bio'] ?? 'No Bio Provided';
+          final String profilePicture = sellerData['profilePicture'] ?? ''; // Empty if not available
 
-          // Displaying seller profile information
+          // Display seller profile information
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: ListView(
@@ -49,22 +68,22 @@ class SellerProfilePage extends StatelessWidget {
                         ? NetworkImage(profilePicture)
                         : null,
                     child: profilePicture.isEmpty
-                        ? Icon(Icons.person, size: 50)
+                        ? const Icon(Icons.person, size: 50)
                         : null,
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   name,
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text('Email: $email'),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text('Bio: $bio'),
-                SizedBox(height: 16),
-                // Add other profile fields as needed
+                const SizedBox(height: 16),
+                // Add additional profile fields or features as needed
               ],
             ),
           );
@@ -76,14 +95,14 @@ class SellerProfilePage extends StatelessWidget {
   // Fetch the seller profile based on the userId
   Future<DocumentSnapshot> loadSellerProfile(String userId) async {
     try {
-      DocumentSnapshot sellerProfile = await FirebaseFirestore.instance
-          .collection('sellers') // Make sure the collection name is correct
-          .doc(userId)  // Use the username or userId to fetch the document
+      final DocumentSnapshot sellerProfile = await FirebaseFirestore.instance
+          .collection('sellers') // Ensure the collection name matches your database
+          .doc(userId) // Fetch the document using the userId
           .get();
       return sellerProfile;
     } catch (e) {
-      print("Error loading seller profile: $e");
-      throw e;
+      print('Error loading seller profile: $e');
+      rethrow; // Propagate the error to FutureBuilder for display
     }
   }
 }

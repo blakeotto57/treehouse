@@ -73,7 +73,6 @@ class _CleaningSellersPageState extends State<CleaningSellersPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          userId: userId,
                         ),
                       ),
                     );

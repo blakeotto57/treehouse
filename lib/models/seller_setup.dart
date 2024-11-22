@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/models/seller_profile.dart'; // Import the Seller Profile Page
 
+// Global variable for storing the logged-in user ID
 String? globaluserid;
 
 class SellerSetupPage extends StatefulWidget {
-  const SellerSetupPage({super.key});
+  const SellerSetupPage({Key? key}) : super(key: key);
 
   @override
   _SellerSetupPageState createState() => _SellerSetupPageState();
@@ -22,14 +22,15 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   Future<bool> _checkUsernameAndPassword(String username, String password) async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
-          .collection('sellers')  // Querying the 'sellers' collection
+          .collection('sellers') // Querying the 'sellers' collection
           .where('username', isEqualTo: username)
           .where('password', isEqualTo: password)
           .get();
-      return querySnapshot.docs.isNotEmpty;  // Return true if matching seller found
+
+      return querySnapshot.docs.isNotEmpty; // Return true if a matching seller is found
     } catch (e) {
       print("Error checking username and password: $e");
-      return false;  // Return false in case of error or no match
+      return false; // Return false in case of an error or no match
     }
   }
 
@@ -51,12 +52,15 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
           const SnackBar(content: Text('Login successful!')),
         );
 
-        // After login, navigate to the Seller Profile Page
-        globaluserid = username;
+        // Update the global user ID and navigate to the Seller Profile Page
+        setState(() {
+          globaluserid = username;
+        });
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => SellerProfilePage(userId: username),  // Pass userId as the document ID in Firestore
+            builder: (context) => const SellerProfilePage(), // No need to pass userId; uses globaluserid
           ),
         );
       } else {

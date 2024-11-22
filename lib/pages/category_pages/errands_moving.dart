@@ -73,7 +73,6 @@ class _ErrandsMovingSellersPageState extends State<ErrandsMovingSellersPage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => SellerProfilePage(
-                          userId: userId,
                         ),
                       ),
                     );
