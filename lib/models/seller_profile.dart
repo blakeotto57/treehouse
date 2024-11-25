@@ -16,6 +16,11 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
   final currentUser = FirebaseAuth.instance.currentUser!;
 
 
+  //edit field for username
+  Future<void> editField(String field) async {
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +78,37 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
           MyTextBox(
             text: "User Bio",
             sectionName: "username",
-          )
+            onPressed: () => editField("username"),
+          ),
+
+
+          // Bio section
+          MyTextBox(
+            text: "User Bio",
+            sectionName: "bio",
+            onPressed: () => editField("bio"),
+          ),
+
+
+
+           // User details
+          Padding(
+            padding: const EdgeInsets.only(left: 25.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: 
+                Text(
+                  "My Details",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+
+
+
+
+
         ],
       ),
     );
