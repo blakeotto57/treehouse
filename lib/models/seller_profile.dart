@@ -1,108 +1,81 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:treehouse/components.dart/text_box.dart';
 
-// Global user ID
-String? globaluserid;
+class SellerProfilePage extends StatefulWidget {
+  const SellerProfilePage({super.key});
 
-class SellerProfilePage extends StatelessWidget {
-  const SellerProfilePage({Key? key}) : super(key: key);
+  @override
+  State<SellerProfilePage> createState() => _SellerProfilePageState();
+}
+
+class _SellerProfilePageState extends State<SellerProfilePage> {
+  
+  //user
+  final currentUser = FirebaseAuth.instance.currentUser!;
+
 
   @override
   Widget build(BuildContext context) {
-    if (globaluserid == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Seller Profile')),
-        body: const Center(
-          child: Text('No user logged in. Please log in to view the profile.'),
-          
-        ),
-      );
-    }
-
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Seller Profile')),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: loadSellerProfile(globaluserid!), // Fetch the profile data
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator()); // Loading indicator
-          }
+      backgroundColor: Colors.green[200],
+      appBar: AppBar(
+        title: Text("Seller Profile"),
+        backgroundColor: Colors.green[200],
+      ),
+      body: ListView(
+        children: [
+          const SizedBox(height: 25),
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error loading profile: ${snapshot.error}'),
-            ); // Display error message
-          }
-
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return const Center(
-              child: Text('Seller profile not found.'),
-            ); // No data found
-          }
-
-          // Extracting data from the seller profile document
-          final sellerData = snapshot.data!.data() as Map<String, dynamic>?;
-
-          if (sellerData == null) {
-            return const Center(
-              child: Text('No profile data available.'),
-            );
-          }
-
-          // Extract individual fields with null checks
-          final String name = sellerData['name'] ?? 'No Name Provided';
-          final String email = sellerData['email'] ?? 'No Email Provided';
-          final String bio = sellerData['bio'] ?? 'No Bio Provided';
-          final String profilePicture = sellerData['profilePicture'] ?? ''; // Empty if not available
-
-          // Display seller profile information
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ListView(
-              children: [
-                Center(
-                  child: CircleAvatar(
-                    radius: 50,
-                    backgroundImage: profilePicture.isNotEmpty
-                        ? NetworkImage(profilePicture)
-                        : null,
-                    child: profilePicture.isEmpty
-                        ? const Icon(Icons.person, size: 50)
-                        : null,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  name,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Text('Email: $email'),
-                const SizedBox(height: 16),
-                Text('Bio: $bio'),
-                const SizedBox(height: 16),
-                // Add additional profile fields or features as needed
-              ],
+          // Profile picture
+          Padding(
+            padding: const EdgeInsets.only(left: 20.0),
+            child: Align(
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.person,
+                size: 72,
+              ),
             ),
-          );
-        },
+          ),
+
+          // Space between
+          const SizedBox(height: 50),
+
+          // User email
+          Align(
+            alignment: Alignment.center,
+            child: 
+              Text(
+                currentUser.email!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+            
+
+          // User details
+          Padding(
+            padding: const EdgeInsets.only(left: 25.0),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: 
+                Text(
+                  "My Details",
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+
+          // Username section
+          MyTextBox(
+            text: "User Bio",
+            sectionName: "username",
+          )
+        ],
       ),
     );
-  }
-
-  // Fetch the seller profile based on the userId
-  Future<DocumentSnapshot> loadSellerProfile(String userId) async {
-    try {
-      final DocumentSnapshot sellerProfile = await FirebaseFirestore.instance
-          .collection('sellers') // Ensure the collection name matches your database
-          .doc(userId) // Fetch the document using the userId
-          .get();
-      return sellerProfile;
-    } catch (e) {
-      print('Error loading seller profile: $e');
-      rethrow; // Propagate the error to FutureBuilder for display
-    }
   }
 }

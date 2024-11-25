@@ -5,17 +5,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/models/chat_page.dart';
-import 'package:treehouse/models/seller_setup.dart';
 import 'package:treehouse/models/seller_profile.dart';
 import 'package:treehouse/models/marketplace.dart'; // Correct import for Marketplace
 import 'package:treehouse/pages/user_settings.dart'; // Import the user profile page
 import 'package:treehouse/pages/feedback.dart'; // Adjust path if necessary
-import 'package:treehouse/models/messages_page.dart'; // Correct import for Marketplace
-
-
-
-
-String? globaluserid; // Persistent global variable for Seller ID
+import 'package:treehouse/models/messages_page.dart'; // Correct import for MessagesPage
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -28,19 +22,14 @@ class _HomePageState extends State<HomePage> {
   List<CategoryModel> categories = [];
   int _currentIndex = 0; // Keeps track of the current page index
 
-  @override
+
+@override
   void initState() {
     super.initState();
-    _loaduserid();
     categories = CategoryModel.getCategories(); // Load categories only once
   }
 
-  Future<void> _loaduserid() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      globaluserid = globaluserid;
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -54,17 +43,21 @@ class _HomePageState extends State<HomePage> {
           children: [
             HomeContent(categories: categories), // Home content page
             Marketplace(), // Marketplace page
-            ChatPage(currentUserId: "hi", chatRoomId: '1', recipientId: '1',), ///fix later
-            SellerProfilePage(),
+            const ChatPage(
+              currentUserId: "replace_with_actual_id", // Fix this later
+              chatRoomId: 'replace_with_room_id', // Fix this later
+              recipientId: 'replace_with_recipient_id',
+            ),
+            const SellerProfilePage(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex, // Keep track of the selected tab
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+          currentIndex: _currentIndex, // Keep track of the selected tab
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -108,7 +101,7 @@ class ConversationsPage extends StatelessWidget {
 class HomeContent extends StatelessWidget {
   final List<CategoryModel> categories;
 
-  const HomeContent({required this.categories});
+  const HomeContent({required this.categories, Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +109,7 @@ class HomeContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          searchbar(),
+          searchBar(),
           const SizedBox(height: 10),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20.0),
@@ -143,7 +136,7 @@ class HomeContent extends StatelessWidget {
             itemCount: categories.length,
             padding: const EdgeInsets.all(10),
             shrinkWrap: true,
-            physics: const ClampingScrollPhysics(), // Allow scrolling
+            physics: const NeverScrollableScrollPhysics(), // Avoid nested scroll issues
             itemBuilder: (context, index) {
               return InkWell(
                 onTap: () => categories[index].onTap(context),
@@ -185,7 +178,7 @@ class HomeContent extends StatelessWidget {
 }
 
 // Search Bar
-Widget searchbar() {
+Widget searchBar() {
   return Padding(
     padding: const EdgeInsets.all(12.0),
     child: TextField(
@@ -210,7 +203,7 @@ AppBar appBar(BuildContext context) {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => FeedbackPage()), // Navigate to FeedbackPage
+          MaterialPageRoute(builder: (context) =>  FeedbackPage()), // Navigate to FeedbackPage
         );
       },
     ),
@@ -228,7 +221,7 @@ AppBar appBar(BuildContext context) {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const UserProfilePage()),
+            MaterialPageRoute(builder: (context) => const UserSettingsPage()),
           );
         },
       ),

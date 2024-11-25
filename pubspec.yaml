@@ -13,11 +13,11 @@ dependencies:
     sdk: flutter
   shared_preferences: ^2.3.3
   image_picker: ^0.8.7+3
-  firebase_storage: ^11.0.0  # Updated to a version that supports firebase_core ^2.0.0
+  firebase_storage: ^11.0.0  
   cloud_firestore: ^4.0.0
   firebase_core: ^2.32.0
   firebase_database: ^10.5.7
-  firebase_auth: ^4.0.0
+  firebase_auth: ^4.16.0
   intl: ^0.18.0 # Add the latest version here
 
 

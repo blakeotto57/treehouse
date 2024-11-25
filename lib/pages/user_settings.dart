@@ -1,30 +1,42 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_page.dart'; // Import the login page
+import 'package:flutter/material.dart';
+import 'package:treehouse/auth/auth.dart';
 
-class UserProfilePage extends StatelessWidget {
-  const UserProfilePage({super.key});
+class UserSettingsPage extends StatefulWidget {
+  const UserSettingsPage({super.key});
+
+  @override
+  State<UserSettingsPage> createState() => _UserSettingsPageState();
+}
+
+class _UserSettingsPageState extends State<UserSettingsPage> {
+  //sign user out
+  void signOut() {
+    FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(builder: (context) => const AuthPage()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Profile'),
+        title: Text('User Settings'),
         centerTitle: true,
         actions: [
           // Log out button in the top right corner
           IconButton(
+            onPressed: signOut,
             icon: Icon(Icons.logout),
-            onPressed: () {
-              _showLogoutDialog(context);
-            },
           ),
         ],
       ),
       body: ListView(
         padding: EdgeInsets.all(16.0),
         children: [
-          // Profile Picture at the Top
+          // Settings Picture at the Top
           Center(
             child: CircleAvatar(
               radius: 50,
@@ -122,34 +134,6 @@ class UserProfilePage extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  // This method shows a dialog when the logout button is pressed
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Log Out'),
-          content: Text('Do you want to log out or log in with a different account?'),
-          actions: <Widget>[
-            TextButton(
-              child: Text('Log Out'),
-              onPressed: () async {
-                // Log out the user
-                await FirebaseAuth.instance.signOut();
-                Navigator.pop(context); // Close the dialog
-                // Navigate to login page after logout
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginPage()),
-                );
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 
