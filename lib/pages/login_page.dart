@@ -34,7 +34,7 @@ class _LoginPageState extends State<LoginPage> {
 
       //try sign in
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: emailTextController.text, 
         password: passwordTextController.text,
         );
@@ -101,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                  MyTextField(
                     controller: passwordTextController,
                     hintText: "Password",
-                    obscureText: false,
+                    obscureText: true,
                   ),
             
             
