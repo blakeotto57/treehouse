@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import 'package:treehouse/pages/category_pages/personal_care.dart';
-import 'package:treehouse/pages/category_pages/academic_assistance.dart';
-import 'package:treehouse/pages/category_pages/cleaning.dart';
-import 'package:treehouse/pages/category_pages/errands_moving.dart';
-import 'package:treehouse/pages/category_pages/pet_care.dart';
-import 'package:treehouse/pages/category_pages/photography.dart';
-import 'package:treehouse/pages/category_pages/technical_services.dart';
-import 'package:treehouse/pages/category_pages/vending_cooking.dart';
+import 'package:treehouse/category_pages/personal_care.dart';
+import 'package:treehouse/category_pages/academic_assistance.dart';
+import 'package:treehouse/category_pages/cleaning.dart';
+import 'package:treehouse/category_pages/errands_moving.dart';
+import 'package:treehouse/category_pages/pet_care.dart';
+import 'package:treehouse/category_pages/photography.dart';
+import 'package:treehouse/category_pages/technical_services.dart';
+import 'package:treehouse/category_pages/vending_cooking.dart';
 
 
 

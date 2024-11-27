@@ -30,11 +30,6 @@ class _RegisterPageState extends State<RegisterPage> {
         child: CircularProgressIndicator(),
       ),
     );
-  Future.delayed(const Duration(seconds: 1), () {
-    if (mounted) {
-      Navigator.pop(context);
-    }
-  });
 
     // Check if passwords match
     if (passwordTextController.text != confirmPasswordTextController.text) {
@@ -56,8 +51,10 @@ class _RegisterPageState extends State<RegisterPage> {
           .collection("users")
           .doc(userCredential.user!.uid)
           .set({
+        "username": emailTextController.text.split("@")[0],
         "email": emailTextController.text.trim(),
-        "createdAt": DateTime.now(),
+        "bio": "Empty bio",
+        //add more if needed
       });
 
 

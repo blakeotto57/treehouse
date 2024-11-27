@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/models/chat_page.dart';
@@ -9,7 +7,7 @@ import 'package:treehouse/models/seller_profile.dart';
 import 'package:treehouse/models/marketplace.dart'; // Correct import for Marketplace
 import 'package:treehouse/pages/user_settings.dart'; // Import the user profile page
 import 'package:treehouse/pages/feedback.dart'; // Adjust path if necessary
-import 'package:treehouse/models/messages_page.dart'; // Correct import for MessagesPage
+import 'package:treehouse/pages/messages_page.dart'; // Correct import for MessagesPage
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -43,11 +41,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             HomeContent(categories: categories), // Home content page
             Marketplace(), // Marketplace page
-            const ChatPage(
-              currentUserId: "replace_with_actual_id", // Fix this later
-              chatRoomId: 'replace_with_room_id', // Fix this later
-              recipientId: 'replace_with_recipient_id',
-            ),
+            MessagesPage(),
             const SellerProfilePage(),
           ],
         ),
@@ -93,7 +87,7 @@ class ConversationsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MessagesPage(userId: currentUserId); // Use MessagesList directly
+    return MessagesPage(); // Use MessagesList directly
   }
 }
 

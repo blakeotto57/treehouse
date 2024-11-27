@@ -1,82 +1,41 @@
-import 'package:flutter/material.dart';
+//screen where you see individual messages between 2 people, message list
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:treehouse/auth/auth_service.dart';
+import 'package:treehouse/components.dart/text_field.dart';
+import 'package:treehouse/models/chat_service.dart';
 
-class ChatPage extends StatefulWidget {
-  final String currentUserId;
-  final String chatRoomId;
-  final String recipientId;
+class ChatPage extends StatelessWidget {
+  final String receiverEmail;
+  final String receiverID;
 
-  const ChatPage({
-    required this.currentUserId,
-    required this.chatRoomId,
-    required this.recipientId,
-    Key? key,
-  }) : super(key: key);
+  ChatPage({
+    super.key,
+    required this.receiverEmail,
+    required this.receiverID,
 
-  @override
-  _ChatPageState createState() => _ChatPageState();
-}
+  });
 
-class _ChatPageState extends State<ChatPage> {
+  // text controller
   final TextEditingController _messageController = TextEditingController();
-  String recipientName = "Loading...";
 
-  @override
-  void initState() {
-    super.initState();
-    _loadRecipientName();
-  }
+  // chat and auth services
+  final ChatService _chatService = ChatService();
+  final AuthService _authService = AuthService();
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    super.dispose();
-  }
 
-  Future<void> _loadRecipientName() async {
-    try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(widget.recipientId).get();
-      if (mounted) {
-        setState(() {
-          recipientName = userDoc.data()?['name'] ?? 'Unknown User';
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          recipientName = 'Unknown User';
-        });
-      }
-    }
-  }
-
-  Future<void> _sendMessage() async {
-    final messageText = _messageController.text.trim();
-    if (messageText.isEmpty) return;
-
-    try {
-      await FirebaseFirestore.instance
-          .collection('chats')
-          .doc(widget.chatRoomId)
-          .collection('messages')
-          .add({
-        'senderId': widget.currentUserId,
-        'recipientId': widget.recipientId,
-        'text': messageText,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      await FirebaseFirestore.instance.collection('chats').doc(widget.chatRoomId).set({
-        'lastMessage': messageText,
-        'lastUpdated': FieldValue.serverTimestamp(),
-        'participants': [widget.currentUserId, widget.recipientId],
-      }, SetOptions(merge: true));
-
-      _messageController.clear();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message: $e')),
+  //send message
+  void sendMessage() async {
+    // if something inside the textbox
+    if (_messageController.text.isNotEmpty) {
+      // send message
+      await _chatService.sendMessage(
+        receiverID, 
+        _messageController.text,
       );
+      //after message sent clear controller
+      _messageController.clear();
+      
     }
   }
 
@@ -84,79 +43,71 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(recipientName),
+        title: Text(receiverEmail),
       ),
       body: Column(
         children: [
-          Expanded(
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('chats')
-                  .doc(widget.chatRoomId)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: false)
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No messages yet.'));
-                }
-
-                final messages = snapshot.data!.docs;
-
-                return ListView.builder(
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index].data() as Map<String, dynamic>;
-                    final isMe = message['senderId'] == widget.currentUserId;
-
-                    return Align(
-                      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: isMe ? Colors.blue[100] : Colors.grey[300],
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                        child: Text(
-                          message['text'],
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+         //display all messages
+         Expanded(
+          child: _buildMessageList(),
           ),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: const InputDecoration(
-                      hintText: 'Type a message...',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
-                      ),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.send, color: Colors.blue),
-                  onPressed: _sendMessage,
-                ),
-              ],
-            ),
-          ),
+
+         // user input box 
+         _buildUserInput(),
         ],
-      ),
+      )
+    );
+  }
+  //build list of users except the current logged in user
+  Widget _buildMessageList() {
+  String senderID = _authService.currentUser?.uid ?? '';
+    return StreamBuilder(
+      stream: _chatService.getMessages(receiverID, senderID), 
+      builder: (context, snapshot) {
+        //errors
+        if (snapshot.hasError) {
+          return const Text("Error");
+        }
+
+        //loading icon
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Text("loading...");
+        }
+
+        //return list view
+        return ListView(
+          children: snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+        );
+      }
+    );
+  }
+
+  // build message item
+  Widget _buildMessageItem(DocumentSnapshot doc) {
+    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+
+    return Text(data["message"]);
+  }
+
+  // build message input
+  Widget _buildUserInput() {
+    return Row(
+      children: [
+        // textfield will take up most of the space
+        Expanded(
+          child: MyTextField(
+            controller: _messageController, 
+            hintText: "Type a message", 
+            obscureText: false,
+          ),
+        ),
+
+        // send button
+        IconButton(
+          onPressed: sendMessage,
+          icon: Icon(Icons.send),
+        ),
+      ],
     );
   }
 }
