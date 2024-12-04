@@ -86,7 +86,7 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
         List<String> imageUrls = await _uploadImages();
 
         // Save the data to Firestore
-        await FirebaseFirestore.instance.collection('sellers').add({
+        await FirebaseFirestore.instance.collection('sellers').doc(currentUser.email).set({
           'userId': currentUser.uid, // Store the user's UID
           'email': currentUser.email, // Store the user's email (optional)
           'category': selectedCategory,

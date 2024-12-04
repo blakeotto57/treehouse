@@ -20,7 +20,7 @@ class _SellerProfilePageState extends State<SellerProfilePage> {
   // Check if the current user's ID matches a document ID in the sellers collection
   Future<bool> isCurrentUserASeller() async {
     try {
-      final sellerDoc = await sellersCollection.doc(currentUser.uid).get();
+      final sellerDoc = await sellersCollection.doc(currentUser.email).get();
       return sellerDoc.exists;
     } catch (e) {
       print('Error checking seller status: $e');

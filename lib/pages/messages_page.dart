@@ -11,7 +11,6 @@ class MessagesPage extends StatelessWidget {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,47 +24,53 @@ class MessagesPage extends StatelessWidget {
   // build a list of users except currently logged in user
   Widget _buildUserList() {
     return StreamBuilder(
-      stream: _chatService.getUsersStream(), 
+      stream: _chatService.getUsersStream(),
       builder: (context, snapshot) {
-        //error
+        // Handle error
         if (snapshot.hasError) {
           return const Text("Error");
         }
 
-        // loading...
+        // Loading state
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text("loading...");
+          return const Text("Loading...");
         }
 
-        // return list view
+        // Check if data exists and build the list
+        final users = snapshot.data ?? [];
+
         return ListView(
-          children: snapshot.data!.map<Widget>((userData) => _buildUserListItem(userData, context)).toList(),
+          children: users.map<Widget>((userData) {
+            return _buildUserListItem(userData, context);
+          }).toList(),
         );
-      }
+      },
     );
   }
 
-  //build individual list tile for user
+  // Build individual list tile for user
   Widget _buildUserListItem(Map<String, dynamic> userData, BuildContext context) {
-    //display all users except current user
-    if (userData["email"] != _authService.currentUser?.email) {
+    // Check if email exists in userData
+    final email = userData["email"];
+    
+    if (email == null || email == _authService.currentUser?.email) {
+      return Container();  // Skip current user or invalid data
+    }
+
     return UserTile(
-      text: userData["email"],
+      text: email, // Use email directly, as it has been checked
       onTap: () {
-        // when tapped on user go to chat page
+        // Navigate to the chat page with the user's email and UID
         Navigator.push(
           context,
           MaterialPageRoute(
-          builder: (context) => ChatPage(
-            receiverEmail: userData["email"],
-            receiverID: userData["uid"],
-          ),
+            builder: (context) => ChatPage(
+              receiverEmail: email,  // Ensure receiver email is valid
+              receiverID: userData["uid"] ?? "",  // Use an empty string if "uid" is null
+            ),
           ),
         );
-      }
+      },
     );
-  } else {
-    return Container();
   }
-}
 }
