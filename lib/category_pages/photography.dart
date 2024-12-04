@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:treehouse/pages/seller_profile.dart';
+import 'package:treehouse/pages/user_profile.dart';
 
 class PhotographySellersPage extends StatelessWidget {
   const PhotographySellersPage({Key? key}) : super(key: key);
@@ -59,7 +59,7 @@ class PhotographySellersPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SellerProfilePage(
+                        builder: (context) => UserProfilePage(
                         ),
                       ),
                     );

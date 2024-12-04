@@ -5,14 +5,14 @@ import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/pages/seller_setup.dart';
 
 
-class SellerProfilePage extends StatefulWidget {
-  const SellerProfilePage({super.key});
+class UserProfilePage extends StatefulWidget {
+  const UserProfilePage({super.key});
 
   @override
-  State<SellerProfilePage> createState() => _SellerProfilePageState();
+  State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-class _SellerProfilePageState extends State<SellerProfilePage> {
+class _UserProfilePageState extends State<UserProfilePage> {
   final currentUser = FirebaseAuth.instance.currentUser!;
   final usersCollection = FirebaseFirestore.instance.collection("users");
   final sellersCollection = FirebaseFirestore.instance.collection("sellers");

@@ -1,19 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:treehouse/pages/seller_profile.dart';
-
-
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:treehouse/models/solo_seller_profile.dart';
 
 class PersonalCareSellersPage extends StatelessWidget {
   const PersonalCareSellersPage({Key? key}) : super(key: key);
-  
 
   @override
   Widget build(BuildContext context) {
-
-    //current user email
+    // Current user email
     final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
 
     return Scaffold(
@@ -25,8 +20,6 @@ class PersonalCareSellersPage extends StatelessWidget {
             .collection('sellers')
             .where('category', isEqualTo: 'Personal Care')
             .snapshots(),
-
-
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -43,13 +36,11 @@ class PersonalCareSellersPage extends StatelessWidget {
               })
               .toList();
 
-          
           if (sellers.isEmpty) {
             return const Center(
               child: Text('No other sellers found in this category.'),
             );
           }
-
 
           return ListView.builder(
             itemCount: sellers.length,
@@ -80,12 +71,11 @@ class PersonalCareSellersPage extends StatelessWidget {
                   subtitle: Text(seller['description'] ?? 'No description provided.'),
                   trailing: const Icon(Icons.arrow_forward),
                   onTap: () {
-                    // Navigate to seller profile page
+                    // Navigate to SoloSellerProfilePage and pass the seller's userId
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SellerProfilePage(
-                        ),
+                        builder: (context) => SoloSellerProfilePage(userId: userId),
                       ),
                     );
                   },

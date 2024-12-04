@@ -3,7 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/models/chat_page.dart';
-import 'package:treehouse/pages/seller_profile.dart';
+import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/marketplace.dart'; // Correct import for Marketplace
 import 'package:treehouse/pages/user_settings.dart'; // Import the user profile page
 import 'package:treehouse/pages/feedback.dart'; // Adjust path if necessary
@@ -42,7 +42,7 @@ class _HomePageState extends State<HomePage> {
             HomeContent(categories: categories), // Home content page
             Marketplace(), // Marketplace page
             MessagesPage(),
-            const SellerProfilePage(),
+            const UserProfilePage(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(

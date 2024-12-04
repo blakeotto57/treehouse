@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:treehouse/pages/seller_profile.dart';
+import 'package:treehouse/pages/user_profile.dart';
 
 class CleaningSellersPage extends StatefulWidget {
   const CleaningSellersPage({Key? key}) : super(key: key);
@@ -72,7 +72,7 @@ class _CleaningSellersPageState extends State<CleaningSellersPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SellerProfilePage(
+                        builder: (context) => UserProfilePage(
                         ),
                       ),
                     );

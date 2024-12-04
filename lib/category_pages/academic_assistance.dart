@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:treehouse/pages/seller_profile.dart';
+import 'package:treehouse/pages/user_profile.dart';
 
 String? globaluserid;
 
@@ -75,7 +75,7 @@ class _AcademicAssistanceSellersPageState extends State<AcademicAssistanceSeller
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => SellerProfilePage(
+                        builder: (context) => UserProfilePage(
                         ),
                       ),
                     );
