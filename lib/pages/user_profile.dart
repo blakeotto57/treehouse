@@ -164,7 +164,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     else
                       const Center(
                         child: Text(
-                          "You are already a seller!",
+                          "",
                           style: TextStyle(color: Colors.black),
                         ),
                       ),

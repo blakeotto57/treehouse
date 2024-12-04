@@ -47,6 +47,9 @@ class PersonalCareSellersPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final seller = sellers[index].data() as Map<String, dynamic>;
               final userId = sellers[index].id;
+              final email = seller['email'] ?? 'Unknown';
+              final username = email.contains('@') ? email.split('@')[0] : email;
+              
 
               return Card(
                 margin: const EdgeInsets.all(10),
@@ -63,7 +66,7 @@ class PersonalCareSellersPage extends StatelessWidget {
                         : null,
                   ),
                   title: Text(
-                    seller['name'] ?? 'Unknown',
+                    username,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                     ),

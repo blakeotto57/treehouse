@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:treehouse/components/text_box.dart';
+import 'chat_page.dart'; // Import the ChatPage here
 
 class SoloSellerProfilePage extends StatefulWidget {
   final String userId;
@@ -14,47 +14,6 @@ class SoloSellerProfilePage extends StatefulWidget {
 class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
   final usersCollection = FirebaseFirestore.instance.collection("sellers");
 
-  // Edit field for user data
-  Future<void> editField(String field, String userId) async {
-    String newValue = "";
-    await showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
-        title: Text(
-          "Edit $field",
-          style: const TextStyle(color: Colors.white),
-        ),
-        content: TextField(
-          autofocus: true,
-          style: const TextStyle(color: Colors.white),
-          decoration: InputDecoration(
-            hintText: "Enter new $field",
-            hintStyle: const TextStyle(color: Colors.grey),
-          ),
-          onChanged: (value) {
-            newValue = value;
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              if (newValue.trim().isNotEmpty) {
-                usersCollection.doc(userId).update({field: newValue});
-              }
-            },
-            child: const Text("Save", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,6 +21,31 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
       appBar: AppBar(
         title: const Text("Seller Profile"),
         backgroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.message),
+            onPressed: () {
+              // Fetch seller's email and pass it to the ChatPage
+              usersCollection.doc(widget.userId).get().then((doc) {
+                if (doc.exists) {
+                  final sellerData = doc.data() as Map<String, dynamic>;
+                  final sellerEmail = sellerData['email'] ?? 'Unknown Email';
+
+                  // Navigate to the ChatPage
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatPage(
+                        receiverEmail: sellerEmail,
+                        receiverID: widget.userId,
+                      ),
+                    ),
+                  );
+                }
+              });
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: usersCollection.doc(widget.userId).snapshots(),
@@ -101,17 +85,52 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                MyTextBox(
-                  text: userData['username'] ?? '',
-                  sectionName: "Username",
-                  onPressed: () => editField("username", widget.userId),
-                ),
-                MyTextBox(
-                  text: userData['bio'] ?? '',
-                  sectionName: "Bio",
-                  onPressed: () => editField("bio", widget.userId),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.all(16.0),
+                  margin: const EdgeInsets.symmetric(vertical: 8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Description",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        userData['description'] ?? 'No description available.',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 25),
+                const Text(
+                  "Previous Work",
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                // Add image gallery or other components as required
               ],
             );
           }
