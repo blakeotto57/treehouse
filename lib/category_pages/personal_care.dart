@@ -1,6 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:treehouse/pages/seller_profile.dart';
 
 
@@ -8,9 +8,14 @@ import 'package:treehouse/pages/seller_profile.dart';
 
 class PersonalCareSellersPage extends StatelessWidget {
   const PersonalCareSellersPage({Key? key}) : super(key: key);
+  
 
   @override
   Widget build(BuildContext context) {
+
+    //current user email
+    final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Personal Care Sellers'),
@@ -20,6 +25,8 @@ class PersonalCareSellersPage extends StatelessWidget {
             .collection('sellers')
             .where('category', isEqualTo: 'Personal Care')
             .snapshots(),
+
+
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -28,13 +35,28 @@ class PersonalCareSellersPage extends StatelessWidget {
             return const Center(child: Text('No sellers found in this category.'));
           }
 
-          final sellers = snapshot.data!.docs;
+          // Filter out the current user's document based on email
+          final sellers = snapshot.data!.docs
+              .where((doc) {
+                final data = doc.data() as Map<String, dynamic>;
+                return data['email'] != currentUserEmail;
+              })
+              .toList();
+
+          
+          if (sellers.isEmpty) {
+            return const Center(
+              child: Text('No other sellers found in this category.'),
+            );
+          }
+
 
           return ListView.builder(
             itemCount: sellers.length,
             itemBuilder: (context, index) {
               final seller = sellers[index].data() as Map<String, dynamic>;
               final userId = sellers[index].id;
+
               return Card(
                 margin: const EdgeInsets.all(10),
                 shape: RoundedRectangleBorder(
