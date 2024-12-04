@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/auth/auth_service.dart';
-import 'package:treehouse/components.dart/user_tile.dart';
+import 'package:treehouse/components/user_tile.dart';
 import 'package:treehouse/models/chat_page.dart';
 import 'package:treehouse/models/chat_service.dart';
 

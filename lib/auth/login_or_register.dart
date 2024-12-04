@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:treehouse/pages/register_page.dart';
+import 'package:treehouse/auth/register_page.dart';
 import 'package:treehouse/pages/login_page.dart';
 
 

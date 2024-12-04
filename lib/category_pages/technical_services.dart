@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:treehouse/models/seller_profile.dart';
+import 'package:treehouse/pages/seller_profile.dart';
 
 class TechnicalServicesSellersPage extends StatelessWidget {
   const TechnicalServicesSellersPage({Key? key}) : super(key: key);

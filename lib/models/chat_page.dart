@@ -2,7 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
-import 'package:treehouse/components.dart/text_field.dart';
+import 'package:treehouse/components/text_field.dart';
 import 'package:treehouse/models/chat_service.dart';
 
 class ChatPage extends StatelessWidget {

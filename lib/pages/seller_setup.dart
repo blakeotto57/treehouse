@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
-
-import 'package:treehouse/models/seller_profile.dart';
-
-
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:treehouse/pages/home.dart';
+import 'package:treehouse/pages/seller_profile.dart';
 
 class SellerSetupPage extends StatefulWidget {
-
-  SellerSetupPage({super.key});
+  final Function()? onTap;
+  const SellerSetupPage({
+    super.key,
+    required this.onTap,
+  });
 
   @override
   _SellerSetupPageState createState() => _SellerSetupPageState();
@@ -17,11 +20,8 @@ class SellerSetupPage extends StatefulWidget {
 
 class _SellerSetupPageState extends State<SellerSetupPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  bool _isSubmitting = false;
+  final TextEditingController _instagramController = TextEditingController();
 
   final List<String> serviceCategories = [
     'Personal Care',
@@ -38,6 +38,9 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   List<File> _images = [];
   final ImagePicker _picker = ImagePicker();
 
+  // Declare isSeller as a state variable
+  bool isSeller = false;
+
   // Pick an image from the gallery
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -48,62 +51,71 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
     }
   }
 
-
+  // Upload images to Firebase Storage
+  Future<List<String>> _uploadImages() async {
+    List<String> imageUrls = [];
+    for (var image in _images) {
+      String fileName = 'seller_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      FirebaseStorage storage = FirebaseStorage.instance;
+      Reference ref = storage.ref().child(fileName);
+      await ref.putFile(image);
+      String downloadUrl = await ref.getDownloadURL();
+      imageUrls.add(downloadUrl);
+    }
+    return imageUrls;
+  }
 
   // Submit the form
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
-        _isSubmitting = true;
+        isSeller = true; // Show progress indicator
       });
 
-
-
-      //stores inputted data into firebase
       try {
         // Get the values from the controllers
-        String name = _nameController.text.trim();
-        String email = _emailController.text.trim();
-        String phone = _phoneController.text.trim();
         String description = _descriptionController.text.trim();
+        String instagram = _instagramController.text.trim();
+        User? currentUser = FirebaseAuth.instance.currentUser;
 
+        if (currentUser == null) {
+          throw Exception("No user is logged in.");
+        }
 
+        // Upload images and get the URLs
+        List<String> imageUrls = await _uploadImages();
 
         // Save the data to Firestore
         await FirebaseFirestore.instance.collection('sellers').add({
-          'name': name,
-          'email': email,
-          'phone': phone,
+          'userId': currentUser.uid, // Store the user's UID
+          'email': currentUser.email, // Store the user's email (optional)
           'category': selectedCategory,
           'description': description,
+          'instagram': instagram, // Store the Instagram username
+          'imageUrls': imageUrls, // Store image URLs
           'timestamp': FieldValue.serverTimestamp(),
+          "seller": true,
         });
 
-
-      // Clear the form after submission
-      _nameController.clear();
-      _emailController.clear();
-      _phoneController.clear();
-      _descriptionController.clear();
-      _images.clear();
-
+        // Clear the form after submission
+        _descriptionController.clear();
+        _instagramController.clear();
+        _images.clear();
 
         // Navigate to SellerProfilePage after successful setup
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => SellerProfilePage(),  // Ensure SellerProfilePage is defined and imported
+            builder: (context) => HomePage(), // Ensure SellerProfilePage is defined and imported
           ),
         );
-
-
-    } catch (e) {
+      } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error submitting data: $e')),
         );
       } finally {
         setState(() {
-          _isSubmitting = false;
+          isSeller = false; // Reset state after submission
         });
       }
     }
@@ -112,7 +124,9 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.green[100],
       appBar: AppBar(
+        backgroundColor: Colors.green[300],
         title: const Text('Become a Seller'),
       ),
       body: Padding(
@@ -121,63 +135,6 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
           key: _formKey,
           child: ListView(
             children: [
-              // Name field
-              TextFormField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Email field
-              TextFormField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                    return 'Please enter a valid email';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Phone number field
-              TextFormField(
-                controller: _phoneController,
-                decoration: InputDecoration(
-                  labelText: 'Phone Number',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                keyboardType: TextInputType.phone,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your phone number';
-                  }
-                  return null;
-                },
-              ),
               const SizedBox(height: 16),
 
               // Category dropdown
@@ -224,6 +181,22 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
                   if (value == null || value.isEmpty) {
                     return 'Please describe your products or services';
                   }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Instagram username field
+              TextFormField(
+                controller: _instagramController,
+                decoration: InputDecoration(
+                  labelText: 'Instagram (optional)',
+                  hintText: 'Enter your Instagram username',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                validator: (value) {
                   return null;
                 },
               ),
@@ -277,13 +250,15 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
 
               // Submit button
               const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: _isSubmitting ? null : _submitForm,
-                child: _isSubmitting
-                    ? const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      )
-                    : const Text('Submit'),
+              Container(
+                child: ElevatedButton(
+                  onPressed: isSeller ? null : _submitForm, // Disable button when submitting
+                  child: isSeller
+                      ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        )
+                      : const Text('Submit'),
+                ),
               ),
             ],
           ),
