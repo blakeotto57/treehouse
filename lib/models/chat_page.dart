@@ -23,7 +23,7 @@ class ChatPage extends StatelessWidget {
 
   // chat and auth services
   final ChatService _chatService = ChatService();
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final AuthService _authService = AuthService();
 
 
   //send message
@@ -66,7 +66,7 @@ class ChatPage extends StatelessWidget {
     return StreamBuilder(
       stream: _chatService.getMessages(
         receiverID, 
-        _firebaseAuth.currentUser!.uid), 
+        _authService.currentUser!.uid), 
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text("Error${snapshot.error}");
@@ -92,16 +92,21 @@ class ChatPage extends StatelessWidget {
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
+
+    // is current user
+    bool isCurrentUser = data["senderID"] == _authService.currentUser!.email!;
+
+
     //align the message to right if sender and to the left if other
-    var alignment = (data["senderId"] == _firebaseAuth.currentUser!.uid) 
-    ? Alignment.centerRight
-    : Alignment.centerLeft;
+    var alignment = isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
 
     return Container(
       alignment: alignment,
       child: Column(
+        crossAxisAlignment: 
+          isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          Text(data["senderEmail"]),
+          Text(data["senderID"]),
           Text(data["message"]),
         ],
       )

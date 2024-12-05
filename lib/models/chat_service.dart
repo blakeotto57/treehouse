@@ -13,7 +13,7 @@ class ChatService {
   //map is the field in fire store like 
   // email: botto@ucsc.edu, name: "blake"
   Stream<List<Map<String,dynamic>>> getUsersStream() {
-    return _fireStore.collection("sellers").snapshots().map((snapshot) {
+    return _fireStore.collection("users").snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
 
         // go through each individual user
@@ -33,6 +33,7 @@ class ChatService {
     final String currentUserEmail = _firebaseAuth.currentUser!.email!;
     final Timestamp timestamp = Timestamp.now();
 
+
     // create a new message
     Message newMessage = Message(
       senderID: currentUserEmail,
@@ -41,6 +42,7 @@ class ChatService {
       message: message,
       timestamp: timestamp,
     );
+
 
     //construct chat room ID for the 2 users
     List<String> ids = [currentUserID, receiverID];
