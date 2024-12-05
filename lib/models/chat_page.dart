@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/components/text_field.dart';
 import 'package:treehouse/models/chat_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class ChatPage extends StatelessWidget {
   final String receiverEmail;
@@ -21,7 +23,7 @@ class ChatPage extends StatelessWidget {
 
   // chat and auth services
   final ChatService _chatService = ChatService();
-  final AuthService _authService = AuthService();
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
 
   //send message
@@ -58,36 +60,56 @@ class ChatPage extends StatelessWidget {
       )
     );
   }
-  //build list of users except the current logged in user
+  
+  // build message list
   Widget _buildMessageList() {
-  String senderID = _authService.currentUser?.uid ?? '';
     return StreamBuilder(
-      stream: _chatService.getMessages(receiverID, senderID), 
+      stream: _chatService.getMessages(
+        receiverID, 
+        _firebaseAuth.currentUser!.uid), 
       builder: (context, snapshot) {
-        //errors
         if (snapshot.hasError) {
-          return const Text("Error");
+          return Text("Error${snapshot.error}");
         }
 
-        //loading icon
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Text("loading...");
+          return const Text("loading ...");
         }
 
-        //return list view
         return ListView(
-          children: snapshot.data!.docs.map((doc) => _buildMessageItem(doc)).toList(),
+          children: snapshot.data!.docs
+          .map((document) => _buildMessageItem(document))
+          .toList(),
         );
       }
     );
   }
 
+
+
+
   // build message item
   Widget _buildMessageItem(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
 
-    return Text(data["message"]);
+    //align the message to right if sender and to the left if other
+    var alignment = (data["senderId"] == _firebaseAuth.currentUser!.uid) 
+    ? Alignment.centerRight
+    : Alignment.centerLeft;
+
+    return Container(
+      alignment: alignment,
+      child: Column(
+        children: [
+          Text(data["senderEmail"]),
+          Text(data["message"]),
+        ],
+      )
+    );
   }
+
+
+
 
   // build message input
   Widget _buildUserInput() {
@@ -105,7 +127,7 @@ class ChatPage extends StatelessWidget {
         // send button
         IconButton(
           onPressed: sendMessage,
-          icon: Icon(Icons.send),
+          icon: const Icon(Icons.send),
         ),
       ],
     );

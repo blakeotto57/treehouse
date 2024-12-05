@@ -5,14 +5,15 @@ import 'package:treehouse/models/message.dart';
 
 class ChatService {
   //get instance of firestore and auth
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _fireStore = FirebaseFirestore.instance;
+
 
   //get user stream
   //map is the field in fire store like 
   // email: botto@ucsc.edu, name: "blake"
   Stream<List<Map<String,dynamic>>> getUsersStream() {
-    return _firestore.collection("users").snapshots().map((snapshot) {
+    return _fireStore.collection("sellers").snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
 
         // go through each individual user
@@ -28,8 +29,8 @@ class ChatService {
   //send messages
   Future<void> sendMessage(String receiverID, message) async {
     // get current user info
-    final String currentUserID = _auth.currentUser!.uid;
-    final String currentUserEmail = _auth.currentUser!.email!;
+    final String currentUserID = _firebaseAuth.currentUser!.uid;
+    final String currentUserEmail = _firebaseAuth.currentUser!.email!;
     final Timestamp timestamp = Timestamp.now();
 
     // create a new message
@@ -47,21 +48,22 @@ class ChatService {
     String chatRoomID = ids.join("_");
 
     // add new message to database
-    await _firestore
+    await _fireStore
     .collection("chat_rooms")
     .doc(chatRoomID)
     .collection("messages")
     .add(newMessage.toMap());
   }
 
+
   //get message
-  Stream<QuerySnapshot> getMessages(String userID, otherUserID) {
+  Stream<QuerySnapshot> getMessages(String userId, otherUserId) {
     //construct a chatroom ID for both users
-    List<String> ids = [userID, otherUserID];
+    List<String> ids = [userId, otherUserId];
     ids.sort();
     String chatRoomID = ids.join("_");
 
-    return _firestore
+    return _fireStore
       .collection("chat_rooms")
       .doc(chatRoomID)
       .collection("messages")
