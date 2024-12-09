@@ -87,13 +87,13 @@ class ChatService {
      }, SetOptions(merge: true)); // Merge to avoid overwriting existing data
 
 
-
     // add new message to database
     await _fireStore
       .collection("chat_rooms")
       .doc(chatRoomID)
       .collection("messages")
-      .add(newMessage.toMap());
+      .doc(timestamp.toDate().toIso8601String()) //title of doc of each message is time it was sent
+      .set(newMessage.toMap());
   }
 
 
