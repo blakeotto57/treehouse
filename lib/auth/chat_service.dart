@@ -29,25 +29,31 @@ class ChatService {
 
     // Fetch users in chat rooms with the current user
   Future<List<Map<String, dynamic>>> getUsersInChatRooms() async {
-    final String currentUserID = _firebaseAuth.currentUser!.uid;
+    final String currentUserEmail = _firebaseAuth.currentUser!.email!;
 
     // Query the chat rooms where the current user is a participant
     final chatRoomsQuery = await _fireStore
         .collection("chat_rooms")
-        .where("participants", arrayContains: currentUserID)
+        .where("participants", arrayContains: currentUserEmail)
         .get();
 
-    // Extract user IDs from chat rooms
-    final userIds = chatRoomsQuery.docs.expand((doc) {
+
+    // Extract the other participants' emails
+    final otherEmails = chatRoomsQuery.docs.expand((doc) {
       final participants = List<String>.from(doc["participants"] ?? []);
-      return participants.where((id) => id != currentUserID);
+      return participants.where((email) => email != currentUserEmail);
     }).toSet();
 
+
     // Fetch user data for these IDs
-    final userData = await Future.wait(userIds.map((id) async {
-      final userDoc = await _fireStore.collection("users").doc(id).get();
-      return userDoc.data() as Map<String, dynamic>;
+    final userData = await Future.wait(otherEmails.map((email) async {
+     final userQuery = await _fireStore
+        .collection("users")
+        .where("email", isEqualTo: email)
+        .get();
+    return userQuery.docs.first.data();
     }));
+
 
     return userData;
   }

@@ -25,8 +25,8 @@ class MessagesPage extends StatelessWidget {
 
   // build a list of users except currently logged in user
   Widget _buildUserList() {
-    return StreamBuilder(
-      stream: _chatService.getUsersStream(),
+    return FutureBuilder(
+      future: _chatService.getUsersInChatRooms(),
       builder: (context, snapshot) {
         // Handle error
         if (snapshot.hasError) {
@@ -49,6 +49,8 @@ class MessagesPage extends StatelessWidget {
       },
     );
   }
+
+  
 
   // Build individual list tile for user
   Widget _buildUserListItem(Map<String, dynamic> userData, BuildContext context) {
