@@ -73,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
             
                   //welcome to treehouse
                   const Text(
-                    'Welcome to the treehouse',
+                    'Welcome to treehouse',
                     style: TextStyle(
                         fontWeight: FontWeight.bold, 
                         color: Colors.white,

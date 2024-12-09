@@ -90,7 +90,7 @@ class _RegisterPageState extends State<RegisterPage> {
               
                     //welcome to treehouse
                     const Text(
-                      'Lets join the treehouse',
+                      'Lets join treehouse',
                       style: TextStyle(
                           fontWeight: FontWeight.bold, 
                           color: Colors.white,

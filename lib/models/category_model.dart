@@ -36,7 +36,7 @@ class CategoryModel {
       CategoryModel(
         name: "Personal Care", 
         iconPath: "assets/icons/haircut-icon.svg", 
-        boxColor: Color.fromRGBO(75, 57, 239, 1),
+        boxColor: Color.fromRGBO(178, 129, 243, 1),
 
         onTap: (context) {
           Navigator.push(

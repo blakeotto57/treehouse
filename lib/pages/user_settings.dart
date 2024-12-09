@@ -10,12 +10,12 @@ class UserSettingsPage extends StatefulWidget {
 }
 
 class _UserSettingsPageState extends State<UserSettingsPage> {
-  //sign user out
+  // Sign user out
   void signOut() {
     FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => const AuthPage()),
+      context,
+      MaterialPageRoute(builder: (context) => const AuthPage()),
     );
   }
 
@@ -23,111 +23,115 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Settings'),
+        title: const Text('User Settings'),
         centerTitle: true,
+        backgroundColor: Colors.green[300],
+        elevation: 2,
         actions: [
-          // Log out button in the top right corner
           IconButton(
             onPressed: signOut,
-            icon: Icon(Icons.logout),
+            icon: const Icon(Icons.logout),
+            tooltip: 'Sign Out',
           ),
         ],
       ),
       body: ListView(
-        padding: EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16.0),
         children: [
-          // Settings Picture at the Top
+          // Profile Picture at the Top
           Center(
             child: CircleAvatar(
               radius: 50,
-              backgroundColor: Colors.grey.shade300,
-              child: Icon(
+              backgroundColor: Colors.green[300],
+              child: const Icon(
                 Icons.person,
                 size: 50,
                 color: Colors.white,
               ),
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
 
           // Section 1: Account Information
           buildSectionHeader('Account Information'),
-          ListTile(
-            title: Text('Name'),
-            subtitle: Text('John Doe'), // Example, replace with dynamic data
-            trailing: Icon(Icons.edit),
+          buildListTile(
+            title: 'Name',
+            subtitle: 'John Doe', // Replace with dynamic data
+            icon: Icons.edit,
             onTap: () {
-              // Handle edit functionality
+              // Handle name edit
             },
           ),
-          ListTile(
-            title: Text('Email'),
-            subtitle: Text('johndoe@example.com'),
-            trailing: Icon(Icons.edit),
+          buildListTile(
+            title: 'Email',
+            subtitle: 'johndoe@example.com', // Replace with dynamic data
+            icon: Icons.edit,
             onTap: () {
-              // Handle edit functionality
+              // Handle email edit
             },
           ),
-          Divider(),
+          const Divider(),
 
           // Section 2: Security
           buildSectionHeader('Security'),
-          ListTile(
-            title: Text('Change Password'),
-            trailing: Icon(Icons.lock),
+          buildListTile(
+            title: 'Change Password',
+            icon: Icons.lock,
             onTap: () {
               // Handle password change
             },
           ),
-          ListTile(
-            title: Text('Two-Factor Authentication'),
-            trailing: Switch(value: false, onChanged: (value) {
+          SwitchListTile(
+            title: const Text('Two-Factor Authentication'),
+            value: false,
+            onChanged: (value) {
               // Handle toggle
-            }),
+            },
           ),
-          Divider(),
+          const Divider(),
 
           // Section 3: Theme Customization
           buildSectionHeader('Theme Customization'),
-          ListTile(
-            title: Text('Dark Mode'),
-            trailing: Switch(value: false, onChanged: (value) {
+          SwitchListTile(
+            title: const Text('Dark Mode'),
+            value: false,
+            onChanged: (value) {
               // Handle theme change
-            }),
+            },
           ),
-          ListTile(
-            title: Text('Accent Color'),
-            trailing: Icon(Icons.color_lens),
+          buildListTile(
+            title: 'Accent Color',
+            icon: Icons.color_lens,
             onTap: () {
               // Handle color selection
             },
           ),
-          Divider(),
+          const Divider(),
 
           // Section 4: User Activity
           buildSectionHeader('User Activity'),
-          ListTile(
-            title: Text('Recent Activity'),
+          buildListTile(
+            title: 'Recent Activity',
             onTap: () {
               // Handle navigation to activity page
             },
           ),
-          Divider(),
+          const Divider(),
 
           // Section 5: Transaction History
           buildSectionHeader('Transaction History'),
-          ListTile(
-            title: Text('View Transactions'),
+          buildListTile(
+            title: 'View Transactions',
             onTap: () {
               // Handle navigation to transaction history
             },
           ),
-          Divider(),
+          const Divider(),
 
           // Section 6: Linked Accounts
           buildSectionHeader('Linked Accounts'),
-          ListTile(
-            title: Text('Manage Social Media Connections'),
+          buildListTile(
+            title: 'Manage Social Media Connections',
             onTap: () {
               // Handle linked account management
             },
@@ -139,15 +143,43 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
   Widget buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Text(
         title,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Colors.black87,
+          color: Colors.green,
         ),
       ),
+    );
+  }
+
+  Widget buildListTile({
+    required String title,
+    String? subtitle,
+    IconData? icon,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      title: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
+      subtitle: subtitle != null ? Text(subtitle) : null,
+      trailing: icon != null
+          ? Icon(
+              icon,
+              color: Colors.green[300],
+            )
+          : null,
+      onTap: onTap,
+      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      tileColor: Colors.grey[100],
+      dense: true,
     );
   }
 }

@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/pages/seller_setup.dart';
 
-
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
 
@@ -17,7 +16,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
   final usersCollection = FirebaseFirestore.instance.collection("users");
   final sellersCollection = FirebaseFirestore.instance.collection("sellers");
 
-  // Check if the current user's ID matches a document ID in the sellers collection
   Future<bool> isCurrentUserASeller() async {
     try {
       final sellerDoc = await sellersCollection.doc(currentUser.email).get();
@@ -28,20 +26,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
     }
   }
 
-  // Edit field for user data
   Future<void> editField(String field) async {
     String newValue = "";
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.grey[900],
+        backgroundColor: Colors.white,
         title: Text(
           "Edit $field",
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.black),
         ),
         content: TextField(
           autofocus: true,
-          style: const TextStyle(color: Colors.white),
+          style: const TextStyle(color: Colors.black),
           decoration: InputDecoration(
             hintText: "Enter new $field",
             hintStyle: const TextStyle(color: Colors.grey),
@@ -53,7 +50,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
+            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
             onPressed: () {
@@ -62,7 +59,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 usersCollection.doc(currentUser.uid).update({field: newValue});
               }
             },
-            child: const Text("Save", style: TextStyle(color: Colors.white)),
+            child: const Text("Save", style: TextStyle(color: Colors.blue)),
           ),
         ],
       ),
@@ -72,10 +69,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[200],
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Seller Profile"),
-        backgroundColor: Colors.white,
+        title: const Text("My Profile"),
+        centerTitle: true,
+        backgroundColor: Colors.green[300],
+        elevation: 0,
       ),
       body: FutureBuilder<bool>(
         future: isCurrentUserASeller(),
@@ -102,73 +101,91 @@ class _UserProfilePageState extends State<UserProfilePage> {
               if (userSnapshot.hasData && userSnapshot.data != null) {
                 final userData = userSnapshot.data!.data() as Map<String, dynamic>;
 
-                return ListView(
-                  padding: const EdgeInsets.all(16.0),
-                  children: [
-                    const SizedBox(height: 25),
-                    const Align(
-                      alignment: Alignment.center,
-                      child: Icon(Icons.person, size: 72),
-                    ),
-                    const SizedBox(height: 25),
-                    Align(
-                      alignment: Alignment.center,
-                      child: Text(
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(height: 30),
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.green[300],
+                        child: const Icon(Icons.person, size: 80, color: Colors.white),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
                         currentUser.email!,
-                        style: const TextStyle(color: Colors.black),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 25),
-                    const Text(
-                      "My Details",
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 30),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.shade200,
+                              blurRadius: 10,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "My Details",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            MyTextBox(
+                              text: userData['username'] ?? '',
+                              sectionName: "Username",
+                              onPressed: () => editField("username"),
+                            ),
+                            const SizedBox(height: 10),
+                            MyTextBox(
+                              text: userData['bio'] ?? '',
+                              sectionName: "Bio",
+                              onPressed: () => editField("bio"),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    MyTextBox(
-                      text: userData['username'] ?? '',
-                      sectionName: "Username",
-                      onPressed: () => editField("username"),
-                    ),
-                    MyTextBox(
-                      text: userData['bio'] ?? '',
-                      sectionName: "Bio",
-                      onPressed: () => editField("bio"),
-                    ),
-                    const SizedBox(height: 25),
-
-                    // Conditionally render the ElevatedButton based on seller status
-                    if (!sellerSnapshot.data!)
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[300],
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                      const SizedBox(height: 30),
+                      if (!sellerSnapshot.data!)
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green[300],
+                            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SellerSetupPage(onTap: () {}),
+                              ),
+                            );
+                          },
+                          child: const Text(
+                            "Become a Seller",
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                         ),
-                        onPressed: () async {
-                          // Navigate to the SellerSetupPage
-                          await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SellerSetupPage(onTap: () {  },),
-                            ),
-                          );
-                        },
-                        child: const Text(
-                          "Become a Seller",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      )
-                    else
-                      const Center(
-                        child: Text(
-                          "",
-                          style: TextStyle(color: Colors.black),
-                        ),
-                      ),
-                  ],
+                    ],
+                  ),
                 );
               }
 

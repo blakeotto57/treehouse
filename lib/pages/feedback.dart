@@ -150,7 +150,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Feedback'),
-        backgroundColor: Colors.teal,
+        backgroundColor: Colors.green[300],
       ),
       body: globalUserName == null
           ? Center(child: CircularProgressIndicator())
@@ -198,7 +198,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
                       ? CircularProgressIndicator()
                       : ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.teal,
+                            backgroundColor: Colors.green[300],
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
