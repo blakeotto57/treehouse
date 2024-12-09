@@ -26,6 +26,33 @@ class ChatService {
     });
   }
 
+
+    // Fetch users in chat rooms with the current user
+  Future<List<Map<String, dynamic>>> getUsersInChatRooms() async {
+    final String currentUserID = _firebaseAuth.currentUser!.uid;
+
+    // Query the chat rooms where the current user is a participant
+    final chatRoomsQuery = await _fireStore
+        .collection("chat_rooms")
+        .where("participants", arrayContains: currentUserID)
+        .get();
+
+    // Extract user IDs from chat rooms
+    final userIds = chatRoomsQuery.docs.expand((doc) {
+      final participants = List<String>.from(doc["participants"] ?? []);
+      return participants.where((id) => id != currentUserID);
+    }).toSet();
+
+    // Fetch user data for these IDs
+    final userData = await Future.wait(userIds.map((id) async {
+      final userDoc = await _fireStore.collection("users").doc(id).get();
+      return userDoc.data() as Map<String, dynamic>;
+    }));
+
+    return userData;
+  }
+
+
   //send messages
   Future<void> sendMessage(String receiverID, message) async {
     // get current user info
@@ -51,17 +78,17 @@ class ChatService {
 
     // add new message to database
     await _fireStore
-    .collection("chat_rooms")
-    .doc(chatRoomID)
-    .collection("messages")
-    .add(newMessage.toMap());
+      .collection("chat_rooms")
+      .doc(chatRoomID)
+      .collection("messages")
+      .add(newMessage.toMap());
   }
 
 
   //get message
-  Stream<QuerySnapshot> getMessages(String userId, otherUserId) {
+  Stream<QuerySnapshot> getMessages(String senderId, otherUserId) {
     //construct a chatroom ID for both users
-    List<String> ids = [userId, otherUserId];
+    List<String> ids = [senderId, otherUserId];
     ids.sort();
     String chatRoomID = ids.join("_");
 

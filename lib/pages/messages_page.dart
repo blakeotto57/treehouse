@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/components/user_tile.dart';
 import 'package:treehouse/models/chat_page.dart';
-import 'package:treehouse/models/chat_service.dart';
+import 'package:treehouse/auth/chat_service.dart';
+import 'package:treehouse/pages/feedback.dart';
 
 class MessagesPage extends StatelessWidget {
   MessagesPage({super.key});
@@ -67,7 +68,7 @@ class MessagesPage extends StatelessWidget {
           MaterialPageRoute(
             builder: (context) => ChatPage(
               receiverEmail: email,  // Ensure receiver email is valid
-              receiverID: userData["uid"] ?? "",  // Use an empty string if "uid" is null
+              receiverID: email,  // Use an empty string if "uid" is null
             ),
           ),
         );
