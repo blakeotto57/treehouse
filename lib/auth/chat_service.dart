@@ -28,41 +28,38 @@ class ChatService {
 
 
     // Fetch users in chat rooms with the current user
-  Future<List<Map<String, dynamic>>> getUsersInChatRooms() async {
-    final String currentUserEmail = _firebaseAuth.currentUser!.email!;
+    Future<List<Map<String, dynamic>>> getUsersInChatRooms() async {
+      final String currentUserEmail = _firebaseAuth.currentUser!.email!;
 
-    // Query the chat rooms where the current user is a participant
-    final chatRoomsQuery = await _fireStore
-        .collection("chat_rooms")
-        .where("participants", arrayContains: currentUserEmail)
-        .get();
+      // Query chat rooms where the current user is a participant
+      final chatRoomsQuery = await _fireStore
+          .collection("chat_rooms")
+          .where("participants", arrayContains: currentUserEmail)
+          .get();
 
+      // Extract the other participants' emails
+      final otherEmails = chatRoomsQuery.docs.expand((doc) {
+        final participants = List<String>.from(doc["participants"] ?? []);
+        return participants.where((id) => id != currentUserEmail);
+      }).toSet();
 
-    // Extract the other participants' emails
-    final otherEmails = chatRoomsQuery.docs.expand((doc) {
-      final participants = List<String>.from(doc["participants"] ?? []);
-      return participants.where((email) => email != currentUserEmail);
-    }).toSet();
+      // Fetch user data for these emails
+      final userData = await Future.wait(otherEmails.map((email) async {
+        final userQuery = await _fireStore
+            .collection("users")
+            .where("email", isEqualTo: email)
+            .get();
+        return userQuery.docs.first.data();
+      }));
 
-
-    // Fetch user data for these IDs
-    final userData = await Future.wait(otherEmails.map((email) async {
-     final userQuery = await _fireStore
-        .collection("users")
-        .where("email", isEqualTo: email)
-        .get();
-    return userQuery.docs.first.data();
-    }));
-
-
-    return userData;
-  }
+      return userData;
+    }
 
 
   //send messages
   Future<void> sendMessage(String receiverID, message) async {
     // get current user info
-    final String currentUserID = _firebaseAuth.currentUser!.uid;
+    final String currentUserID = _firebaseAuth.currentUser!.uid!;
     final String currentUserEmail = _firebaseAuth.currentUser!.email!;
     final Timestamp timestamp = Timestamp.now();
 
@@ -78,9 +75,18 @@ class ChatService {
 
 
     //construct chat room ID for the 2 users
-    List<String> ids = [currentUserID, receiverID];
+    List<String> ids = [currentUserEmail, receiverID];
     ids.sort();// sorts the id's to make sure the chatroom is the same for both people
     String chatRoomID = ids.join("_");
+
+    //creates particiapnts section in firebase
+    final chatRoomRef = _fireStore.collection("chat_rooms").doc(chatRoomID);
+
+    await chatRoomRef.set({
+    "participants": ids, // Add participants to the chat room
+     }, SetOptions(merge: true)); // Merge to avoid overwriting existing data
+
+
 
     // add new message to database
     await _fireStore

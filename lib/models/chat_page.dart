@@ -66,7 +66,7 @@ class ChatPage extends StatelessWidget {
     return StreamBuilder(
       stream: _chatService.getMessages(
         receiverID, 
-        _authService.currentUser!.uid), 
+        _authService.currentUser!.email!), 
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Text("Error${snapshot.error}");
