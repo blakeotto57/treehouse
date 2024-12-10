@@ -8,12 +8,16 @@ class PersonalCareSellersPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Current user email
     final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Personal Care Sellers'),
+        title: const Text(
+          'Personal Care Sellers',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.green[300],
+        centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -25,10 +29,14 @@ class PersonalCareSellersPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text('No sellers found in this category.'));
+            return const Center(
+              child: Text(
+                'No sellers found in this category.',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
+            );
           }
 
-          // Filter out the current user's document based on email
           final sellers = snapshot.data!.docs
               .where((doc) {
                 final data = doc.data() as Map<String, dynamic>;
@@ -38,53 +46,86 @@ class PersonalCareSellersPage extends StatelessWidget {
 
           if (sellers.isEmpty) {
             return const Center(
-              child: Text('No other sellers found in this category.'),
+              child: Text(
+                'No other sellers found in this category.',
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              ),
             );
           }
 
           return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             itemCount: sellers.length,
             itemBuilder: (context, index) {
               final seller = sellers[index].data() as Map<String, dynamic>;
               final userId = sellers[index].id;
               final email = seller['email'] ?? 'Unknown';
               final username = email.contains('@') ? email.split('@')[0] : email;
-              
 
-              return Card(
-                margin: const EdgeInsets.all(10),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundImage: seller['profilePicture'] != null
-                        ? NetworkImage(seller['profilePicture'])
-                        : null,
-                    child: seller['profilePicture'] == null
-                        ? const Icon(Icons.person)
-                        : null,
-                  ),
-                  title: Text(
-                    username,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  subtitle: Text(seller['description'] ?? 'No description provided.'),
-                  trailing: const Icon(Icons.arrow_forward),
-                  onTap: () {
-                    // Navigate to SoloSellerProfilePage and pass the seller's userId
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => SoloSellerProfilePage(userId: userId),
-                      ),
-                    );
-                  },
-                ),
+              return SellerCard(
+                userId: userId,
+                username: username,
+                description: seller['description'] ?? 'No description provided.',
+                profilePicture: seller['profilePicture'],
               );
             },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class SellerCard extends StatelessWidget {
+  final String userId;
+  final String username;
+  final String description;
+  final String? profilePicture;
+
+  const SellerCard({
+    Key? key,
+    required this.userId,
+    required this.username,
+    required this.description,
+    this.profilePicture,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      elevation: 4,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundImage: profilePicture != null ? NetworkImage(profilePicture!) : null,
+          child: profilePicture == null
+              ? const Icon(Icons.person, color: Colors.white)
+              : null,
+          backgroundColor: profilePicture == null ? Colors.green[300] : null,
+        ),
+        title: Text(
+          username,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        subtitle: Text(
+          description,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontSize: 14, color: Colors.grey),
+        ),
+        trailing: const Icon(Icons.arrow_forward, color: Colors.green),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => SoloSellerProfilePage(userId: userId),
+            ),
           );
         },
       ),

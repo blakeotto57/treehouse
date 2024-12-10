@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:treehouse/models/reviews_page.dart';
 import 'chat_page.dart';
+import 'reviews_page.dart'; // Import the SellerReviewsPage
 
 class SoloSellerProfilePage extends StatefulWidget {
   final String userId;
@@ -87,7 +89,34 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                       color: Colors.black54,
                     ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 20),
+
+
+                    // View Reviews Button
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ReviewsPage(sellerId: widget.userId),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      "View Reviews",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+
 
                   // Seller Details
                   Container(
@@ -182,6 +211,7 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                       ],
                     ),
                   ),
+                  const SizedBox(height: 30),
                 ],
               ),
             );
