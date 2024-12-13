@@ -81,7 +81,6 @@ class ChatService {
 
     //creates particiapnts section in firebase
     final chatRoomRef = _fireStore.collection("chat_rooms").doc(chatRoomID);
-
     await chatRoomRef.set({
     "participants": ids, // Add participants to the chat room
      }, SetOptions(merge: true)); // Merge to avoid overwriting existing data
