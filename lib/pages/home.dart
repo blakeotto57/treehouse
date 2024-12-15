@@ -184,7 +184,7 @@ AppBar customAppBar(BuildContext context) {
     title: const Text(
       "Treehouse",
       style: TextStyle(
-        fontSize: 20,
+        fontSize: 30,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),

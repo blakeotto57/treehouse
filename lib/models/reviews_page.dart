@@ -1,25 +1,114 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 
-class ReviewsPage extends StatelessWidget {
+class ReviewsPage extends StatefulWidget {
   final String sellerId;
 
   const ReviewsPage({super.key, required this.sellerId});
 
   @override
+  State<ReviewsPage> createState() => _ReviewsPageState();
+}
+
+class _ReviewsPageState extends State<ReviewsPage> {
+  final currentUserEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+  bool hasReviewed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfUserReviewed();
+  }
+
+  Future<void> checkIfUserReviewed() async {
+    final snapshot = await FirebaseFirestore.instance
+        .collection("sellers")
+        .doc(widget.sellerId)
+        .collection("reviews")
+        .where('reviewerName', isEqualTo: currentUserEmail)
+        .get();
+
+    setState(() {
+      hasReviewed = snapshot.docs.isNotEmpty;
+    });
+  }
+
+  void hideFabAfterSubmission() {
+    setState(() {
+      hasReviewed = true;
+    });
+  }
+
+  void deleteReview(String reviewId) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("sellers")
+          .doc(widget.sellerId)
+          .collection("reviews")
+          .doc(reviewId)
+          .delete();
+
+      setState(() {
+        hasReviewed = false; // Allow the FAB to reappear
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Review deleted successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to delete review. Try again.')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Seller Reviews'),
+        title: StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection("sellers")
+              .doc(widget.sellerId)
+              .collection("reviews")
+              .snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Text('Seller Reviews');
+            }
+
+            final reviews = snapshot.data!.docs;
+
+            double totalRating = 0.0;
+            int reviewCount = reviews.length;
+
+            for (var review in reviews) {
+              totalRating += (review['rating'] ?? 0) as double;
+            }
+
+            double averageRating = totalRating / reviewCount;
+
+            return Text(
+              '${widget.sellerId}  (Avg: ${averageRating.toStringAsFixed(0)}/5)',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            );
+          },
+        ),
         backgroundColor: Colors.green[300],
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection("sellers") // Access the sellers collection
-            .doc(sellerId) // Access the specific seller document
-            .collection("reviews") // Access the reviews subcollection for this seller
-            .orderBy('timestamp', descending: true) // Order by timestamp
+            .collection("sellers")
+            .doc(widget.sellerId)
+            .collection("reviews")
+            .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -40,7 +129,9 @@ class ReviewsPage extends StatelessWidget {
           return ListView.builder(
             itemCount: reviews.length,
             itemBuilder: (context, index) {
-              final reviewData = reviews[index].data() as Map<String, dynamic>;
+              final review = reviews[index];
+              final reviewData = review.data() as Map<String, dynamic>;
+              final reviewId = review.id;
               final reviewerName = reviewData['reviewerName'] ?? 'Anonymous';
               final comment = reviewData['comment'] ?? 'No comment provided.';
               final rating = reviewData['rating'] ?? 0;
@@ -49,16 +140,49 @@ class ReviewsPage extends StatelessWidget {
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
                   title: Text(
-                    reviewerName,
+                    reviewerName.split('@')[0],
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(comment),
-                  trailing: Text(
-                    '$rating/5',
-                    style: const TextStyle(
-                      color: Colors.amber,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${rating.toStringAsFixed(0)}/5',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.amber,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (reviewerName == currentUserEmail)
+                        IconButton(
+                          icon: const Icon(Icons.more_vert),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Delete Review'),
+                                content: const Text(
+                                    'Are you sure you want to delete your review?'),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.pop(context);
+                                      deleteReview(reviewId);
+                                    },
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                    ],
                   ),
                 ),
               );
@@ -66,53 +190,72 @@ class ReviewsPage extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          // Show a dialog to add a review
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return ReviewDialog(sellerId: sellerId);
-            },
-          );
-        },
-        child: const Icon(Icons.add),
-        backgroundColor: Colors.green[300],
-      ),
+      floatingActionButton: (widget.sellerId == currentUserEmail || hasReviewed)
+          ? null // Hide FAB if the current user is viewing their own review page or has already reviewed
+          : FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return ReviewDialog(
+                      sellerId: widget.sellerId,
+                      onReviewSubmitted: hideFabAfterSubmission,
+                    );
+                  },
+                );
+              },
+              child: const Icon(Icons.add),
+              backgroundColor: Colors.green[300],
+            ),
     );
   }
 }
 
 class ReviewDialog extends StatefulWidget {
   final String sellerId;
+  final VoidCallback onReviewSubmitted;
 
-  const ReviewDialog({super.key, required this.sellerId});
+  const ReviewDialog({
+    super.key,
+    required this.sellerId,
+    required this.onReviewSubmitted,
+  });
 
   @override
   _ReviewDialogState createState() => _ReviewDialogState();
 }
 
 class _ReviewDialogState extends State<ReviewDialog> {
-  final _reviewerNameController = TextEditingController();
   final _commentController = TextEditingController();
   double _rating = 0.0;
 
   void _submitReview() async {
-    if (_reviewerNameController.text.isNotEmpty && _commentController.text.isNotEmpty && _rating > 0) {
-      await FirebaseFirestore.instance
-          .collection("sellers")
-          .doc(widget.sellerId) // Access the specific seller
-          .collection("reviews") // Access the reviews subcollection for this seller
-          .add({
-        'reviewerName': _reviewerNameController.text,
-        'comment': _commentController.text,
-        'rating': _rating,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+    if (_commentController.text.isNotEmpty && _rating > 0) {
+      String reviewerName = FirebaseAuth.instance.currentUser?.email ?? 'Anonymous';
 
-      Navigator.pop(context); // Close the dialog
+      try {
+        await FirebaseFirestore.instance
+            .collection("sellers")
+            .doc(widget.sellerId)
+            .collection("reviews")
+            .add({
+          'reviewerName': reviewerName,
+          'comment': _commentController.text,
+          'rating': _rating,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+
+        widget.onReviewSubmitted(); // Notify parent to hide the FAB
+        Navigator.pop(context); // Close the dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Review submitted successfully')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit review. Try again.')),
+        );
+      }
     } else {
-      // Show a message if the review is incomplete
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill in all fields and provide a rating')),
       );
@@ -127,32 +270,33 @@ class _ReviewDialogState extends State<ReviewDialog> {
         child: Column(
           children: [
             TextField(
-              controller: _reviewerNameController,
-              decoration: const InputDecoration(labelText: 'Your Name'),
-            ),
-            TextField(
               controller: _commentController,
-              decoration: const InputDecoration(labelText: 'Your Comment'),
-              maxLines: 3,
+              decoration: const InputDecoration(hintText: 'Your Review'),
+              maxLines: null,
+              maxLength: 100,
+              maxLengthEnforcement: MaxLengthEnforcement.enforced,
             ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                return IconButton(
-                  icon: Icon(
-                    _rating > index ? Icons.star : Icons.star_border,
-                    color: Colors.amber,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _rating = index + 1.0;
-                    });
-                  },
-                );
-              }),
+            FittedBox(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    iconSize: 30,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    icon: Icon(
+                      _rating > index ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _rating = index + 1.0;
+                      });
+                    },
+                  );
+                }),
+              ),
             ),
-            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: _submitReview,
               child: const Text('Submit Review'),

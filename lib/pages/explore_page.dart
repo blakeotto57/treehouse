@@ -31,8 +31,12 @@ class _ExplorePageState extends State<ExplorePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Explore Sellers',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "Explore Sellers",
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: Colors.green[300],
         centerTitle: true,

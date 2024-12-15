@@ -13,8 +13,12 @@ class PersonalCareSellersPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Personal Care Sellers',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          "Personal Care",
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
         backgroundColor: Colors.green[300],
         centerTitle: true,

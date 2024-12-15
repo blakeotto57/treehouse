@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:treehouse/category_pages/personal_care.dart';
-import 'package:treehouse/category_pages/academic_assistance.dart';
+import 'package:treehouse/category_pages/academics.dart';
 import 'package:treehouse/category_pages/cleaning.dart';
 import 'package:treehouse/category_pages/errands_moving.dart';
 import 'package:treehouse/category_pages/pet_care.dart';
 import 'package:treehouse/category_pages/photography.dart';
 import 'package:treehouse/category_pages/technical_services.dart';
-import 'package:treehouse/category_pages/vending_cooking.dart';
+import 'package:treehouse/category_pages/food.dart';
 
 
 
@@ -50,17 +50,17 @@ class CategoryModel {
 
 
 
-    //Vending & Cooking box
+    //Food box
     categories.add(
       CategoryModel(
-        name: "Vending & Cooking", 
+        name: "Food", 
         iconPath: "assets/icons/vending-icon.svg", 
         boxColor: Color.fromRGBO(215, 57, 239, 1),
 
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => VendingCookingSellersPage()),
+            MaterialPageRoute(builder: (context) => FoodSellersPage()),
             );
           }
         ),
@@ -86,17 +86,17 @@ class CategoryModel {
 
 
 
-    //Academic assitance box
+    //Academics box
     categories.add(
       CategoryModel(
-        name: "Academic Help", 
+        name: "Academics", 
         iconPath: "assets/icons/school-icon.svg", 
         boxColor: Color.fromRGBO(238, 138, 96, 1),
 
         onTap: (context) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AcademicAssistanceSellersPage()),
+            MaterialPageRoute(builder: (context) => AcademicsSellersPage()),
             );
 
           }
@@ -108,7 +108,7 @@ class CategoryModel {
     //Technical Services box
     categories.add(
       CategoryModel(
-        name: "Technical Services", 
+        name: "Technical", 
         iconPath: "assets/icons/computer-icon.svg", 
         boxColor: Color.fromRGBO(255, 64, 129, 1),
 

@@ -38,41 +38,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Profile Picture at the Top
-          Center(
-            child: CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.green[300],
-              child: const Icon(
-                Icons.person,
-                size: 50,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Section 1: Account Information
-          buildSectionHeader('Account Information'),
-          buildListTile(
-            title: 'Name',
-            subtitle: 'John Doe', // Replace with dynamic data
-            icon: Icons.edit,
-            onTap: () {
-              // Handle name edit
-            },
-          ),
-          buildListTile(
-            title: 'Email',
-            subtitle: 'johndoe@example.com', // Replace with dynamic data
-            icon: Icons.edit,
-            onTap: () {
-              // Handle email edit
-            },
-          ),
-          const Divider(),
-
-          // Section 2: Security
+          
+          // Section 1: Security
           buildSectionHeader('Security'),
           buildListTile(
             title: 'Change Password',
@@ -81,16 +48,10 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
               // Handle password change
             },
           ),
-          SwitchListTile(
-            title: const Text('Two-Factor Authentication'),
-            value: false,
-            onChanged: (value) {
-              // Handle toggle
-            },
-          ),
+          
           const Divider(),
 
-          // Section 3: Theme Customization
+          // Section 2: Theme Customization
           buildSectionHeader('Theme Customization'),
           SwitchListTile(
             title: const Text('Dark Mode'),
@@ -99,41 +60,15 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
               // Handle theme change
             },
           ),
-          buildListTile(
-            title: 'Accent Color',
-            icon: Icons.color_lens,
-            onTap: () {
-              // Handle color selection
-            },
-          ),
+          
           const Divider(),
 
-          // Section 4: User Activity
-          buildSectionHeader('User Activity'),
-          buildListTile(
-            title: 'Recent Activity',
-            onTap: () {
-              // Handle navigation to activity page
-            },
-          ),
-          const Divider(),
-
-          // Section 5: Transaction History
+          // Section 3: Transaction History
           buildSectionHeader('Transaction History'),
           buildListTile(
             title: 'View Transactions',
             onTap: () {
               // Handle navigation to transaction history
-            },
-          ),
-          const Divider(),
-
-          // Section 6: Linked Accounts
-          buildSectionHeader('Linked Accounts'),
-          buildListTile(
-            title: 'Manage Social Media Connections',
-            onTap: () {
-              // Handle linked account management
             },
           ),
         ],

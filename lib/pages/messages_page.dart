@@ -18,27 +18,22 @@ class MessagesPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           "Messages",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
+        centerTitle: true,
+
         backgroundColor: Colors.green[300],
         elevation: 0,
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Header
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Text(
-              "Chat with Friends",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-          const Divider(thickness: 1, color: Colors.grey),
+         
           const SizedBox(height: 10),
 
           // List of users

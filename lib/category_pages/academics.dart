@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:treehouse/pages/user_profile.dart';
 
-class VendingCookingSellersPage extends StatefulWidget {
-  const VendingCookingSellersPage({Key? key}) : super(key: key);
+String? globaluserid;
+
+
+class AcademicsSellersPage extends StatefulWidget {
+  const AcademicsSellersPage({Key? key}) : super(key: key);
 
   @override
-  State<VendingCookingSellersPage> createState() => _VendingCookingSellersPageState();
+  State<AcademicsSellersPage> createState() => _AcademicsSellersPageState();
 }
 
-class _VendingCookingSellersPageState extends State<VendingCookingSellersPage> {
+class _AcademicsSellersPageState extends State<AcademicsSellersPage> {
   late Stream<QuerySnapshot> _sellersStream;
 
   @override
@@ -18,7 +20,7 @@ class _VendingCookingSellersPageState extends State<VendingCookingSellersPage> {
     super.initState();
     _sellersStream = FirebaseFirestore.instance
         .collection('sellers')
-        .where('category', isEqualTo: 'Vending & Cooking')
+        .where('category', isEqualTo: 'Academic Assistance') // Updated to Academic Assistance
         .snapshots();
   }
 
@@ -26,7 +28,7 @@ class _VendingCookingSellersPageState extends State<VendingCookingSellersPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Vending & Cooking Sellers'),
+        title: const Text('Academic Assistance Sellers'),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: _sellersStream,

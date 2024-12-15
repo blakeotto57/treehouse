@@ -15,7 +15,7 @@ class TechnicalServicesSellersPage extends StatelessWidget {
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('sellers')
-            .where('category', isEqualTo: 'Technical Services') // Adjust category to 'Technical Services'
+            .where('category', isEqualTo: 'Technical') // Adjust category to 'Technical Services'
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {

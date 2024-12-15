@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String? globalUserName;
@@ -149,117 +150,55 @@ class _FeedbackPageState extends State<FeedbackPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Feedback'),
+        title: const Text(
+          "Your Feedback",
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: Colors.green[300],
       ),
-      body: globalUserName == null
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView( // Wrap with SingleChildScrollView to prevent overflow
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  // Feedback Text Box
-                  TextField(
-                    controller: feedbackController,
-                    decoration: InputDecoration(
-                      labelText: 'Enter your feedback',
-                      border: OutlineInputBorder(),
-                      counterText: '${feedbackController.text.length}/$minFeedbackLength characters',
-                    ),
-                    maxLength: 1000,
-                    onChanged: (value) {
-                      setState(() {});
-                    },
-                    maxLines: 3,
-                  ),
-                  SizedBox(height: 10),
+      body: SingleChildScrollView( // Wrap with SingleChildScrollView to prevent overflow
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Feedback Text Box
+            TextField(
+              controller: feedbackController,
+                decoration: const InputDecoration(hintText: 'Your Feedback'),
+                maxLines: null, // Allows multi-line input
+                maxLength: 100, // Limits to 100 characters
+                maxLengthEnforcement: MaxLengthEnforcement.enforced,
 
-                  // Star Rating
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      return IconButton(
-                        icon: Icon(
-                          index < selectedRating ? Icons.star : Icons.star_border,
-                          color: Colors.amber,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            selectedRating = index + 1;
-                          });
-                        },
-                      );
-                    }),
-                  ),
-                  SizedBox(height: 20),
+                
+              onChanged: (value) {
+                setState(() {});
+              },
+            ),
+            SizedBox(height: 10),
 
-                  // Submit Feedback Button
-                  isSubmitting
-                      ? CircularProgressIndicator()
-                      : ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green[300],
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                          ),
-                          onPressed: _submitFeedback,
-                          child: Text('Submit Feedback'),
-                        ),
-                  SizedBox(height: 20),
 
-                  // "Report a Bug" Button
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      setState(() {
-                        showBugReportBox = !showBugReportBox;
-                      });
-                    },
-                    icon: Icon(Icons.bug_report),
-                    label: Text('Report a Bug'),
+            // Submit Feedback Button
+            isSubmitting
+                ? CircularProgressIndicator()
+                : ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.deepOrange,
+                      backgroundColor: Colors.green[300],
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
+                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
+                    onPressed: _submitFeedback,
+                    child: Text('Submit Feedback'),
                   ),
-                  if (showBugReportBox) ...[
-                    SizedBox(height: 20),
-
-                    // Bug Report Text Box
-                    TextField(
-                      controller: bugReportController,
-                      decoration: InputDecoration(
-                        labelText: 'Describe the bug',
-                        border: OutlineInputBorder(),
-                        counterText: '${bugReportController.text.length}/$minFeedbackLength characters',
-                      ),
-                      maxLength: 1000,
-                      onChanged: (value) {
-                        setState(() {});
-                      },
-                      maxLines: 3,
-                    ),
-                    SizedBox(height: 10),
-
-                    // Submit Bug Report Button
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.deepOrange,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      ),
-                      onPressed: _submitBugReport,
-                      child: Text('Submit Bug Report'),
-                    ),
-                  ]
-                ],
-              ),
-            ),
+            SizedBox(height: 20),
+        
+          ],
+        ),
+      ),
     );
   }
 }
