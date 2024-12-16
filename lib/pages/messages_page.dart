@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
-import 'package:treehouse/components/user_tile.dart';
 import 'package:treehouse/models/chat_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
 
@@ -93,10 +92,10 @@ class MessagesPage extends StatelessWidget {
     );
   }
 
-  // Build individual list tile for user
-  Widget _buildUserListItem(Map<String, dynamic> userData, BuildContext context) {
-    // Check if email exists in userData
+    // Build individual list tile for user
+    Widget _buildUserListItem(Map<String, dynamic> userData, BuildContext context) {
     final email = userData["email"];
+    final profileImageUrl = userData["profileImageUrl"];
 
     if (email == null || email == _authService.currentUser?.email) {
       return Container(); // Skip current user or invalid data
@@ -112,8 +111,14 @@ class MessagesPage extends StatelessWidget {
         child: ListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           leading: CircleAvatar(
+            radius: 25,
+            backgroundImage: profileImageUrl != null
+                ? NetworkImage(profileImageUrl) // Display the user's profile picture
+                : null, // If no image URL, show a default icon
             backgroundColor: Colors.green[300],
-            child: const Icon(Icons.person, color: Colors.white),
+            child: profileImageUrl == null
+                ? const Icon(Icons.person, color: Colors.white)
+                : null, // Show placeholder icon if no image
           ),
           title: Center(
             child: Text(
@@ -121,7 +126,6 @@ class MessagesPage extends StatelessWidget {
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
-          
           onTap: () {
             // Navigate to the chat page with the user's email and UID
             Navigator.push(
