@@ -41,12 +41,10 @@ class PersonalCareSellersPage extends StatelessWidget {
             );
           }
 
-          final sellers = snapshot.data!.docs
-              .where((doc) {
-                final data = doc.data() as Map<String, dynamic>;
-                return data['email'] != currentUserEmail;
-              })
-              .toList();
+          final sellers = snapshot.data!.docs.where((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            return data['email'] != currentUserEmail;
+          }).toList();
 
           if (sellers.isEmpty) {
             return const Center(
@@ -64,14 +62,37 @@ class PersonalCareSellersPage extends StatelessWidget {
               final seller = sellers[index].data() as Map<String, dynamic>;
               final userId = sellers[index].id;
               final email = seller['email'] ?? 'Unknown';
-              final username = email.contains('@') ? email.split('@')[0] : email;
+              final username =
+                  email.contains('@') ? email.split('@')[0] : email;
 
-              return SellerCard(
-                userId: userId,
-                username: username,
-                description: seller['description'] ?? 'No description provided.',
-                profilePicture: seller['profilePicture'],
+              // Use FutureBuilder to fetch profileImageUrl from users collection
+              return FutureBuilder<DocumentSnapshot?>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .where('email', isEqualTo: email)
+                    .limit(1)
+                    .get()
+                    .then((snapshot) => snapshot.docs.isNotEmpty ? snapshot.docs.first : null),
+                builder: (context, userSnapshot) {
+                  // Check if the profileImageUrl exists
+                  String? profileImageUrl;
+                  if (userSnapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (userSnapshot.hasData && userSnapshot.data != null) {
+                    final userData = userSnapshot.data!.data() as Map<String, dynamic>;
+                    profileImageUrl = userData['profileImageUrl'];
+                  }
+
+                  return SellerCard(
+                    userId: userId,
+                    username: username,
+                    description: seller['description'] ?? 'No description provided.',
+                    profilePicture: profileImageUrl,
+                  );
+                },
               );
+
             },
           );
         },
@@ -104,11 +125,14 @@ class SellerCard extends StatelessWidget {
       elevation: 4,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundImage: profilePicture != null ? NetworkImage(profilePicture!) : null,
+          radius: 25,
+          backgroundColor: Colors.green[300],
+          backgroundImage: profilePicture != null && profilePicture!.isNotEmpty
+              ? NetworkImage(profilePicture!)
+              : null,
           child: profilePicture == null
               ? const Icon(Icons.person, color: Colors.white)
               : null,
-          backgroundColor: profilePicture == null ? Colors.green[300] : null,
         ),
         title: Text(
           username,
