@@ -9,7 +9,7 @@ import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/models/reviews_page.dart';
 import 'package:treehouse/pages/seller_calendar.dart'; // Import the seller calendar page
 import 'package:treehouse/pages/seller_setup.dart'; // Import the seller setup page
-import 'package:treehouse/pages/availability_page.dart';
+import 'package:treehouse/pages/set_availibility.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});

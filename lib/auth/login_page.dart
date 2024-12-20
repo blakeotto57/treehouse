@@ -40,7 +40,9 @@ class _LoginPageState extends State<LoginPage> {
         );
 
         //pop loading circle
-        if (context.mounted) Navigator.pop(context);
+        if (mounted) {
+          Navigator.pop(context);
+        }
       } on FirebaseAuthException catch (e) {
         Navigator.pop(context);
         
