@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/models/reviews_page.dart';
-import 'chat_page.dart';
-import 'reviews_page.dart'; // Import the SellerReviewsPage
+import '../pages/chat_page.dart';
+import '../pages/appointment_booking.dart'; // Import the new booking page
 
 class SoloSellerProfilePage extends StatefulWidget {
   final String userId;
@@ -14,7 +14,8 @@ class SoloSellerProfilePage extends StatefulWidget {
 }
 
 class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
-  final usersCollection = FirebaseFirestore.instance.collection("sellers");
+  final sellersCollection = FirebaseFirestore.instance.collection("sellers");
+  final usersCollection = FirebaseFirestore.instance.collection("users");
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +31,7 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
             icon: const Icon(Icons.message),
             tooltip: 'Message Seller',
             onPressed: () {
-              usersCollection.doc(widget.userId).get().then((doc) {
+              sellersCollection.doc(widget.userId).get().then((doc) {
                 if (doc.exists) {
                   final sellerData = doc.data() as Map<String, dynamic>;
                   final sellerEmail = sellerData['email'] ?? 'Unknown Email';
@@ -51,169 +52,220 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
         ],
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: usersCollection.doc(widget.userId).snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+        stream: sellersCollection.doc(widget.userId).snapshots(),
+        builder: (context, sellerSnapshot) {
+          if (sellerSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (snapshot.hasError) {
+          if (sellerSnapshot.hasError) {
             return const Center(child: Text("Error loading seller data"));
           }
 
-          if (snapshot.hasData && snapshot.data != null) {
-            final sellerData = snapshot.data!.data() as Map<String, dynamic>;
+          if (sellerSnapshot.hasData && sellerSnapshot.data != null) {
+            final sellerData = sellerSnapshot.data!.data() as Map<String, dynamic>;
 
-            return SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Profile Picture
-                  CircleAvatar(
-                    radius: 60,
-                    backgroundColor: Colors.green[300],
-                    child: const Icon(
-                      Icons.person,
-                      size: 80,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+            return FutureBuilder<DocumentSnapshot>(
+              future: usersCollection
+                  .where("email", isEqualTo: sellerData['email'])
+                  .limit(1)
+                  .get()
+                  .then((snapshot) => snapshot.docs.isNotEmpty ? snapshot.docs.first : throw Exception('No user found')),
+              builder: (context, userSnapshot) {
+                String? profileImageUrl;
 
-                  // Seller Email
-                  Text(
-                    sellerData['email'] ?? 'Unknown Email',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Colors.black54,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
+                if (userSnapshot.hasData && userSnapshot.data != null) {
+                  final userData = userSnapshot.data!.data() as Map<String, dynamic>;
+                  profileImageUrl = userData['profileImageUrl'];
+                }
 
-                    // View Reviews Button
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.amber,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ReviewsPage(sellerId: widget.userId),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      "View Reviews",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
-                  ),
-
-                  const SizedBox(height: 20),
-
-
-                  // Seller Details
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade200,
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Seller Details",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          sellerData['description'] ?? 'No description provided.',
-                          style: const TextStyle(fontSize: 14, color: Colors.black87),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-
-                  // Previous Work Section
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade200,
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          "Previous Work",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        // Placeholder for image gallery
-                        sellerData['workImages'] != null
-                            ? SizedBox(
-                                height: 150,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: (sellerData['workImages'] as List).length,
-                                  itemBuilder: (context, index) {
-                                    return Container(
-                                      margin: const EdgeInsets.only(right: 10),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: Image.network(
-                                          sellerData['workImages'][index],
-                                          height: 150,
-                                          width: 150,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Profile Picture
+                      CircleAvatar(
+                        radius: 60,
+                        backgroundColor: Colors.green[300],
+                        backgroundImage: profileImageUrl != null
+                            ? NetworkImage(profileImageUrl)
+                            : null,
+                        child: profileImageUrl == null
+                            ? const Icon(
+                                Icons.person,
+                                size: 80,
+                                color: Colors.white,
                               )
-                            : const Text(
-                                "No previous work available.",
-                                style: TextStyle(fontSize: 14, color: Colors.black54),
+                            : null,
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Seller Email
+                      Text(
+                        sellerData['email'] ?? 'Unknown Email',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.black54,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Buttons Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Appointment Button
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[300],
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                      ],
-                    ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AppointmentBookingPage(sellerId: widget.userId),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Appointment",
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                          const SizedBox(width: 30),
+
+                          // View Reviews Button
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.amber,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ReviewsPage(sellerId: widget.userId),
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              "Reviews",
+                              style: TextStyle(color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Seller Details
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.shade200,
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Seller Details",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              sellerData['description'] ?? 'No description provided.',
+                              style: const TextStyle(fontSize: 14, color: Colors.black87),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+
+                      // Previous Work Section
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.shade200,
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              "Previous Work",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            sellerData['workImages'] != null
+                                ? SizedBox(
+                                    height: 150,
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.horizontal,
+                                      itemCount: (sellerData['workImages'] as List).length,
+                                      itemBuilder: (context, index) {
+                                        return Container(
+                                          margin: const EdgeInsets.only(right: 10),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(8),
+                                            child: Image.network(
+                                              sellerData['workImages'][index],
+                                              height: 150,
+                                              width: 150,
+                                              fit: BoxFit.cover,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                : const Text(
+                                    "No previous work available.",
+                                    style: TextStyle(fontSize: 14, color: Colors.black54),
+                                  ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                    ],
                   ),
-                  const SizedBox(height: 30),
-                ],
-              ),
+                );
+              },
             );
           }
 

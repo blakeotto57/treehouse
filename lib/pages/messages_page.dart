@@ -1,7 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
-import 'package:treehouse/models/chat_page.dart';
+import 'package:treehouse/pages/chat_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
+import 'package:treehouse/pages/appointment_booking.dart'; // Import the new booking page
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class MessagesPage extends StatelessWidget {
   MessagesPage({super.key});
@@ -138,6 +141,144 @@ class MessagesPage extends StatelessWidget {
               ),
             );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class SoloSellerProfilePage extends StatelessWidget {
+  final String userId;
+
+  const SoloSellerProfilePage({Key? key, required this.userId}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Seller Profile',
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: Colors.green[300],
+        centerTitle: true,
+        elevation: 2,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Profile Picture
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userId)
+                  .get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.green[300],
+                    child: CircularProgressIndicator(color: Colors.white),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.green[300],
+                    child: Icon(Icons.error, color: Colors.white),
+                  );
+                }
+                if (snapshot.hasData && snapshot.data != null) {
+                  final userData = snapshot.data!.data() as Map<String, dynamic>;
+                  final profileImageUrl = userData['profileImageUrl'];
+                  return CircleAvatar(
+                    radius: 60,
+                    backgroundColor: Colors.green[300],
+                    backgroundImage: profileImageUrl != null
+                        ? NetworkImage(profileImageUrl)
+                        : null,
+                    child: profileImageUrl == null
+                        ? const Icon(
+                            Icons.person,
+                            size: 80,
+                            color: Colors.white,
+                          )
+                        : null,
+                  );
+                }
+                return CircleAvatar(
+                  radius: 60,
+                  backgroundColor: Colors.green[300],
+                  child: Icon(
+                    Icons.person,
+                    size: 80,
+                    color: Colors.white,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 20),
+
+            // Seller Email
+            FutureBuilder<DocumentSnapshot>(
+              future: FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userId)
+                  .get(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                }
+                if (snapshot.hasError) {
+                  return const Text('Error loading email');
+                }
+                if (snapshot.hasData && snapshot.data != null) {
+                  final userData = snapshot.data!.data() as Map<String, dynamic>;
+                  final email = userData['email'] ?? 'Unknown Email';
+                  return Text(
+                    email,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black54,
+                    ),
+                  );
+                }
+                return const Text('Unknown Email');
+              },
+            ),
+            const SizedBox(height: 20),
+
+            // View Reviews Button
+            ElevatedButton(
+              onPressed: () {
+                // Navigate to reviews page
+              },
+              child: const Text('View Reviews'),
+            ),
+            const SizedBox(height: 10),
+
+            // Appointment Button
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AppointmentBookingPage(sellerId: userId),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green[300],
+              ),
+              child: const Text('Appointment'),
+            ),
+          ],
         ),
       ),
     );

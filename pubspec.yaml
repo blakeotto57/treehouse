@@ -17,10 +17,12 @@ dependencies:
   cloud_firestore: ^5.5.0
   firebase_core: ^3.8.0
   firebase_database: ^11.1.6
-  firebase_auth: 5.3.3
-  intl: ^0.19.0 # Add the latest version here
+  firebase_auth: ^5.3.3
+  intl: ^0.18.1 # Add the latest version here
   firebase_app_check: ^0.3.1+6
-
+  syncfusion_flutter_calendar: ^28.1.35
+  booking_calendar: ^1.1.10 # Add the latest version of booking_calendar package
+  time_slot: ^1.0.0
 
   # Cupertino Icons for iOS
   cupertino_icons: ^1.0.8

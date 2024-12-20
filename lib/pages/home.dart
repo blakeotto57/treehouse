@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:treehouse/models/category_model.dart';
-import 'package:treehouse/models/chat_page.dart';
+import 'package:treehouse/pages/calendar.dart'; // Add this import
 import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/user_settings.dart';
@@ -38,7 +38,8 @@ class _HomePageState extends State<HomePage> {
             HomeContent(categories: categories),
             ExplorePage(),
             MessagesPage(),
-            const UserProfilePage(),
+            CalendarPage(), // Add CalendarPage to the IndexedStack
+            UserProfilePage(),
           ],
         ),
         bottomNavigationBar: BottomNavigationBar(
@@ -53,14 +54,22 @@ class _HomePageState extends State<HomePage> {
               icon: Icon(Icons.home),
               label: "Home",
             ),
+
             BottomNavigationBarItem(
               icon: Icon(Icons.store),
               label: "Explore",
             ),
+
             BottomNavigationBarItem(
               icon: Icon(Icons.message),
               label: "Messages",
             ),
+
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_today),
+              label: "Calendar",
+            ),
+
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
               label: "Profile",

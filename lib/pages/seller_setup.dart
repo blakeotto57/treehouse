@@ -124,7 +124,7 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.green[300],
         title: const Text('Become a Seller'),
