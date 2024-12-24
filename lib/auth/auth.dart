@@ -37,7 +37,7 @@ class AuthPage extends StatelessWidget {
 
                 if (firestoreSnapshot.hasData && firestoreSnapshot.data == true) {
                   // Email exists in Firestore -> Navigate to Home Page
-                  return const HomePage();
+                  return HomePage();
                 } else {
                   // Email not found -> Show error or redirect to Login/Register
                   return const LoginOrRegister();

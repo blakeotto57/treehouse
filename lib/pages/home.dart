@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:treehouse/models/category_model.dart';
-import 'package:treehouse/pages/calendar.dart'; // Add this import
 import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/user_settings.dart';
@@ -30,7 +29,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.grey[100],
+        backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: _currentIndex == 0 ? customAppBar(context) : null,
         body: IndexedStack(
           index: _currentIndex,
@@ -38,7 +37,6 @@ class _HomePageState extends State<HomePage> {
             HomeContent(categories: categories),
             ExplorePage(),
             MessagesPage(),
-            CalendarPage(), // Add CalendarPage to the IndexedStack
             UserProfilePage(),
           ],
         ),
@@ -66,11 +64,6 @@ class _HomePageState extends State<HomePage> {
             ),
 
             BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
-              label: "Calendar",
-            ),
-
-            BottomNavigationBarItem(
               icon: Icon(Icons.person_outline),
               label: "Profile",
             ),
@@ -91,16 +84,19 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               "Categories",
               style: TextStyle(
-                color: Colors.black,
+                color: textColor,
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
               ),
@@ -143,10 +139,10 @@ class HomeContent extends StatelessWidget {
                         const SizedBox(height: 10),
                         Text(
                           categories[index].name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 16,
-                            color: Colors.black87,
+                            color: textColor,
                           ),
                         ),
                       ],

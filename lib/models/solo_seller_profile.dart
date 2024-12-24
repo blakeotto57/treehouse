@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/models/reviews_page.dart';
 import '../pages/chat_page.dart';
-import '../pages/appointment_booking.dart'; // Import the new booking page
 
 class SoloSellerProfilePage extends StatefulWidget {
   final String userId;
@@ -19,10 +18,16 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text("Seller Profile"),
+        title: Text(
+          "Seller Profile",
+          style: TextStyle(color: textColor),
+        ),
         centerTitle: true,
         backgroundColor: Colors.green[300],
         elevation: 2,
@@ -108,9 +113,10 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                       // Seller Email
                       Text(
                         sellerData['email'] ?? 'Unknown Email',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
-                          color: Colors.black54,
+                          color: textColor,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -119,30 +125,9 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Appointment Button
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green[300],
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AppointmentBookingPage(sellerId: widget.userId),
-                                ),
-                              );
-                            },
-                            child: const Text(
-                              "Appointment",
-                              style: TextStyle(color: Colors.white, fontSize: 16),
-                            ),
-                          ),
-                          const SizedBox(width: 30),
-
+                          
+                           
+                
                           // View Reviews Button
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -162,7 +147,11 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                             },
                             child: const Text(
                               "Reviews",
-                              style: TextStyle(color: Colors.white, fontSize: 16),
+                              style: TextStyle(
+                                color: Colors.white, 
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                ),
                             ),
                           ),
                         ],
@@ -177,10 +166,10 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.shade200,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                                BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 6,
+                              offset: Offset(0, 3),
                             ),
                           ],
                         ),
@@ -214,9 +203,9 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.grey.shade200,
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                              color: Colors.black26,
+                              blurRadius: 6,
+                              offset: Offset(0, 3),
                             ),
                           ],
                         ),

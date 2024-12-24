@@ -22,11 +22,14 @@ class MyTextBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Container(
       width: width, // Set width dynamically
       height: height, // Set height dynamically
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(16),
       ),
       padding: padding ?? const EdgeInsets.only(left: 15, bottom: 15), // Default padding
@@ -38,16 +41,30 @@ class MyTextBox extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(sectionName),
+              Text(
+                sectionName,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: textColor,
+                ),
+                ),
               // Edit button
               IconButton(
                 onPressed: onPressed,
                 icon: const Icon(Icons.edit),
+                color: textColor,
               ),
             ],
           ),
           // Text
-          Text(text),
+          Text(
+            text,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 16,
+            ),
+          ),
         ],
       ),
     );

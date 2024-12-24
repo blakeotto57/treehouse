@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/text_field.dart';
 
 import '../components/button.dart';
+import '../pages/home.dart';
 
 
 class RegisterPage extends StatefulWidget {
@@ -27,42 +28,69 @@ class _RegisterPageState extends State<RegisterPage> {
 
   //sign up user
   void signUp() async {
-    
-      //make sure passwords match
-      if (passwordTextController.text != confirmPasswordTextController.text) {
-        //show error
-        displayMessage("Passwords do not match!");
-        return;
-      
-      }
-      // try creating the user
-      try {
-        //create the user
-        UserCredential userCredential = 
-            
-            await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: emailTextController.text,
-          password: passwordTextController.text,
-        );
-
-        //after creating new user, create a new document in firebase for them
-        FirebaseFirestore.instance
-        .collection("users")
-        .doc(userCredential.user!.uid)
-        .set({
-          "username" : emailTextController.text.split("@")[0],
-          "bio" : "Empty bio",
-          "email" : emailTextController.text,
-          //add additional fields if needed
-        });
-
-
-      } on FirebaseAuthException catch (e) {
-        
-        // show error to user
-        displayMessage(e.code);
-      }
+  // Make sure passwords match
+  if (passwordTextController.text != confirmPasswordTextController.text) {
+    // Show error
+    displayMessage("Passwords do not match!");
+    return;
   }
+
+  // Show loading indicator
+  showDialog(
+    context: context,
+    builder: (context) => const Center(
+      child: CircularProgressIndicator(),
+    ),
+  );
+
+  try {
+    // Create the user
+    UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: emailTextController.text,
+      password: passwordTextController.text,
+    );
+
+    // After creating new user, create a new document in Firebase for them
+    await FirebaseFirestore.instance.collection("users").doc(emailTextController.text).set({
+      "username": emailTextController.text.split("@")[0],
+      "bio": "Empty bio",
+      "email": emailTextController.text,
+      "password": passwordTextController.text,
+      "profileImageUrl": null, // Add default value for profileImageUrl
+      // Add additional fields if needed
+    });
+
+    // Pop loading indicator
+    if (mounted) {
+      Navigator.pop(context);
+    }
+
+    // Navigate to the home page or show success message
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) =>  HomePage()),
+      );
+    }
+  } on FirebaseAuthException catch (e) {
+    // Pop loading indicator
+    if (mounted) {
+      Navigator.pop(context);
+    }
+
+    // Show error to user
+    displayMessage(e.code);
+  } catch (e) {
+    // Pop loading indicator
+    if (mounted) {
+      Navigator.pop(context);
+    }
+
+    // Log and show any other errors
+    print('Error: $e');
+    displayMessage('An error occurred. Please try again.');
+  }
+}
 
   //display a dialog message
   void displayMessage(String message) {

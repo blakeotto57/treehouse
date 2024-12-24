@@ -21,6 +21,8 @@ dependencies:
   intl: ^0.19.0 # Updated to the latest compatible version
   firebase_app_check: ^0.3.1+6
   syncfusion_flutter_calendar: ^28.1.35
+  provider: ^6.1.2 
+  persistent_bottom_nav_bar: ^4.0.2
   
 
   # Cupertino Icons for iOS
@@ -38,3 +40,10 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/
+
+  fonts:
+    - family: Helvetica
+      fonts:
+        - asset: fonts/expressway.otf
+        - weight: 700
+  

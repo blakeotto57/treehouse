@@ -137,6 +137,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
               final rating = reviewData['rating'] ?? 0;
 
               return Card(
+                color:  Theme.of(context).colorScheme.primary,
                 margin: const EdgeInsets.all(10),
                 child: ListTile(
                   title: Text(
@@ -264,6 +265,9 @@ class _ReviewDialogState extends State<ReviewDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return AlertDialog(
       title: const Text('Add a Review'),
       content: SingleChildScrollView(
@@ -298,8 +302,15 @@ class _ReviewDialogState extends State<ReviewDialog> {
               ),
             ),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
               onPressed: _submitReview,
-              child: const Text('Submit Review'),
+              child: Text(
+                'Submit Review',
+                style: TextStyle(color: textColor),
+                
+              ),
             ),
           ],
         ),

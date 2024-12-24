@@ -31,6 +31,10 @@ class MyTextField extends StatelessWidget {
           color: Colors.grey,
         )
       ),
+      style: const TextStyle(
+        color: Colors.black,
+        fontWeight: FontWeight.normal,
+      ), // Set a fixed text color
    );
   }
 }

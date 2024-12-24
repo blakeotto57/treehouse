@@ -4,8 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/models/solo_seller_profile.dart';
 
 class PersonalCareSellersPage extends StatelessWidget {
-  const PersonalCareSellersPage({Key? key}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
@@ -23,6 +21,7 @@ class PersonalCareSellersPage extends StatelessWidget {
         backgroundColor: Colors.green[300],
         centerTitle: true,
       ),
+      
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
             .collection('sellers')
@@ -124,6 +123,7 @@ class SellerCard extends StatelessWidget {
       ),
       elevation: 4,
       child: ListTile(
+        tileColor: Theme.of(context).colorScheme.primary,
         leading: CircleAvatar(
           radius: 25,
           backgroundColor: Colors.green[300],

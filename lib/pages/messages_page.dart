@@ -3,21 +3,27 @@ import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/pages/chat_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
-import 'package:treehouse/pages/appointment_booking.dart'; // Import the new booking page
-import 'package:syncfusion_flutter_calendar/calendar.dart';
 
-class MessagesPage extends StatelessWidget {
-  MessagesPage({super.key});
+class MessagesPage extends StatefulWidget {
+  const MessagesPage({super.key});
 
+  @override
+  State<MessagesPage> createState() => _MessagesPageState();
+}
+
+class _MessagesPageState extends State<MessagesPage> {
   // Chat and Auth services
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
+        automaticallyImplyLeading: false, // Remove the back button
         title: const Text(
           "Messages",
           style: TextStyle(
@@ -27,18 +33,38 @@ class MessagesPage extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-
         backgroundColor: Colors.green[300],
-        elevation: 0,
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Set the icon color to white regardless of the theme
+        ),
       ),
       body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
-         
-          const SizedBox(height: 10),
-
-          // List of users
+          StreamBuilder<DocumentSnapshot>(
+            stream: FirebaseFirestore.instance.collection('users').doc('user_id').snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              }
+              if (snapshot.hasError) {
+                return const Text('Error loading email');
+              }
+              if (snapshot.hasData && snapshot.data != null) {
+                final userData = snapshot.data?.data() as Map<String, dynamic>?;
+                final email = userData?['email'] ?? "";
+                return Text(
+                  email,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black54,
+                  ),
+                );
+              }
+              return const Text('Unknown Email');
+            },
+          ),
+          // Add more widgets here
           Expanded(
             child: _buildUserList(),
           ),
@@ -95,8 +121,8 @@ class MessagesPage extends StatelessWidget {
     );
   }
 
-    // Build individual list tile for user
-    Widget _buildUserListItem(Map<String, dynamic> userData, BuildContext context) {
+  // Build individual list tile for user
+  Widget _buildUserListItem(Map<String, dynamic> userData, BuildContext context) {
     final email = userData["email"];
     final profileImageUrl = userData["profileImageUrl"];
 
@@ -107,6 +133,7 @@ class MessagesPage extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Card(
+        color: Theme.of(context).colorScheme.primary,
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -154,14 +181,19 @@ class SoloSellerProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Scaffold(
+            backgroundColor: Theme.of(context).colorScheme.surface,
+
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Seller Profile',
           style: TextStyle(
             fontSize: 30,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: textColor,
           ),
         ),
         backgroundColor: Colors.green[300],
@@ -253,31 +285,7 @@ class SoloSellerProfilePage extends StatelessWidget {
               },
             ),
             const SizedBox(height: 20),
-
-            // View Reviews Button
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to reviews page
-              },
-              child: const Text('View Reviews'),
-            ),
-            const SizedBox(height: 10),
-
-            // Appointment Button
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AppointmentBookingPage(sellerId: userId),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green[300],
-              ),
-              child: const Text('Appointment'),
-            ),
+      
           ],
         ),
       ),

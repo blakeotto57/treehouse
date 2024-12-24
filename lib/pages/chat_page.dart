@@ -32,6 +32,10 @@ class ChatPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkMode ? Colors.grey[900] ?? Colors.black : Colors.white;
+    final boxShadowColor = isDarkMode ? Colors.black54 ?? Colors.black : Colors.grey.shade300 ?? Colors.grey;
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -87,14 +91,18 @@ class ChatPage extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               receiverEmail,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black,
+              ),
             ),
           ],
         ),
         backgroundColor: Colors.green[300],
         elevation: 0,
       ),
-      backgroundColor: Colors.grey[100],
+      backgroundColor: backgroundColor,
       body: Column(
         children: [
           // Display all messages
@@ -102,7 +110,7 @@ class ChatPage extends StatelessWidget {
             child: _buildMessageList(),
           ),
           // User input box
-          _buildUserInput(),
+          _buildUserInput(backgroundColor, boxShadowColor, isDarkMode),
         ],
       ),
     );
@@ -137,14 +145,14 @@ class ChatPage extends StatelessWidget {
   }
 
   // Build user input area
-  Widget _buildUserInput() {
+  Widget _buildUserInput(Color backgroundColor, Color boxShadowColor, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: backgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.shade300,
+            color: boxShadowColor,
             blurRadius: 10,
             offset: Offset(0, -2),
           ),
@@ -162,15 +170,9 @@ class ChatPage extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           // Send button
-          ElevatedButton(
+          IconButton(
+            icon: Icon(Icons.send, color: isDarkMode ? Colors.white : Colors.black),
             onPressed: sendMessage,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green[300],
-              shape: const CircleBorder(),
-              padding: const EdgeInsets.all(15),
-              elevation: 5,
-            ),
-            child: const Icon(Icons.send, color: Colors.white),
           ),
         ],
       ),

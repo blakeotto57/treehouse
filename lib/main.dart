@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:treehouse/auth/auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:treehouse/theme/theme_provider.dart';
+import 'package:treehouse/auth/auth.dart';
 import 'firebase_options.dart'; // Firebase options (you need to configure this from Firebase console)
 
 void main() async {
@@ -9,7 +10,12 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform, // Initialize Firebase with options
   );
-  runApp(MyApp()); // Run the app after Firebase is initialized
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  ); // Run the app after Firebase is initialized
 }
 
 class MyApp extends StatelessWidget {
@@ -19,8 +25,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(fontFamily: "expressway"), // Custom font if added
-      home: AuthPage(),
+      theme: Provider.of<ThemeProvider>(context).themeData, // Use the theme from ThemeProvider
+      home: const AuthPage(),
     );
   }
 }

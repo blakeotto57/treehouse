@@ -7,9 +7,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/models/reviews_page.dart';
-import 'package:treehouse/pages/seller_calendar.dart'; // Import the seller calendar page
 import 'package:treehouse/pages/seller_setup.dart'; // Import the seller setup page
 import 'package:treehouse/pages/set_availibility.dart';
+import 'package:flutter/services.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -57,8 +57,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+    
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text(
           "Profile",
@@ -93,7 +96,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               }
               if (snapshot.hasData && snapshot.data != null && snapshot.data!.docs.isNotEmpty) {
                 return IconButton(
-                  icon: const Icon(Icons.calendar_today),
+                  icon: const Icon(Icons.calendar_today, color: Colors.white,),
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -109,7 +112,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ),
       ),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: usersCollection.doc(currentUser.uid).snapshots(),
+        stream: usersCollection.doc(currentUser.email).snapshots(),
         builder: (context, userSnapshot) {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -120,10 +123,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
           }
 
           if (userSnapshot.hasData && userSnapshot.data != null) {
-            final userData = userSnapshot.data!.data() as Map<String, dynamic>;
+            final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+
+            if (userData == null) {
+              return const Center(child: Text("User data is null"));
+            }
 
             // Fetch profile image URL
-            profileImageUrl = userData['profileImageUrl'];
+            profileImageUrl = userData['profileImageUrl'] ?? "";
 
             return SingleChildScrollView(
               child: Column(
@@ -138,11 +145,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           onTap: pickAndUploadImage,
                           child: CircleAvatar(
                             radius: 40,
-                            backgroundImage: profileImageUrl != null
+                            backgroundImage: profileImageUrl!.isNotEmpty
                                 ? NetworkImage(profileImageUrl!)
                                 : null,
                             backgroundColor: Colors.green[300],
-                            child: profileImageUrl == null
+                            child: profileImageUrl!.isEmpty
                                 ? const Icon(Icons.person,
                                     size: 40, color: Colors.white)
                                 : null,
@@ -154,27 +161,27 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           children: [
                             Text(
                               currentUser.email!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
-                                color: Colors.black54,
+                                color: textColor,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                             const SizedBox(height: 10),
+
                             MyTextBox(
                               text: userData['username'] ?? '',
                               sectionName: "Username",
                               onPressed: () => editField("username"),
                               width: 200,
-                              height: 90,
                               margin: const EdgeInsets.all(10),
                             ),
+                            
                             MyTextBox(
                               text: userData['bio'] ?? '',
                               sectionName: "Bio",
                               onPressed: () => editField("bio"),
                               width: 200,
-                              height: 90,
                               margin: const EdgeInsets.all(10),
                             ),
                           ],
@@ -194,7 +201,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
                         return Center(
                           child: Container(
-                            width: 200, // Set the width of the button
+                            width: 250, // Adjust the width to ensure the text is all on one line
                             child: MyButton(
                               onTap: () {
                                 Navigator.push(
@@ -205,7 +212,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 );
                               },
                               text: "Become a Seller",
-                              color: Colors.green[300], // Set the button color to green[300]
+                              color: Colors.green.shade300,
                             ),
                           ),
                         );
@@ -218,12 +225,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     child: Text(
-                      "Photos Submitted",
+                      'Additional Information',
                       style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  // Add any other widgets as needed
+                  // Add more widgets here
                 ],
               ),
             );
@@ -239,39 +245,62 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   Future<void> editField(String field) async {
     String newValue = "";
+    int charLimit = field == "username" ? 20 : 200;
+
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: Colors.white,
-        title: Text(
-          "Edit $field",
-          style: const TextStyle(color: Colors.black),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            "Edit $field",
+            style: const TextStyle(color: Colors.black),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  style: const TextStyle(color: Colors.black),
+                  decoration: InputDecoration(
+                    hintText: "Enter new $field",
+                    hintStyle: const TextStyle(color: Colors.grey),
+                  ),
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(charLimit),
+                  ],
+                  maxLines: field == "bio" ? null : 1,
+                  keyboardType: field == "bio" ? TextInputType.multiline : TextInputType.text,
+                  onChanged: (value) {
+                    setState(() {
+                      newValue = value;
+                    });
+                  },
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  '${newValue.length}/$charLimit characters',
+                  style: const TextStyle(color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+            ),
+            TextButton(
+              onPressed: () {
+                if (newValue.trim().isNotEmpty) {
+                  usersCollection.doc(currentUser.uid).update({field: newValue});
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text("Save", style: TextStyle(color: Colors.blue)),
+            ),
+          ],
         ),
-        content: TextField(
-          style: const TextStyle(color: Colors.black),
-          decoration: InputDecoration(
-            hintText: "Enter new $field",
-            hintStyle: const TextStyle(color: Colors.grey),
-          ),
-          onChanged: (value) {
-            newValue = value;
-          },
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              if (newValue.trim().isNotEmpty) {
-                usersCollection.doc(currentUser.uid).update({field: newValue});
-              }
-            },
-            child: const Text("Save", style: TextStyle(color: Colors.blue)),
-          ),
-        ],
       ),
     );
   }
@@ -287,6 +316,9 @@ class UserProfile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Profile'),
@@ -372,7 +404,6 @@ class UserProfile extends StatelessWidget {
                               sectionName: "Username",
                               onPressed: () => editField("username"),
                               width: 200,
-                              height: 90,
                               margin: const EdgeInsets.all(10),
                             ),
                             MyTextBox(
@@ -380,7 +411,6 @@ class UserProfile extends StatelessWidget {
                               sectionName: "Bio",
                               onPressed: () => editField("bio"),
                               width: 200,
-                              height: 90,
                               margin: const EdgeInsets.all(10),
                             ),
                           ],
@@ -400,7 +430,7 @@ class UserProfile extends StatelessWidget {
                       if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
                         return Center(
                           child: Container(
-                            width: 150, // Adjust the width as needed
+                            width: 250, // Adjust the width to ensure the text is all on one line
                             child: MyButton(
                               onTap: () {
                                 Navigator.push(
@@ -411,7 +441,7 @@ class UserProfile extends StatelessWidget {
                                 );
                               },
                               text: "Become a Seller",
-                              color: Colors.green[300], // Set the button color to green[300]
+                              color: Colors.green.shade300, // Set the button color to green.shade300
                             ),
                           ),
                         );

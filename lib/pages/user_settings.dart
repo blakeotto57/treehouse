@@ -1,6 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth.dart';
+import 'package:treehouse/theme/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class UserSettingsPage extends StatefulWidget {
   const UserSettingsPage({super.key});
@@ -10,23 +13,37 @@ class UserSettingsPage extends StatefulWidget {
 }
 
 class _UserSettingsPageState extends State<UserSettingsPage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final TextEditingController _newPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _currentPasswordController = TextEditingController();
+  bool _isLoading = false;
+
   // Sign user out
-  void signOut() {
-    FirebaseAuth.instance.signOut();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const AuthPage()),
-    );
+  void signOut() async {
+    await _auth.signOut();
+    Navigator.of(context).pushReplacementNamed('/login');
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('User Settings'),
-        centerTitle: true,
+        title: const Text(
+          "User Settings",
+          style: TextStyle(
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: Colors.green[300],
         elevation: 2,
+        iconTheme: IconThemeData(
+          color: isDarkMode ? Colors.white : Colors.black, // Change icon color based on theme
+        ),
         actions: [
           IconButton(
             onPressed: signOut,
@@ -41,11 +58,107 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
           
           // Section 1: Security
           buildSectionHeader('Security'),
-          buildListTile(
-            title: 'Change Password',
+          
+         buildListTile(
+            title: "Change Password",
             icon: Icons.lock,
             onTap: () {
-              // Handle password change
+              showDialog(
+                context: context,
+                barrierDismissible: true,
+                builder: (context) => SingleChildScrollView(
+                  child: AlertDialog(
+                    title: Row(
+                      children: [
+                        const Text(
+                          "Change Password",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+
+                           TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey,
+                                ),
+                              ),
+                      ),
+                      ],
+                    ),
+                    content: SingleChildScrollView(
+                      child: Container(
+                        height: 200,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: _currentPasswordController,
+                              decoration: const InputDecoration(
+                                labelText: "Current Password",
+                                border: OutlineInputBorder(),
+                              ),
+                              obscureText: true,
+                            ),
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _newPasswordController,
+                              decoration: const InputDecoration(
+                                labelText: "New Password",
+                                border: OutlineInputBorder(),
+                              ),
+                              obscureText: true,
+                            ),                            
+                            const SizedBox(height: 16),
+                            TextField(
+                              controller: _confirmPasswordController,
+                              decoration: const InputDecoration(
+                                labelText: "Confirm New Password",
+                                border: OutlineInputBorder(),
+                              ),
+                              obscureText: true,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    actions: [
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : Center(
+                            child: ElevatedButton(
+                                onPressed: () {
+                                  _changePassword();
+                                  Navigator.of(context).pop();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green[300],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  "Change Password",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                          ),
+                    ],
+                  ),
+                ),
+            
+              );
             },
           ),
           
@@ -54,10 +167,10 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
           // Section 2: Theme Customization
           buildSectionHeader('Theme Customization'),
           SwitchListTile(
-            title: const Text('Dark Mode'),
-            value: false,
-            onChanged: (value) {
-              // Handle theme change
+            title: Text('Dark Mode'),
+            value: Provider.of<ThemeProvider>(context).isDarkMode,
+            onChanged: (bool value) {
+              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             },
           ),
           
@@ -74,6 +187,42 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _changePassword() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        // Re-authenticate the user
+        AuthCredential credential = EmailAuthProvider.credential(
+          email: user.email!,
+          password: _currentPasswordController.text,
+        );
+        await user.reauthenticateWithCredential(credential);
+
+        // Update the password
+        FirebaseFirestore.instance.collection('users').doc(user.email!)
+        .update({
+          'password': _newPasswordController.text,
+        });
+          
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password successfully updated')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update password: $e')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No user is signed in')),
+      );
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget buildSectionHeader(String title) {
@@ -113,7 +262,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),
-      tileColor: Colors.grey[100],
       dense: true,
     );
   }
