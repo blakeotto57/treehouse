@@ -22,9 +22,9 @@ class MyTextField extends StatelessWidget {
           borderSide: BorderSide(color: Colors.white),
         ),
         focusedBorder: const OutlineInputBorder(
-          borderSide: BorderSide(color: Colors.white),
+          borderSide: BorderSide(color: Colors.blue),
         ),
-        fillColor: Colors.grey[100],
+        fillColor: Colors.white,
         filled: true,
         hintText: hintText,
         hintStyle: TextStyle(

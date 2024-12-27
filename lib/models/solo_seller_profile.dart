@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/models/reviews_page.dart';
+import 'package:treehouse/stripe/stripe_service.dart';
 import '../pages/chat_page.dart';
 
 class SoloSellerProfilePage extends StatefulWidget {
@@ -15,6 +16,9 @@ class SoloSellerProfilePage extends StatefulWidget {
 class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
   final sellersCollection = FirebaseFirestore.instance.collection("sellers");
   final usersCollection = FirebaseFirestore.instance.collection("users");
+
+  final TextEditingController _amountController = TextEditingController();
+  final TextEditingController _reasonController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +97,6 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Profile Picture
                       CircleAvatar(
                         radius: 60,
                         backgroundColor: Colors.green[300],
@@ -109,8 +112,6 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                             : null,
                       ),
                       const SizedBox(height: 20),
-
-                      // Seller Email
                       Text(
                         sellerData['email'] ?? 'Unknown Email',
                         style: TextStyle(
@@ -120,15 +121,9 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Buttons Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          
-                           
-                
-                          // View Reviews Button
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.amber,
@@ -148,53 +143,86 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                             child: const Text(
                               "Reviews",
                               style: TextStyle(
-                                color: Colors.white, 
+                                color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
-                                ),
+                              ),
                             ),
+                          ),
+                          const SizedBox(width: 10),
+                          TextButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: true, // Allow tapping outside to dismiss
+                                builder: (context) {
+                                  return SingleChildScrollView(
+                                    child: AlertDialog(
+                                      title: Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text("Payment Details"),
+                                          InkWell(
+                                            onTap: () => Navigator.pop(context),
+                                            child: const Icon(Icons.close, color: Colors.grey),
+                                          ),
+                                        ],
+                                      ),
+                                      content: Container(
+                                        height: 200,
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            TextField(
+                                              controller: _amountController,
+                                              decoration: const InputDecoration(
+                                                icon: Icon(Icons.attach_money),
+                                                labelText: "Amount to Pay",
+                                                labelStyle: TextStyle(color: Colors.grey),
+                                              ),
+                                              keyboardType: TextInputType.number,
+                                            ),
+                                            TextField(
+                                              controller: _reasonController,
+                                              decoration: const InputDecoration(
+                                                icon: Icon(Icons.description),
+                                                labelText: "What's this for?",
+                                                labelStyle: TextStyle(color: Colors.grey),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            TextButton(
+                                              style: TextButton.styleFrom(
+                                                foregroundColor: Colors.white,
+                                                backgroundColor: Colors.green,
+                                                padding: const EdgeInsets.all(16),
+                                              ),
+                                              onPressed: () {
+                                                Navigator.pop(context);
+                                              },
+                                              child: const Text("Pay"),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ).then((_) {
+                                _amountController.clear();
+                                _reasonController.clear();
+                              });
+                            },
+                            style: TextButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor: Colors.green,
+                              padding: const EdgeInsets.all(16),
+                            ),
+                            child: const Text("Pay with Stripe"),
                           ),
                         ],
                       ),
                       const SizedBox(height: 20),
-
-                      // Seller Details
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                                BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 6,
-                              offset: Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              "Seller Details",
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              sellerData['description'] ?? 'No description provided.',
-                              style: const TextStyle(fontSize: 14, color: Colors.black87),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 30),
-
-                      // Previous Work Section
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -257,7 +285,6 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
               },
             );
           }
-
           return const Center(
             child: Text("Seller data not available."),
           );

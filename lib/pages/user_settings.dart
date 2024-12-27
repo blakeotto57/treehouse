@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:treehouse/auth/auth.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -28,6 +27,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white : Colors.black;
 
     return Scaffold(
       appBar: AppBar(
@@ -70,12 +70,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                   child: AlertDialog(
                     title: Row(
                       children: [
-                        const Text(
+                        Text(
                           "Change Password",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white
+                            color: textColor,
                             ),
                           ),
                           const SizedBox(width: 16),
@@ -92,7 +92,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                                 color: Colors.grey,
                                 ),
                               ),
-                      ),
+                        ),
                       ],
                     ),
                     content: SingleChildScrollView(
@@ -146,10 +146,10 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   "Change Password",
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: textColor,
                                   ),
                                 ),
                               ),
@@ -176,14 +176,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
           
           const Divider(),
 
-          // Section 3: Transaction History
-          buildSectionHeader('Transaction History'),
-          buildListTile(
-            title: 'View Transactions',
-            onTap: () {
-              // Handle navigation to transaction history
-            },
-          ),
+         
         ],
       ),
     );
@@ -219,10 +212,6 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         const SnackBar(content: Text('No user is signed in')),
       );
     }
-  }
-
-  void _showMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget buildSectionHeader(String title) {

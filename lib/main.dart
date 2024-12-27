@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:treehouse/auth/auth.dart';
@@ -10,6 +11,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform, // Initialize Firebase with options
   );
+  Stripe.publishableKey = 'pk_live_51QHBkvBXZFp1JN2DdxxjGMSu0araZivIpZSiOV8ZlWfUtTDjIXzWjR0mrrzhdnlIxf9A9Rjz8UJSoovzYgw1QfkP001opcNLtQ';
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
