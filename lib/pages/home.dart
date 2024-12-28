@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+import 'package:treehouse/category_pages/personal_care.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/explore_page.dart';
@@ -16,63 +17,58 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<CategoryModel> categories = [];
-  int _currentIndex = 0;
+  final PersistentTabController _controller = PersistentTabController(initialIndex: 0);
 
-  @override
-  void initState() {
-    super.initState();
-    categories = CategoryModel.getCategories();
+  List<Widget> _buildScreens() => [
+        HomeContent(categories: CategoryModel.getCategories()),
+        ExplorePage(),
+        MessagesPage(),
+        UserProfilePage(),
+      ];
+
+  List<PersistentBottomNavBarItem> _navBarsItems() {
+    return [
+      PersistentBottomNavBarItem(
+        icon: const Icon(Icons.home, size: 26),
+        title: 'Home',
+        activeColorPrimary: Colors.green,
+        inactiveColorPrimary: Colors.grey,
+        iconSize: 22, // Lower the icon
+      ),
+      PersistentBottomNavBarItem(
+        icon: const Icon(Icons.store, size: 26),
+        title: 'Explore',
+        activeColorPrimary: Colors.green,
+        inactiveColorPrimary: Colors.grey,
+        iconSize: 22,
+      ),
+      PersistentBottomNavBarItem(
+        icon: const Icon(Icons.message, size: 26),
+        title: 'Messages',
+        activeColorPrimary: Colors.green,
+        inactiveColorPrimary: Colors.grey,
+        iconSize: 22,
+      ),
+      PersistentBottomNavBarItem(
+        icon: const Icon(Icons.person_outline, size: 26),
+        title: 'Profile',
+        activeColorPrimary: Colors.green,
+        inactiveColorPrimary: Colors.grey,
+        iconSize: 22,
+      ),
+    ];
   }
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: _currentIndex == 0 ? customAppBar(context) : null,
-        body: IndexedStack(
-          index: _currentIndex,
-          children: [
-            HomeContent(categories: categories),
-            ExplorePage(),
-            MessagesPage(),
-            UserProfilePage(),
-          ],
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Home",
-            ),
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.store),
-              label: "Explore",
-            ),
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.message),
-              label: "Messages",
-            ),
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              label: "Profile",
-            ),
-          ],
-          selectedItemColor: Colors.green[300],
-          unselectedItemColor: Colors.grey,
-          elevation: 8,
-        ),
-      ),
+    return PersistentTabView(
+      context,
+      controller: _controller,
+      screens: _buildScreens(),
+      items: _navBarsItems(),
+      navBarStyle: NavBarStyle.style1, // Adjust to preferred style
+      navBarHeight: 50, // Set the height of the bottom nav bar
+      padding: EdgeInsets.symmetric(vertical: 8), // Lower icons
     );
   }
 }
@@ -93,15 +89,7 @@ class HomeContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              "Categories",
-              style: TextStyle(
-                color: textColor,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 30),
             GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
@@ -120,7 +108,7 @@ class HomeContent extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: categories[index].boxColor.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
                           blurRadius: 6,
@@ -156,22 +144,22 @@ class HomeContent extends StatelessWidget {
       ),
     );
   }
-}
 
-Widget searchBar() {
-  return TextField(
-    decoration: InputDecoration(
-      filled: true,
-      fillColor: Colors.white,
-      hintText: "Search Categories",
-      prefixIcon: const Icon(Icons.search, color: Colors.grey),
-      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
+  Widget searchBar() {
+    return TextField(
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: Colors.white,
+        hintText: "Search Categories",
+        prefixIcon: const Icon(Icons.search, color: Colors.grey),
+        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 AppBar customAppBar(BuildContext context) {
@@ -189,7 +177,7 @@ AppBar customAppBar(BuildContext context) {
     title: const Text(
       "Treehouse",
       style: TextStyle(
-        fontSize: 30,
+        fontSize: 24,
         fontWeight: FontWeight.bold,
         color: Colors.white,
       ),
@@ -197,7 +185,7 @@ AppBar customAppBar(BuildContext context) {
     centerTitle: true,
     actions: [
       IconButton(
-        icon: const Icon(Icons.person_outline, color: Colors.white),
+        icon: const Icon(Icons.settings, color: Colors.white),
         onPressed: () {
           Navigator.push(
             context,

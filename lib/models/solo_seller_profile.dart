@@ -8,6 +8,7 @@ class SoloSellerProfilePage extends StatefulWidget {
   final String userId;
 
   const SoloSellerProfilePage({super.key, required this.userId});
+  
 
   @override
   State<SoloSellerProfilePage> createState() => _SoloSellerProfilePageState();

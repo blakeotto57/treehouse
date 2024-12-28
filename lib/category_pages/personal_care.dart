@@ -91,7 +91,6 @@ class PersonalCareSellersPage extends StatelessWidget {
                   );
                 },
               );
-
             },
           );
         },
@@ -160,3 +159,4 @@ class SellerCard extends StatelessWidget {
     );
   }
 }
+

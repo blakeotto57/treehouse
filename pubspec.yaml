@@ -24,6 +24,10 @@ dependencies:
   provider: ^6.1.2 
   persistent_bottom_nav_bar: ^6.2.1
   url_launcher: ^6.3.1
+  in_app_purchase: ^3.2.0
+  google_fonts: ^6.2.1
+  purchases_flutter: ^8.4.0
+  custom_navigation_bar: ^0.8.2
 
   
 
