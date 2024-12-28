@@ -61,14 +61,16 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return PersistentTabView(
-      context,
-      controller: _controller,
-      screens: _buildScreens(),
-      items: _navBarsItems(),
-      navBarStyle: NavBarStyle.style1, // Adjust to preferred style
-      navBarHeight: 50, // Set the height of the bottom nav bar
-      padding: EdgeInsets.symmetric(vertical: 8), // Lower icons
+    return Scaffold(
+      body: PersistentTabView(
+        context,
+        controller: _controller,
+        screens: _buildScreens(),
+        items: _navBarsItems(),
+        navBarStyle: NavBarStyle.style1, // Adjust to preferred style
+        navBarHeight: 50, // Set the height of the bottom nav bar
+        padding: EdgeInsets.symmetric(vertical: 8), // Lower icons
+      ),
     );
   }
 }
@@ -83,116 +85,98 @@ class HomeContent extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black;
 
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 30),
-            GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-                mainAxisExtent: 120,
-              ),
-              itemCount: categories.length,
-              padding: const EdgeInsets.all(8),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemBuilder: (context, index) {
-                return InkWell(
-                  onTap: () => categories[index].onTap(context),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: categories[index].boxColor.withOpacity(0.8),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 6,
-                          offset: Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SvgPicture.asset(
-                          categories[index].iconPath,
-                          width: 50,
-                          height: 50,
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          categories[index].name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            color: textColor,
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.green[300],
+        leading: IconButton(
+          icon: const Icon(Icons.feedback, color: Colors.white),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => FeedbackPage()),
+            );
+          },
+        ),
+        title: const Text(
+          "Treehouse",
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+              );
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                  mainAxisExtent: 120,
+                ),
+                itemCount: categories.length,
+                padding: const EdgeInsets.all(8),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemBuilder: (context, index) {
+                  return InkWell(
+                    onTap: () => categories[index].onTap(context),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: categories[index].boxColor.withOpacity(0.8),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 6,
+                            offset: Offset(0, 3),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SvgPicture.asset(
+                            categories[index].iconPath,
+                            width: 50,
+                            height: 50,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            categories[index].name,
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                );
-              },
-            ),
-          ],
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  Widget searchBar() {
-    return TextField(
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: Colors.white,
-        hintText: "Search Categories",
-        prefixIcon: const Icon(Icons.search, color: Colors.grey),
-        contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    );
-  }
-}
-
-AppBar customAppBar(BuildContext context) {
-  return AppBar(
-    backgroundColor: Colors.green[300],
-    leading: IconButton(
-      icon: const Icon(Icons.feedback, color: Colors.white),
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => FeedbackPage()),
-        );
-      },
-    ),
-    title: const Text(
-      "Treehouse",
-      style: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.bold,
-        color: Colors.white,
-      ),
-    ),
-    centerTitle: true,
-    actions: [
-      IconButton(
-        icon: const Icon(Icons.settings, color: Colors.white),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const UserSettingsPage()),
-          );
-        },
-      ),
-    ],
-  );
 }
