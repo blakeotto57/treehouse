@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/models/reviews_page.dart';
+import 'package:treehouse/payment/pay.dart';
 import 'package:treehouse/stripe/stripe_service.dart';
+import 'package:pay/pay.dart';
+import 'package:treehouse/payment/configurations_pay.dart';
 import '../pages/chat_page.dart';
 
 class SoloSellerProfilePage extends StatefulWidget {
@@ -20,6 +23,24 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
 
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
+
+  final List<PaymentItem> _paymentItems = [
+    PaymentItem(
+      label: 'Total',
+      amount: '99.99',
+      status: PaymentItemStatus.final_price,
+    )
+  ];
+
+  void onApplePayResult(paymentResult) {
+    debugPrint('Apple Payment result: $paymentResult');
+    // Handle Apple Pay result
+  }
+
+  void onGooglePayResult(paymentResult) {
+    debugPrint('Google Payment result: $paymentResult');
+    // Handle Google Pay result
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -192,16 +213,25 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                                               ),
                                             ),
                                             const SizedBox(height: 20),
-                                            TextButton(
-                                              style: TextButton.styleFrom(
-                                                foregroundColor: Colors.white,
-                                                backgroundColor: Colors.green,
-                                                padding: const EdgeInsets.all(16),
+                                            ApplePayButton(
+                                              paymentConfiguration: defaultApplePayConfigString,
+                                              paymentItems: _paymentItems,
+                                              style: ApplePayButtonStyle.black,
+                                              type: ApplePayButtonType.buy,
+                                              onPaymentResult: onApplePayResult,
+                                              loadingIndicator: const Center(
+                                                child: CircularProgressIndicator(),
                                               ),
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child: const Text("Pay"),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            GooglePayButton(
+                                              paymentConfiguration: defaultGooglePayConfig,
+                                              paymentItems: _paymentItems,
+                                              type: GooglePayButtonType.pay,
+                                              onPaymentResult: onGooglePayResult,
+                                              loadingIndicator: const Center(
+                                                child: CircularProgressIndicator(),
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -219,7 +249,7 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                               backgroundColor: Colors.green,
                               padding: const EdgeInsets.all(16),
                             ),
-                            child: const Text("Pay with Stripe"),
+                            child: const Text("Pay"),
                           ),
                         ],
                       ),

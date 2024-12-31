@@ -37,6 +37,7 @@ dependencies:
   video_player: ^2.9.2
   table_calendar: ^3.1.3
   flutter_stripe: ^11.3.0
+  pay: ^3.0.1
 
 dev_dependencies:
   flutter_test:
@@ -47,10 +48,11 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icons/
+    - assets/fonts/    # Added fonts directory
 
   fonts:
     - family: Expressway
       fonts:
-        - asset: fonts/expressway.otf
-        - weight: 700
-  
+        - asset: assets/fonts/expressway.otf
+          weight: 700
+
