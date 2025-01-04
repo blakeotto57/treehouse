@@ -8,7 +8,6 @@ import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/models/reviews_page.dart';
 import 'package:treehouse/pages/seller_setup.dart'; // Import the seller setup page
-import 'package:treehouse/pages/set_availibility.dart';
 import 'package:flutter/services.dart';
 
 class UserProfilePage extends StatefulWidget {
@@ -88,28 +87,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
             },
           ),
         ],
-        leading: FutureBuilder<QuerySnapshot>(
-          future: sellersCollection.where('email', isEqualTo: currentUser.email).get(),
-          builder: (context, snapshot) {
-           if (snapshot.connectionState == ConnectionState.waiting) {
-                return Container();
-              }
-              if (snapshot.hasData && snapshot.data != null && snapshot.data!.docs.isNotEmpty) {
-                return IconButton(
-                  icon: const Icon(Icons.calendar_today, color: Colors.white,),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AvailabilityPage(sellerId: currentUser.email!),
-                    ),
-                  );
-                },
-              );
-            }
-            return Container();
-          },
-        ),
       ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: usersCollection.doc(currentUser.email).snapshots(),
@@ -124,6 +101,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
           if (userSnapshot.hasData && userSnapshot.data != null) {
             final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+            if (userData == null) {
+              return const Center(child: Text("User data is null"));
+            }
 
             if (userData == null) {
               return const Center(child: Text("User data is null"));
@@ -322,30 +302,6 @@ class UserProfile extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Profile'),
-        actions: [
-          FutureBuilder<QuerySnapshot>(
-            future: sellersCollection.where('email', isEqualTo: currentUser.email).get(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Container();
-              }
-              if (snapshot.hasData && snapshot.data != null && snapshot.data!.docs.isNotEmpty) {
-                return IconButton(
-                  icon: const Icon(Icons.calendar_today),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => AvailabilityPage(sellerId: currentUser.email!),
-                      ),
-                    );
-                  },
-                );
-              }
-              return Container();
-            },
-          ),
-        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: usersCollection.where('email', isEqualTo: currentUser.email).snapshots(),

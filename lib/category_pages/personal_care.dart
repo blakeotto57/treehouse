@@ -1,99 +1,114 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
+import 'package:treehouse/components/like_button.dart';
+import 'package:treehouse/components/user_post.dart';
 import 'package:treehouse/models/solo_seller_profile.dart';
+import 'package:intl/intl.dart';
 
-class PersonalCareSellersPage extends StatelessWidget {
+class PersonalCarePage extends StatefulWidget {
+  const PersonalCarePage({Key? key}) : super(key: key);
+
+  @override
+  State<PersonalCarePage> createState() => _PersonalCarePageState();
+}
+
+class _PersonalCarePageState extends State<PersonalCarePage> {
+  final textController = TextEditingController();
+  final currentUser = FirebaseAuth.instance.currentUser!;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  Future<void> postMessage() async {
+    if (textController.text.isNotEmpty) {
+      await FirebaseFirestore.instance.collection("personal_care_posts").add({
+        "email": FirebaseAuth.instance.currentUser?.email,
+        "message": textController.text,
+        "timestamp": Timestamp.now(),
+        "likes": [],
+      });
+      setState(() {
+        textController.clear();
+      });
+      FocusScope.of(context).unfocus();
+      SystemChannels.textInput.invokeMethod('TextInput.hide');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          "Personal Care",
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
+        title: const Text("Personal Care"),
         backgroundColor: Colors.green[300],
-        centerTitle: true,
       ),
-      
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('sellers')
-            .where('category', isEqualTo: 'Personal Care')
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(
-              child: Text(
-                'No sellers found in this category.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+      body: Center(
+        child: Column(
+          children: [
+            Expanded(
+              child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection("personal_care_posts")
+                      .orderBy("timestamp", descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return ListView.builder(
+                        itemCount: snapshot.data!.docs.length,
+                        itemBuilder: (context, index) {
+                          final post = snapshot.data!.docs[index].data()
+                              as Map<String, dynamic>;
+
+                          // Tile of the post
+                          return UserPost(
+                            message: post["message"],
+                            user: post["email"],
+                            postId: snapshot.data!.docs[index].id,
+                            likes: List<String>.from(post["likes"] ?? []),
+                            timestamp: post["timestamp"],
+                          );
+                        },
+                      );
+                    } else if (snapshot.hasError) {
+                      return Center(
+                        child: Text("Error:${snapshot.error}"),
+                      );
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  }),
+            ),
+
+            // Message Input
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: textController,
+                      decoration: const InputDecoration(
+                        hintText: "What do you need?",
+                        hintStyle: TextStyle(color: Colors.grey),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.send),
+                    onPressed: postMessage,
+                  ),
+                ],
               ),
-            );
-          }
-
-          final sellers = snapshot.data!.docs.where((doc) {
-            final data = doc.data() as Map<String, dynamic>;
-            return data['email'] != currentUserEmail;
-          }).toList();
-
-          if (sellers.isEmpty) {
-            return const Center(
-              child: Text(
-                'No other sellers found in this category.',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            itemCount: sellers.length,
-            itemBuilder: (context, index) {
-              final seller = sellers[index].data() as Map<String, dynamic>;
-              final userId = sellers[index].id;
-              final email = seller['email'] ?? 'Unknown';
-              final username =
-                  email.contains('@') ? email.split('@')[0] : email;
-
-              // Use FutureBuilder to fetch profileImageUrl from users collection
-              return FutureBuilder<DocumentSnapshot?>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .where('email', isEqualTo: email)
-                    .limit(1)
-                    .get()
-                    .then((snapshot) => snapshot.docs.isNotEmpty ? snapshot.docs.first : null),
-                builder: (context, userSnapshot) {
-                  // Check if the profileImageUrl exists
-                  String? profileImageUrl;
-                  if (userSnapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (userSnapshot.hasData && userSnapshot.data != null) {
-                    final userData = userSnapshot.data!.data() as Map<String, dynamic>;
-                    profileImageUrl = userData['profileImageUrl'];
-                  }
-
-                  return SellerCard(
-                    userId: userId,
-                    username: username,
-                    description: seller['description'] ?? 'No description provided.',
-                    profilePicture: profileImageUrl,
-                  );
-                },
-              );
-            },
-          );
-        },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -159,4 +174,3 @@ class SellerCard extends StatelessWidget {
     );
   }
 }
-

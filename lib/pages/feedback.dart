@@ -97,54 +97,6 @@ class _FeedbackPageState extends State<FeedbackPage> {
     feedbackController.clear();
   }
 
-  void _submitBugReport() async {
-    final bugReport = bugReportController.text;
-
-    if (bugReport.isEmpty || bugReport.length < minFeedbackLength) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please enter at least $minFeedbackLength characters for the bug report.')),
-      );
-      return;
-    }
-
-    if (globalUserName == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Username is not set. Please try again later.')),
-      );
-      return;
-    }
-
-    setState(() {
-      isSubmitting = true;
-    });
-
-    await saveFeedback(globalUserName!, bugReport, 0, isBugReport: true);
-
-    setState(() {
-      isSubmitting = false;
-      showBugReportBox = false;
-    });
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Bug Report Submitted'),
-          content: Text('Thank you for reporting the bug!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-
-    bugReportController.clear();
-  }
 
   @override
   Widget build(BuildContext context) {

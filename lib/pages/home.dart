@@ -17,7 +17,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final PersistentTabController _controller = PersistentTabController(initialIndex: 0);
+  final PersistentTabController _controller =
+      PersistentTabController(initialIndex: 0);
 
   List<Widget> _buildScreens() => [
         HomeContent(categories: CategoryModel.getCategories()),
@@ -112,7 +113,8 @@ class HomeContent extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                MaterialPageRoute(
+                    builder: (context) => const UserSettingsPage()),
               );
             },
           ),
@@ -126,10 +128,10 @@ class HomeContent extends StatelessWidget {
             children: [
               GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
+                  crossAxisCount: 1,
                   crossAxisSpacing: 15,
-                  mainAxisSpacing: 15,
-                  mainAxisExtent: 120,
+                  mainAxisSpacing: 20,
+                  mainAxisExtent: 60,
                 ),
                 itemCount: categories.length,
                 padding: const EdgeInsets.all(8),
@@ -150,23 +152,20 @@ class HomeContent extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: Column(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          SvgPicture.asset(
-                            categories[index].iconPath,
-                            width: 50,
-                            height: 50,
+                          Icon(
+                            categories[index].icon,
+                            size: 40,
+                            color: HSLColor.fromColor(categories[index].boxColor)
+                                .withLightness(
+                                  (HSLColor.fromColor(categories[index].boxColor).lightness - 0.2).clamp(0.0, 1.0)
+                                )
+                                .toColor(),
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            categories[index].name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                              color: textColor,
-                            ),
-                          ),
+                          const SizedBox(width: 10),
+                          categories[index].name,
                         ],
                       ),
                     ),

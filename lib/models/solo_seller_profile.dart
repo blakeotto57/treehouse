@@ -212,25 +212,35 @@ class _SoloSellerProfilePageState extends State<SoloSellerProfilePage> {
                                                 labelStyle: TextStyle(color: Colors.grey),
                                               ),
                                             ),
+
+
                                             const SizedBox(height: 20),
+
+                                            // Payment buttons
                                             ApplePayButton(
-                                              paymentConfiguration: defaultApplePayConfigString,
+                                              paymentConfiguration: defaultApplePayConfig,
                                               paymentItems: _paymentItems,
-                                              style: ApplePayButtonStyle.black,
                                               type: ApplePayButtonType.buy,
                                               onPaymentResult: onApplePayResult,
                                               loadingIndicator: const Center(
                                                 child: CircularProgressIndicator(),
                                               ),
                                             ),
+
                                             const SizedBox(height: 10),
-                                            GooglePayButton(
-                                              paymentConfiguration: defaultGooglePayConfig,
-                                              paymentItems: _paymentItems,
-                                              type: GooglePayButtonType.pay,
-                                              onPaymentResult: onGooglePayResult,
-                                              loadingIndicator: const Center(
-                                                child: CircularProgressIndicator(),
+
+
+                                            Container(
+                                              width: double.infinity,
+                                              height: 50,
+                                              child: GooglePayButton(
+                                                paymentConfiguration: defaultGooglePayConfig,
+                                                paymentItems: _paymentItems,
+                                                type: GooglePayButtonType.pay,
+                                                onPaymentResult: onGooglePayResult,
+                                                loadingIndicator: const Center(
+                                                  child: CircularProgressIndicator(),
+                                                ),
                                               ),
                                             ),
                                           ],
