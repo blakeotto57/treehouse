@@ -62,8 +62,7 @@ class _UserPostState extends State<UserPost> {
   }
 
 
-  // show dialog box (bottom sheet) for adding a comment
-  // -- Keep your NEW UI, only revert how the DB is updated.
+  //show comment list
   void showCommentDialog() {
     showModalBottomSheet(
       context: context,
@@ -129,8 +128,9 @@ class _UserPostState extends State<UserPost> {
                           comment: commentData["comment"],
                           user: commentData["comment by"],
                           time: formatDate(commentData["created on"]),
-                          likes: [],
-                          postId: widget.postId,
+                          likes: List<String>.from(commentData["likes"] ?? []), // Fix: properly cast likes array
+                          postId: widget.postId, 
+                          commentId: commentData["comment"],
                         );
                       }).toList(),
                     );
@@ -199,19 +199,19 @@ class _UserPostState extends State<UserPost> {
     );
   }
 
-  // ADD COMMENT (OLD CODE LOGIC)
-  // Also updates the likes array here, instead of in toggleLike.
-  void addComment(String commentText, {String? parentId}) {
+  
+  void addComment(String comment, {String? parentId}) {
     FirebaseFirestore.instance
         .collection("personal_care_posts")
         .doc(widget.postId)
         .collection("comments")
-        .add({
-      "comment": commentText,
-      "comment by": currentUser.email,
-      "created on": Timestamp.now(),
-      "parentId": parentId, // null for top-level comments
-    });
+        .doc(comment)
+        .set({
+          "comment": comment,
+          "comment by": currentUser.email,
+          "created on": Timestamp.now(),
+          "likes": [], // Initialize empty likes array
+        });
   }
 
   // edit (delete) post logic

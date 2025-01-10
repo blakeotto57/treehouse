@@ -7,25 +7,26 @@ import 'package:treehouse/components/like_button.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Comment extends StatefulWidget {
-  String comment;
+  final String comment; // Changed from message
   final String user;
-  final String time; 
+  final String time;
   final List<String> likes;
-  final String postId; // Add this
+  final String postId;
+  final String commentId;
 
   Comment({
     super.key,
-    required this.comment,
+    required this.comment, // Changed from message
     required this.user,
     required this.time,
     required this.likes,
-    required this.postId, // Add this
+    required this.postId,
+    required this.commentId,
   });
 
   @override
   State<Comment> createState() => _CommentState();
 }
-
 
 class _CommentState extends State<Comment> {
   final currentUser = FirebaseAuth.instance.currentUser!;
@@ -42,92 +43,25 @@ class _CommentState extends State<Comment> {
     setState(() {
       isLiked = !isLiked;
     });
-    DocumentReference postRef = FirebaseFirestore.instance
-        .collection("personal_care_posts")
-        .doc(widget.postId);
 
-    if (isLiked) {
-      postRef.update({
-        "likes": FieldValue.arrayUnion([currentUser.email]),
-      });
-    } else {
-      postRef.update({
-        "likes": FieldValue.arrayRemove([currentUser.email]),
-      });
-    }
-  }
-
-  // show dialog box for adding a comment
-  void showCommentDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Add a comment"),
-        content: TextField(
-          controller: _commentTextController,
-          decoration: const InputDecoration(
-            hintText: "Comment here",
-            hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
-          ),
-          maxLines: null,
-          maxLengthEnforcement: MaxLengthEnforcement.enforced,
-        ),
-        actions: [
-          // cancel button
-          TextButton(
-            onPressed: () {
-              // pop box
-              Navigator.pop(context);
-
-              // clear the text field
-              _commentTextController.clear();
-            },
-            child: const Text(
-              "Cancel",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-
-          // add button
-          TextButton(
-            onPressed: () {
-              //add the comment
-              addComment(_commentTextController.text);
-
-              // pop the box
-              Navigator.pop(context);
-
-              // clear the text field
-              _commentTextController.clear();
-            },
-            child: const Text(
-              "Post",
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void addComment(String commentText) {
-    FirebaseFirestore.instance
+    // Get reference to the comment document
+    DocumentReference commentRef = FirebaseFirestore.instance
         .collection("personal_care_posts")
         .doc(widget.postId)
         .collection("comments")
-        .add({
-      "comment": _commentTextController,
-      "comment by": currentUser.email,
-      "created on": Timestamp.now(),
-    });
+        .doc(widget.comment);
+
+    if (isLiked) {
+      // Add user's email to likes array
+      commentRef.update({
+        "likes": FieldValue.arrayUnion([currentUser.email])
+      });
+    } else {
+      // Remove user's email from likes array
+      commentRef.update({
+        "likes": FieldValue.arrayRemove([currentUser.email])
+      });
+    }
   }
 
   @override
@@ -140,7 +74,6 @@ class _CommentState extends State<Comment> {
           // Header row with username and collapse button
           Row(
             children: [
-              
               const SizedBox(width: 8),
               Text(
                 widget.user,
@@ -168,9 +101,9 @@ class _CommentState extends State<Comment> {
               Padding(
                 padding: const EdgeInsets.only(left: 24, top: 8),
 
-                // comment 
+                // comment
                 child: Text(
-                  widget.comment,
+                  widget.comment, // Changed from message
                   style: const TextStyle(
                     fontSize: 14,
                     color: Colors.black87,
@@ -182,7 +115,8 @@ class _CommentState extends State<Comment> {
                   Icons.more_vert,
                   color: Colors.grey,
                 ),
-                onTap: () => editComment(widget.comment),
+                onTap: () =>
+                    editComment(widget.comment), // Changed from message
               ),
             ],
           ),
@@ -192,49 +126,18 @@ class _CommentState extends State<Comment> {
             child: Row(
               children: [
                 LikeButton(
-                isLiked: isLiked,
-                onTap: toggleLike,
-              ),
+                  isLiked: isLiked,
+                  onTap: toggleLike,
+                ),
 
-              const SizedBox(width: 5),
-              // like count
-              Text(
-                widget.likes.length.toString(),
-                style: const TextStyle(color: Colors.grey),
-              ),
+                const SizedBox(width: 5),
+                // like count
+                Text(
+                  widget.likes.length.toString(),
+                  style: const TextStyle(color: Colors.grey),
+                ),
 
                 const SizedBox(width: 10),
-
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: GestureDetector(
-                    onTap: showCommentDialog, // Update to use local method
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.reply,
-                          size: 16,
-                          color: Colors.grey[600],
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          'Reply',
-                          style: TextStyle(
-                            color: Colors.grey[600],
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
             ),
           ),
@@ -246,7 +149,7 @@ class _CommentState extends State<Comment> {
   // edit comment
   void editComment(String comment) {
     final TextEditingController _editingController = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
