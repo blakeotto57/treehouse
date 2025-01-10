@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/text_field.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 import '../components/button.dart';
 import '../pages/home.dart';
-
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -25,72 +24,107 @@ class _RegisterPageState extends State<RegisterPage> {
   final passwordTextController = TextEditingController();
   final confirmPasswordTextController = TextEditingController();
 
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    hostedDomain: 'edu', // Restrict to .edu domains
+    scopes: ['email', 'profile'],
+  );
+
+  Future<bool> verifyEducationalEmail(String email) async {
+    try {
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
+      if (googleUser != null) {
+        // Verify if Google email matches the provided email
+        if (googleUser.email == email) {
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // Add this validation function at class level
+  bool isValidEducationalEmail(String email) {
+    // Check if email is properly formatted and ends with .edu
+    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email);
+  }
 
   //sign up user
   void signUp() async {
-  // Make sure passwords match
-  if (passwordTextController.text != confirmPasswordTextController.text) {
-    // Show error
-    displayMessage("Passwords do not match!");
-    return;
-  }
+    // Make sure passwords match
+    if (passwordTextController.text != confirmPasswordTextController.text) {
+      // Show error
+      displayMessage("Passwords do not match!");
+      return;
+    }
 
-  // Show loading indicator
-  showDialog(
-    context: context,
-    builder: (context) => const Center(
-      child: CircularProgressIndicator(),
-    ),
-  );
-
-  try {
-    // Create the user
-    UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-      email: emailTextController.text,
-      password: passwordTextController.text,
+    // Show loading indicator
+    showDialog(
+      context: context,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(),
+      ),
     );
 
-    // After creating new user, create a new document in Firebase for them
-    await FirebaseFirestore.instance.collection("users").doc(emailTextController.text).set({
-      "username": emailTextController.text.split("@")[0],
-      "bio": "Empty bio",
-      "email": emailTextController.text,
-      "password": passwordTextController.text,
-      "profileImageUrl": null, // Add default value for profileImageUrl
-      // Add additional fields if needed
-    });
+    try {
+      // Verify email with Google
+      bool isValidUser = await verifyEducationalEmail(emailTextController.text);
+      
+      if (!isValidUser) {
+        Navigator.pop(context); // Remove loading indicator
+        displayMessage("Please verify your .edu email with Google");
+        return;
+      }
 
-    // Pop loading indicator
-    if (mounted) {
-      Navigator.pop(context);
-    }
-
-    // Navigate to the home page or show success message
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) =>  HomePage()),
+      // Continue with Firebase registration
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailTextController.text,
+        password: passwordTextController.text,
       );
-    }
-  } on FirebaseAuthException catch (e) {
-    // Pop loading indicator
-    if (mounted) {
-      Navigator.pop(context);
-    }
 
-    // Show error to user
-    displayMessage(e.code);
-  } catch (e) {
-    // Pop loading indicator
-    if (mounted) {
-      Navigator.pop(context);
-    }
+      // After creating new user, create a new document in Firebase for them
+      await FirebaseFirestore.instance.collection("users").doc(emailTextController.text).set({
+        "username": emailTextController.text.split("@")[0],
+        "bio": "Empty bio",
+        "email": emailTextController.text,
+        "password": passwordTextController.text,
+        "profileImageUrl": null, // Add default value for profileImageUrl
+        // Add additional fields if needed
+      });
 
-    // Log and show any other errors
-    print('Error: $e');
-    displayMessage('An error occurred. Please try again.');
+      // Pop loading indicator
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      // Navigate to the home page or show success message
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) =>  HomePage()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      // Pop loading indicator
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      // Show error to user
+      displayMessage(e.code);
+    } catch (e) {
+      // Pop loading indicator
+      if (mounted) {
+        Navigator.pop(context);
+      }
+
+      // Log and show any other errors
+      print('Error: $e');
+      displayMessage('An error occurred. Please try again.');
+    }
   }
-}
 
   //display a dialog message
   void displayMessage(String message) {
@@ -101,7 +135,6 @@ class _RegisterPageState extends State<RegisterPage> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +166,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     //email textfield
                     MyTextField(
                       controller: emailTextController,
-                      hintText: "Email",
+                      hintText: "College Email",
                       obscureText: false,
                     ),
               

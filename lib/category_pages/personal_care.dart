@@ -25,7 +25,7 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
 
   Future<void> postMessage() async {
     if (textController.text.isNotEmpty) {
-      await FirebaseFirestore.instance.collection("personal_care_posts").add({
+      await FirebaseFirestore.instance.collection("personal_care_posts").doc(textController.text).set({
         "email": FirebaseAuth.instance.currentUser?.email,
         "message": textController.text,
         "timestamp": Timestamp.now(),
@@ -67,7 +67,7 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
                           return UserPost(
                             message: post["message"],
                             user: post["email"],
-                            postId: snapshot.data!.docs[index].id,
+                            postId: post["message"],
                             likes: List<String>.from(post["likes"] ?? []),
                             timestamp: post["timestamp"],
                           );

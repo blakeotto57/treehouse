@@ -1,11 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:treehouse/components/comment.dart';
-import 'package:treehouse/components/comment_button.dart';
 import 'package:treehouse/components/delete_button.dart';
 import 'package:treehouse/components/like_button.dart';
 
@@ -17,6 +14,7 @@ class UserPost extends StatefulWidget {
   final String postId;
   final List<String> likes;
   final Timestamp timestamp;
+
   const UserPost({
     super.key,
     required this.message,
@@ -43,75 +41,166 @@ class _UserPostState extends State<UserPost> {
     isLiked = widget.likes.contains(currentUser.email);
   }
 
-  // toggle like
+  
   void toggleLike() {
     setState(() {
       isLiked = !isLiked;
     });
+    DocumentReference postRef = FirebaseFirestore.instance
+        .collection("personal_care_posts")
+        .doc(widget.postId);
+
+    if (isLiked) {
+      postRef.update({
+        "likes": FieldValue.arrayUnion([currentUser.email]),
+      });
+    } else {
+      postRef.update({
+        "likes": FieldValue.arrayRemove([currentUser.email]),
+      });
+    }
   }
 
-  // show dialog box for adding a comment
+
+  // show dialog box (bottom sheet) for adding a comment
+  // -- Keep your NEW UI, only revert how the DB is updated.
   void showCommentDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Add a comment"),
-        content: TextField(
-          controller: _commentTextController,
-          decoration: const InputDecoration(
-            hintText: "Comment here",
-            hintStyle: TextStyle(color: Colors.grey, fontSize: 16),
-          ),
-          maxLines: null,
-          maxLengthEnforcement: MaxLengthEnforcement.enforced,
-        ),
-        actions: [
-          // cancel button
-          TextButton(
-            onPressed: () {
-              // pop box
-              Navigator.pop(context);
-
-              // clear the text field
-              _commentTextController.clear();
-            },
-            child: const Text(
-              "Cancel",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(12),
+              topRight: Radius.circular(12),
             ),
           ),
-
-          // add button
-          TextButton(
-            onPressed: () {
-              //add the comment
-              addComment(_commentTextController.text);
-
-              // pop the box
-              Navigator.pop(context);
-
-              // clear the text field
-              _commentTextController.clear();
-            },
-            child: const Text(
-              "Post",
-              style: TextStyle(
-                color: Colors.blue,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Text(
+                      'Comments',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+              const Divider(),
+              // Comments List
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection("personal_care_posts")
+                      .doc(widget.postId)
+                      .collection("comments")
+                      .orderBy("created on", descending: true)
+                      .snapshots(),
+                  builder: (context, snapshot) {
+                    //show loading circle if no data
+                    if (!snapshot.hasData) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+
+                    return ListView(
+                      shrinkWrap: true,
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: snapshot.data!.docs.map((comment) {
+                        //get comment data
+                        final commentData =
+                            comment.data() as Map<String, dynamic>;
+
+                        // return the comment tile
+                        return Comment(
+                          comment: commentData["comment"],
+                          user: commentData["comment by"],
+                          time: formatDate(commentData["created on"]),
+                          likes: [],
+                          postId: widget.postId,
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
+              // Comment Input Field
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: Colors.grey[300]!)),
+                  color: Colors.white,
+                ),
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                  left: 16,
+                  right: 16,
+                  top: 8,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _commentTextController,
+                        decoration: InputDecoration(
+                          hintText: 'Add a comment...',
+                          hintStyle: const TextStyle(color: Colors.grey),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide.none,
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        addComment(_commentTextController.text);
+
+                        // pop the box
+                        Navigator.pop(context);
+
+                        // clear the text field
+                        _commentTextController.clear();
+                      },
+                      child: const Text(
+                        'Post',
+                        style: TextStyle(
+                          color: Colors.blue,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  //add a comment to the post
+  // ADD COMMENT (OLD CODE LOGIC)
+  // Also updates the likes array here, instead of in toggleLike.
   void addComment(String commentText, {String? parentId}) {
     FirebaseFirestore.instance
         .collection("personal_care_posts")
@@ -122,28 +211,10 @@ class _UserPostState extends State<UserPost> {
       "comment by": currentUser.email,
       "created on": Timestamp.now(),
       "parentId": parentId, // null for top-level comments
-      "depth": parentId != null ? 1 : 0 // track nesting level
     });
-
-    //access the document in FIrebase
-    DocumentReference postRef = FirebaseFirestore.instance
-        .collection("personal_care_posts")
-        .doc(widget.postId);
-
-    if (isLiked) {
-      // add the user to the likes array
-      postRef.update({
-        "likes": FieldValue.arrayUnion([currentUser.email]),
-      });
-    } else {
-      // remove the user from the likes array
-      postRef.update({
-        "likes": FieldValue.arrayRemove([currentUser.email]),
-      });
-    }
   }
 
-  // edit post
+  // edit (delete) post logic
   void editPost() {
     showDialog(
       context: context,
@@ -211,6 +282,7 @@ class _UserPostState extends State<UserPost> {
     );
   }
 
+  // Build your widget tree (unchanged, except for toggleLike usage).
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -223,6 +295,7 @@ class _UserPostState extends State<UserPost> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Top Row: Avatar, user, date, delete button
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -247,9 +320,6 @@ class _UserPostState extends State<UserPost> {
                 ),
               ),
 
-              const SizedBox(width: 2),
-
-              //space
               Text(
                 "•",
                 style: const TextStyle(
@@ -269,7 +339,7 @@ class _UserPostState extends State<UserPost> {
 
               const SizedBox(width: 2),
 
-              // detele button
+              // delete button
               if (currentUser.email == widget.user)
                 DeleteButton(
                   onTap: editPost,
@@ -279,22 +349,23 @@ class _UserPostState extends State<UserPost> {
 
           const SizedBox(height: 5),
 
+          // Message
           Row(
             children: [
               const SizedBox(width: 50),
-
-              //message
-              Text(
-                widget.message,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.black,
+              Expanded(
+                child: Text(
+                  widget.message,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ],
           ),
 
-          // Like and comment buttons
+          // Like and Comment Buttons
           Row(
             children: [
               LikeButton(
@@ -303,64 +374,46 @@ class _UserPostState extends State<UserPost> {
               ),
 
               const SizedBox(width: 5),
-
               // like count
               Text(
                 widget.likes.length.toString(),
                 style: const TextStyle(color: Colors.grey),
               ),
 
-              //comment button
+              // comment button
               IconButton(
                 onPressed: showCommentDialog,
                 icon: const Icon(Icons.comment),
                 color: Colors.grey,
               ),
 
-              //comment count
-              Text(
-                "0",
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.grey,
-                ),
+              // comment count (live from Firestore)
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection("personal_care_posts")
+                    .doc(widget.postId)
+                    .collection("comments")
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Text(
+                      "0",
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey,
+                      ),
+                    );
+                  }
+                  return Text(
+                    snapshot.data!.docs.length.toString(),
+                    style: const TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey,
+                    ),
+                  );
+                },
               ),
             ],
-          ),
-          //coments under post
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection("personal_care_posts")
-                .doc(widget.postId)
-                .collection("comments")
-                .orderBy("created on", descending: true)
-                .snapshots(),
-            builder: (context, snapshot) {
-              //show loading circle if no data
-              if (!snapshot.hasData) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
-              }
-
-              return ListView(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                children: snapshot.data!.docs.map((comment) {
-                  //get comment data
-                  final commentData = comment.data() as Map<String, dynamic>;
-
-                  // return the comment tile
-                  return Comment(
-                    message: commentData["comment"],
-                    user: commentData["comment by"],
-                    time: formatDate(commentData["created on"]),
-                    likes: [],
-                    postId: widget.postId,
-                  );
-                }).toList(),
-              );
-            },
           ),
         ],
       ),
