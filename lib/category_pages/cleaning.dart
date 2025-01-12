@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:treehouse/components/like_button.dart';
 import 'package:treehouse/components/user_post.dart';
-import 'package:treehouse/models/solo_seller_profile.dart';
+import 'package:treehouse/models/other_users_profile.dart';
 import 'package:intl/intl.dart';
 import 'package:treehouse/pages/user_profile.dart';
 
@@ -170,7 +170,7 @@ class SellerCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => SoloSellerProfilePage(userId: userId),
+              builder: (context) => OtherUsersProfilePage(userId: userId),
             ),
           );
         },

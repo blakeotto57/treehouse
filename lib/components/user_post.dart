@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:treehouse/components/comment.dart';
 import 'package:treehouse/components/delete_button.dart';
 import 'package:treehouse/components/like_button.dart';
+import 'package:treehouse/models/other_users_profile.dart';
+import 'package:treehouse/pages/user_profile.dart';
 
 import '../helper/helper_methods.dart';
 
@@ -308,12 +310,26 @@ class _UserPostState extends State<UserPost> {
               const SizedBox(width: 10),
 
               //user
-              Text(
-                widget.user,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.black,
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => OtherUsersProfilePage(userId: widget.user),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  widget.user,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[700],
+                  ),
                 ),
               ),
 

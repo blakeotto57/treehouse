@@ -12,9 +12,124 @@ class MessagesPage extends StatefulWidget {
 }
 
 class _MessagesPageState extends State<MessagesPage> {
-  // Chat and Auth services
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
+  
+  // Add counter for new message requests
+  Stream<int> get _newRequestsCount {
+    return FirebaseFirestore.instance
+        .collection('message_requests')
+        .doc(_authService.currentUser?.email)
+        .collection('requests')
+        .snapshots()
+        .map((snapshot) => snapshot.docs.length);
+  }
+
+  // Add function to handle user acceptance
+  Future<void> _acceptUser(String userEmail) async {
+    final currentUserEmail = _authService.currentUser?.email;
+    if (currentUserEmail == null) return;
+
+    // Add to accepted users collection
+    await FirebaseFirestore.instance
+        .collection('accepted_chats')
+        .doc(currentUserEmail)
+        .collection('users')
+        .doc(userEmail)
+        .set({
+      'timestamp': FieldValue.serverTimestamp(),
+      'email': userEmail,
+    });
+
+    // Remove from requests
+    await FirebaseFirestore.instance
+        .collection('message_requests')
+        .doc(currentUserEmail)
+        .collection('requests')
+        .doc(userEmail)
+        .delete();
+  }
+
+  // Add function to handle user rejection
+  Future<void> _rejectUser(String userEmail) async {
+    final currentUserEmail = _authService.currentUser?.email;
+    if (currentUserEmail == null) return;
+
+    // Remove from requests
+    await FirebaseFirestore.instance
+        .collection('message_requests')
+        .doc(currentUserEmail)
+        .collection('requests')
+        .doc(userEmail)
+        .delete();
+  }
+
+  // Add function to show requests dialog
+  void _showRequestsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Message Requests'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('message_requests')
+                .doc(_authService.currentUser?.email)
+                .collection('requests')
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final requests = snapshot.data!.docs;
+              
+              if (requests.isEmpty) {
+                return const Text('No pending requests');
+              }
+
+              return ListView.builder(
+                shrinkWrap: true,
+                itemCount: requests.length,
+                itemBuilder: (context, index) {
+                  final request = requests[index].data() as Map<String, dynamic>;
+                  final userEmail = request['senderEmail'] as String;
+
+                  return ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.green[300],
+                      child: Text(userEmail[0].toUpperCase()),
+                    ),
+                    title: Text(userEmail),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.check, color: Colors.green),
+                          onPressed: () {
+                            _acceptUser(userEmail);
+                            Navigator.pop(context);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () {
+                            _rejectUser(userEmail);
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +138,7 @@ class _MessagesPageState extends State<MessagesPage> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Remove the back button
+        automaticallyImplyLeading: false,
         title: const Text(
           "Messages",
           style: TextStyle(
@@ -34,9 +149,49 @@ class _MessagesPageState extends State<MessagesPage> {
         ),
         centerTitle: true,
         backgroundColor: Colors.green[300],
-        iconTheme: const IconThemeData(
-          color: Colors.white, // Set the icon color to white regardless of the theme
-        ),
+        actions: [
+          // Add request counter badge
+          StreamBuilder<int>(
+            stream: _newRequestsCount,
+            builder: (context, snapshot) {
+              final count = snapshot.data ?? 0;
+              
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications,
+                        color: Colors.white),
+                    onPressed: _showRequestsDialog,
+                  ),
+                  if (count > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          count.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,8 +230,8 @@ class _MessagesPageState extends State<MessagesPage> {
 
   // Build a list of users except currently logged-in user
   Widget _buildUserList() {
-    return FutureBuilder(
-      future: _chatService.getUsersInChatRooms(),
+    return StreamBuilder(
+      stream: Stream.fromFuture(_chatService.getUsersInChatRooms()),
       builder: (context, snapshot) {
         // Handle error
         if (snapshot.hasError) {

@@ -55,12 +55,66 @@ class ChatService {
       return userData;
     }
 
+  // In chat_service.dart
+  Stream<List<Map<String, dynamic>>> getAcceptedUsersInChatRooms() async* {
+    final String currentUserEmail = _firebaseAuth.currentUser!.email!;
+    
+    // Get accepted users
+    final acceptedUsersStream = _fireStore
+        .collection('accepted_chats')
+        .doc(currentUserEmail)
+        .collection('users')
+        .snapshots();
+
+    await for (final snapshot in acceptedUsersStream) {
+      final acceptedEmails = snapshot.docs.map((doc) => doc['email'] as String).toSet();
+      
+      if (acceptedEmails.isEmpty) {
+        yield [];
+        continue;
+      }
+
+      // Get user data for accepted emails
+      final userDocs = await Future.wait(
+        acceptedEmails.map((email) => _fireStore
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .get()
+            .then((snap) => snap.docs.first.data())),
+      );
+
+      yield userDocs;
+    }
+  }
+
 
   //send messages
-  Future<void> sendMessage(String receiverID, message) async {
+  Future<void> sendMessage(String receiverID, String message) async {
+    // Check if this is first message and receiver hasn't accepted yet
+    final currentUserEmail = _firebaseAuth.currentUser!.email!;
+    final acceptedDoc = await _fireStore
+        .collection('accepted_chats')
+        .doc(receiverID)
+        .collection('users')
+        .doc(currentUserEmail)
+        .get();
+
+    if (!acceptedDoc.exists) {
+      // Create message request
+      await _fireStore
+          .collection('message_requests')
+          .doc(receiverID)
+          .collection('requests')
+          .doc(currentUserEmail)
+          .set({
+        'senderEmail': currentUserEmail,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+      return;
+    }
+
     // get current user info
     final String currentUserID = _firebaseAuth.currentUser!.uid!;
-    final String currentUserEmail = _firebaseAuth.currentUser!.email!;
     final Timestamp timestamp = Timestamp.now();
 
 

@@ -75,12 +75,26 @@ class _CommentState extends State<Comment> {
           Row(
             children: [
               const SizedBox(width: 8),
-              Text(
-                widget.user,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                  fontSize: 14,
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    '/profile',
+                    arguments: widget.user, // Pass the email as argument
+                  );
+                },
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Text(
+                  widget.user,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green[700],
+                    fontSize: 14,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),

@@ -33,8 +33,11 @@ class ChatPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? Colors.grey[900] ?? Colors.black : Colors.white;
-    final boxShadowColor = isDarkMode ? Colors.black54 ?? Colors.black : Colors.grey.shade300 ?? Colors.grey;
+    final backgroundColor =
+        isDarkMode ? Colors.grey[900] ?? Colors.black : Colors.white;
+    final boxShadowColor = isDarkMode
+        ? Colors.black54 ?? Colors.black
+        : Colors.grey.shade300 ?? Colors.grey;
 
     return Scaffold(
       appBar: AppBar(
@@ -59,8 +62,11 @@ class ChatPage extends StatelessWidget {
                     child: Icon(Icons.error, color: Colors.white),
                   );
                 }
-                if (snapshot.hasData && snapshot.data != null && snapshot.data!.docs.isNotEmpty) {
-                  final userData = snapshot.data!.docs.first.data() as Map<String, dynamic>?;
+                if (snapshot.hasData &&
+                    snapshot.data != null &&
+                    snapshot.data!.docs.isNotEmpty) {
+                  final userData =
+                      snapshot.data!.docs.first.data() as Map<String, dynamic>?;
                   if (userData != null) {
                     final profileImageUrl = userData['profileImageUrl'];
                     if (profileImageUrl != null) {
@@ -119,7 +125,8 @@ class ChatPage extends StatelessWidget {
   // Build message list
   Widget _buildMessageList() {
     return StreamBuilder(
-      stream: _chatService.getMessages(receiverID, _authService.currentUser!.email!),
+      stream: _chatService.getMessages(
+          receiverID, _authService.currentUser!.email!),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -145,7 +152,8 @@ class ChatPage extends StatelessWidget {
   }
 
   // Build user input area
-  Widget _buildUserInput(Color backgroundColor, Color boxShadowColor, bool isDarkMode) {
+  Widget _buildUserInput(
+      Color backgroundColor, Color boxShadowColor, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -158,23 +166,55 @@ class ChatPage extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
-          // Text field for typing message
-          Expanded(
-            child: MyTextField(
-              controller: _messageController,
-              hintText: "Type a message...",
-              obscureText: false,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDarkMode ? Colors.grey[900] : Colors.white,
+          border: Border(
+            top: BorderSide(
+              color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+              width: 1,
+            ),
+            bottom: BorderSide(
+              color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+              width: 1,
             ),
           ),
-          const SizedBox(width: 10),
-          // Send button
-          IconButton(
-            icon: Icon(Icons.send, color: isDarkMode ? Colors.white : Colors.black),
-            onPressed: sendMessage,
-          ),
-        ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        child: Row(
+          children: [
+            // Text field for typing message
+            Expanded(
+              child: TextField(
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: true,
+                  fillColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                  hintText: "Type a message...",
+                  hintStyle: TextStyle(
+                    color: Colors.grey
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+                controller: _messageController,
+                obscureText: false,
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // Send button
+            IconButton(
+              icon: Icon(Icons.send,
+                  color: isDarkMode ? Colors.white : Colors.black),
+              onPressed: sendMessage,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -187,7 +227,8 @@ class ChatPage extends StatelessWidget {
     bool isCurrentUser = data["senderID"] == _authService.currentUser!.email!;
 
     // Align the message to the right if sender, to the left otherwise
-    var alignment = isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
+    var alignment =
+        isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
 
     return Container(
       alignment: alignment,
