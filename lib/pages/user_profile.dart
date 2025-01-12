@@ -74,16 +74,25 @@ class _UserProfilePageState extends State<UserProfilePage> {
         backgroundColor: Colors.green[300],
         elevation: 0,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.star, color: Colors.amber),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      ReviewsPage(sellerId: currentUser.email!),
-                ),
-              );
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('sellers')
+                .where('email', isEqualTo: currentUser.email)
+                .snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                return IconButton(
+                  icon: const Icon(Icons.star, color: Colors.amber),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ReviewsPage(sellerId: currentUser.email!),
+                      ),
+                    );
+                  },
+                );
+              }
+              return const SizedBox.shrink(); // Returns empty widget if user is not a seller
             },
           ),
         ],
@@ -170,34 +179,44 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  FutureBuilder<QuerySnapshot>(
-                    future: sellersCollection
-                        .where('email', isEqualTo: currentUser.email)
-                        .get(),
+                  StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('sellers')
+                        .doc(currentUser.email)
+                        .snapshots(),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Container();
+                      // Hide button if seller document exists
+                      if (snapshot.hasData && snapshot.data!.exists) {
+                        return const SizedBox.shrink();
                       }
-                      if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
-                        return Center(
-                          child: Container(
-                            width: 250, // Adjust the width to ensure the text is all on one line
-                            child: MyButton(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SellerSetupPage(onTap: () {}),
-                                  ),
-                                );
-                              },
-                              text: "Become a Seller",
-                              color: Colors.green.shade300,
+                      
+                      // Show button if user is not a seller
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => SellerSetupPage(onTap: () {}),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green[300],
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                            ),
+                            child: const Text(
+                              'Become a Seller',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                        );
-                      }
-                      return Container();
+                        ],
+                      );
                     },
                   ),
                   const SizedBox(height: 20),

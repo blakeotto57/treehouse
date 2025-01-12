@@ -21,7 +21,6 @@ class SellerSetupPage extends StatefulWidget {
 class _SellerSetupPageState extends State<SellerSetupPage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _instagramController = TextEditingController();
 
   final List<String> serviceCategories = [
     'Personal Care',
@@ -55,7 +54,8 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   Future<List<String>> _uploadImages() async {
     List<String> imageUrls = [];
     for (var image in _images) {
-      String fileName = 'seller_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
+      String fileName =
+          'seller_images/${DateTime.now().millisecondsSinceEpoch}.jpg';
       FirebaseStorage storage = FirebaseStorage.instance;
       Reference ref = storage.ref().child(fileName);
       await ref.putFile(image);
@@ -67,58 +67,70 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
 
   // Submit the form
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        isSeller = true; // Show progress indicator
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      isSeller = true;
+    });
+
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) throw Exception("No user is logged in.");
+
+      String description = _descriptionController.text.trim();
+      List<String> imageUrls = await _uploadImages();
+
+      // Create seller document
+      await FirebaseFirestore.instance
+          .collection('sellers')
+          .doc(currentUser.email)
+          .set({
+        'userId': currentUser.uid,
+        'email': currentUser.email,
+        'category': selectedCategory,
+        'description': description,
+        'imageUrls': imageUrls,
+        'timestamp': FieldValue.serverTimestamp(),
+        'seller': true,
       });
 
-      try {
-        // Get the values from the controllers
-        String description = _descriptionController.text.trim();
-        String instagram = _instagramController.text.trim();
-        User? currentUser = FirebaseAuth.instance.currentUser;
+      // Update user document
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.email)
+          .update({
+        'isSeller': true,
+        'sellerCategory': selectedCategory,
+      });
 
-        if (currentUser == null) {
-          throw Exception("No user is logged in.");
-        }
+      if (!mounted) return;
 
-        // Upload images and get the URLs
-        List<String> imageUrls = await _uploadImages();
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Successfully registered as seller!')),
+      );
 
-        // Save the data to Firestore
-        await FirebaseFirestore.instance.collection('sellers').doc(currentUser.email).set({
-          'userId': currentUser.uid, // Store the user's UID
-          'email': currentUser.email, // Store the user's email (optional)
-          'category': selectedCategory,
-          'description': description,
-          'instagram': instagram, // Store the Instagram username
-          'imageUrls': imageUrls, // Store image URLs
-          'timestamp': FieldValue.serverTimestamp(),
-          "seller": true,
-        });
-
-        // Clear the form after submission
-        _descriptionController.clear();
-        _instagramController.clear();
-        _images.clear();
-
-        // Navigate to SellerProfilePage after successful setup
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(), // Ensure SellerProfilePage is defined and imported
-          ),
-        );
-      } catch (e) {
+      // Simply pop back to previous screen
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error submitting data: $e')),
+          SnackBar(content: Text('Error: ${e.toString()}')),
         );
-      } finally {
+      }
+    } finally {
+      if (mounted) {
         setState(() {
-          isSeller = false; // Reset state after submission
+          isSeller = false;
         });
       }
     }
+  }
+
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    super.dispose();
   }
 
   @override
@@ -186,22 +198,6 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
               ),
               const SizedBox(height: 16),
 
-              // Instagram username field
-              TextFormField(
-                controller: _instagramController,
-                decoration: InputDecoration(
-                  labelText: 'Instagram (optional)',
-                  hintText: 'Enter your Instagram username',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                validator: (value) {
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-
               // Image upload section
               const Text(
                 'Upload Images of Past Work',
@@ -210,8 +206,11 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
               const SizedBox(height: 8),
               ElevatedButton.icon(
                 onPressed: _pickImage,
-                icon: const Icon(Icons.photo),
-                label: const Text('Add Images'),
+                icon: const Icon(Icons.photo,
+                    color: Colors.black),
+                label: const Text('Add Images',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold,
+                    color: Colors.black)),
               ),
               const SizedBox(height: 8),
               _images.isNotEmpty
@@ -246,18 +245,28 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
                               ))
                           .toList(),
                     )
-                  : const Text('No images added yet.'),
+                  : const SizedBox(height: 2),
 
               // Submit button
-              const SizedBox(height: 24),
+              const SizedBox(height: 10),
               Container(
                 child: ElevatedButton(
-                  onPressed: isSeller ? null : _submitForm, // Disable button when submitting
+                  onPressed: isSeller
+                      ? null
+                      : _submitForm, // Disable button when submitting
                   child: isSeller
                       ? const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
                         )
-                      : const Text('Submit'),
+                      : const Text(
+                          'Submit',
+                          style: TextStyle(
+                            color: Colors.blue,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                 ),
               ),
             ],

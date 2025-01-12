@@ -44,7 +44,7 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Personal Care"),
-        backgroundColor: Colors.green[300],
+        backgroundColor: Color.fromRGBO(178, 129, 243, 1),
       ),
       body: Center(
         child: Column(
