@@ -116,7 +116,7 @@ class _CommentState extends State<Comment> {
                   color: Colors.grey,
                 ),
                 onTap: () =>
-                    editComment(widget.comment), // Changed from message
+                    deleteComment(), 
               ),
             ],
           ),
@@ -136,8 +136,6 @@ class _CommentState extends State<Comment> {
                   widget.likes.length.toString(),
                   style: const TextStyle(color: Colors.grey),
                 ),
-
-                const SizedBox(width: 10),
               ],
             ),
           ),
@@ -146,53 +144,55 @@ class _CommentState extends State<Comment> {
     );
   }
 
-  // edit comment
-  void editComment(String comment) {
-    final TextEditingController _editingController = TextEditingController();
-
-    showDialog(
+  Future<void> deleteComment() async {
+    // Show confirmation dialog
+    bool? shouldDelete = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('Edit Comment'),
-              IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-          content: TextField(
-            controller: _editingController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Edit your comment...',
-              border: OutlineInputBorder(),
-            ),
-          ),
+          title: const Text('Delete Comment'),
+          content: const Text('Are you sure you want to delete this comment?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel',
+                  style: TextStyle(color: Colors.grey)),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (_editingController.text.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Comment cannot be empty')),
-                  );
-                  return;
-                }
-                // TODO: Implement comment update logic here
-                Navigator.of(context).pop();
-              },
-              child: const Text('Save'),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.red),
+              ),
             ),
           ],
         );
       },
+    );
+
+    if (shouldDelete != true) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('personal_care_posts')
+          .doc(widget.postId)
+          .collection('comments')
+          .doc(widget.commentId)
+          .delete();
+
+      if (context.mounted) {
+        showSnackBar('Comment deleted successfully', context);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        showSnackBar(e.toString(), context);
+      }
+    }
+  }
+
+  void showSnackBar(String message, BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 

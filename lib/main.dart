@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
+import 'package:treehouse/auth/login_page.dart';
+import 'package:treehouse/pages/home.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:treehouse/auth/auth.dart';
+import 'package:treehouse/pages/login_page.dart';
+import 'package:treehouse/pages/user_settings.dart';
 import 'firebase_options.dart'; // Firebase options (you need to configure this from Firebase console)
 
 void main() async {
@@ -29,6 +33,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: Provider.of<ThemeProvider>(context).themeData, // Use the theme from ThemeProvider
       home: const AuthPage(),
+      title: 'Your App Name',
+      // Define your routes here
+      routes: {
+        '/login': (context) => LoginPage(onTap: () {},),
+        '/settings': (context) => const UserSettingsPage(),
+        // ...other routes...
+      },
+      // Optional: define initial route
+      initialRoute: '/',
     );
   }
 }

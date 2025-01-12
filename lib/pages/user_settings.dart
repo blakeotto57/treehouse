@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:treehouse/auth/login_page.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -21,7 +22,16 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   // Sign user out
   void signOut() async {
     await _auth.signOut();
-    Navigator.of(context).pushReplacementNamed('/login');
+    if (!mounted) return;
+    // Navigate to LoginPage using MaterialPageRoute
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginPage(
+          onTap: () {}, // Add any necessary callback
+        ),
+      ),
+    );
   }
 
   @override

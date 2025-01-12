@@ -41,7 +41,6 @@ class _UserPostState extends State<UserPost> {
     isLiked = widget.likes.contains(currentUser.email);
   }
 
-  
   void toggleLike() {
     setState(() {
       isLiked = !isLiked;
@@ -60,7 +59,6 @@ class _UserPostState extends State<UserPost> {
       });
     }
   }
-
 
   //show comment list
   void showCommentDialog() {
@@ -128,8 +126,9 @@ class _UserPostState extends State<UserPost> {
                           comment: commentData["comment"],
                           user: commentData["comment by"],
                           time: formatDate(commentData["created on"]),
-                          likes: List<String>.from(commentData["likes"] ?? []), // Fix: properly cast likes array
-                          postId: widget.postId, 
+                          likes: List<String>.from(commentData["likes"] ??
+                              []), // Fix: properly cast likes array
+                          postId: widget.postId,
                           commentId: commentData["comment"],
                         );
                       }).toList(),
@@ -174,8 +173,8 @@ class _UserPostState extends State<UserPost> {
                       onPressed: () {
                         addComment(_commentTextController.text);
 
-                        // pop the box
-                        Navigator.pop(context);
+                        // Close keyboard
+                        FocusScope.of(context).unfocus();
 
                         // clear the text field
                         _commentTextController.clear();
@@ -199,7 +198,6 @@ class _UserPostState extends State<UserPost> {
     );
   }
 
-  
   void addComment(String comment, {String? parentId}) {
     FirebaseFirestore.instance
         .collection("personal_care_posts")
@@ -207,11 +205,11 @@ class _UserPostState extends State<UserPost> {
         .collection("comments")
         .doc(comment)
         .set({
-          "comment": comment,
-          "comment by": currentUser.email,
-          "created on": Timestamp.now(),
-          "likes": [], // Initialize empty likes array
-        });
+      "comment": comment,
+      "comment by": currentUser.email,
+      "created on": Timestamp.now(),
+      "likes": [], // Initialize empty likes array
+    });
   }
 
   // edit (delete) post logic
