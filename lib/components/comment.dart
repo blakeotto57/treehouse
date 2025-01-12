@@ -110,14 +110,16 @@ class _CommentState extends State<Comment> {
                   ),
                 ),
               ),
-              GestureDetector(
-                child: const Icon(
-                  Icons.more_vert,
+              // Only show delete icon for comment owner
+              if (currentUser.email == widget.user)
+                IconButton(
+                  icon: const Icon(Icons.more_vert),
+                  onPressed: deleteComment,
                   color: Colors.grey,
+                  iconSize: 20,
+                  padding: EdgeInsets.zero, // Tighter padding for comments
+                  constraints: const BoxConstraints(), // Minimize constraints
                 ),
-                onTap: () =>
-                    deleteComment(), 
-              ),
             ],
           ),
           // Action buttons
@@ -155,8 +157,7 @@ class _CommentState extends State<Comment> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel',
-                  style: TextStyle(color: Colors.grey)),
+              child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),

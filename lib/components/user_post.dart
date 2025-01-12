@@ -212,8 +212,7 @@ class _UserPostState extends State<UserPost> {
     });
   }
 
-  // edit (delete) post logic
-  void editPost() {
+  void deletePost() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -295,7 +294,6 @@ class _UserPostState extends State<UserPost> {
         children: [
           // Top Row: Avatar, user, date, delete button
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               CircleAvatar(
                 backgroundColor: Colors.green,
@@ -306,6 +304,7 @@ class _UserPostState extends State<UserPost> {
                   size: 25,
                 ),
               ),
+
               const SizedBox(width: 10),
 
               //user
@@ -318,6 +317,8 @@ class _UserPostState extends State<UserPost> {
                 ),
               ),
 
+              const SizedBox(width: 5),
+
               Text(
                 "•",
                 style: const TextStyle(
@@ -325,6 +326,8 @@ class _UserPostState extends State<UserPost> {
                   fontSize: 12,
                 ),
               ),
+
+              const SizedBox(width: 5),
 
               //date
               Text(
@@ -340,7 +343,7 @@ class _UserPostState extends State<UserPost> {
               // delete button
               if (currentUser.email == widget.user)
                 DeleteButton(
-                  onTap: editPost,
+                  onTap: deletePost,
                 ),
             ],
           ),
