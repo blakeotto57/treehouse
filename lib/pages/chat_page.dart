@@ -52,13 +52,13 @@ class ChatPage extends StatelessWidget {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return CircleAvatar(
-                    backgroundColor: Colors.green[300],
+                    backgroundColor: Colors.green[800],
                     child: CircularProgressIndicator(color: Colors.white),
                   );
                 }
                 if (snapshot.hasError) {
                   return CircleAvatar(
-                    backgroundColor: Colors.green[300],
+                    backgroundColor: Colors.green[800],
                     child: Icon(Icons.error, color: Colors.white),
                   );
                 }
@@ -71,12 +71,12 @@ class ChatPage extends StatelessWidget {
                     final profileImageUrl = userData['profileImageUrl'];
                     if (profileImageUrl != null) {
                       return CircleAvatar(
-                        backgroundColor: Colors.green[300],
+                        backgroundColor: Colors.green[800],
                         backgroundImage: NetworkImage(profileImageUrl),
                       );
                     } else {
                       return CircleAvatar(
-                        backgroundColor: Colors.green[300],
+                        backgroundColor: Colors.green[800],
                         child: Text(
                           receiverEmail[0].toUpperCase(),
                           style: const TextStyle(color: Colors.white),
@@ -86,7 +86,7 @@ class ChatPage extends StatelessWidget {
                   }
                 }
                 return CircleAvatar(
-                  backgroundColor: Colors.green[300],
+                  backgroundColor: Colors.green[800],
                   child: Text(
                     receiverEmail[0].toUpperCase(),
                     style: const TextStyle(color: Colors.white),

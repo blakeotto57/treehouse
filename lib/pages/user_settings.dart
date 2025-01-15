@@ -49,7 +49,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.green[300],
+        backgroundColor: Colors.green[800],
         elevation: 2,
         iconTheme: IconThemeData(
           color: isDarkMode ? Colors.white : Colors.black, // Change icon color based on theme
@@ -253,7 +253,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       trailing: icon != null
           ? Icon(
               icon,
-              color: Colors.green[300],
+              color: Colors.green[800],
             )
           : null,
       onTap: onTap,

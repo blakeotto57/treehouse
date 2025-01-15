@@ -9,10 +9,14 @@ import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/models/reviews_page.dart';
 import 'package:treehouse/pages/seller_setup.dart'; // Import the seller setup page
 import 'package:flutter/services.dart';
-import 'package:treehouse/widgets/custom_drawer.dart';
+import 'package:treehouse/pages/user_settings.dart';
+import 'package:treehouse/models/category_model.dart';
+import 'package:treehouse/pages/user_settings.dart';
 
 class UserProfilePage extends StatefulWidget {
-  const UserProfilePage({super.key});
+  final List<CategoryModel> categories = CategoryModel.getCategories();
+  
+  UserProfilePage({Key? key}) : super(key: key);
 
   @override
   State<UserProfilePage> createState() => _UserProfilePageState();
@@ -63,23 +67,33 @@ class _UserProfilePageState extends State<UserProfilePage> {
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.green[300],
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
+            icon: Icon(
+              Icons.menu,
+              color: Colors.green[800],
+            ),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        title: const Text(
+        title: Text(
           "Profile",
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 36,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Colors.green[800],
           ),
         ),
         centerTitle: true,
-        elevation: 2,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.green[800],
+            height: 1.0,
+          ),
+        ),
         actions: [
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance.collection('sellers')
@@ -104,7 +118,87 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         ],
       ),
-      drawer: CustomDrawer(),
+      drawer: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.65, // Reduced width
+        child: Drawer(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          child: ListView(
+            children: [
+              Container(
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Categories',
+                    style: TextStyle(
+                      color: Colors.green[800],
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const Divider(height: 1, color: Colors.grey),
+              ...widget.categories.map((category) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    leading: Icon(
+                      category.icon,
+                      size: 30,
+                      color: category.boxColor, // Match icon color to category color
+                    ),
+                    title: Text(
+                      (category.name as Text).data ?? '', // Extract string from Text widget
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: category.boxColor, // Use category's boxColor for text
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      category.onTap(context);
+                    },
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                ],
+              )).toList(),
+              ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                leading: Icon(
+                  Icons.settings,
+                  size: 20,
+                  color: Colors.grey[700],
+                ),
+                title: Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
       body: StreamBuilder<DocumentSnapshot>(
         stream: usersCollection.doc(currentUser.email).snapshots(),
         builder: (context, userSnapshot) {
@@ -166,12 +260,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 ),
                                 child: CircleAvatar(
                                   radius: 60,
-                                  backgroundColor: Colors.green[300],
-                                  child: profileImageUrl != null 
+                                  backgroundColor: Colors.green[800],
+                                  child: profileImageUrl == null 
                                       ? null 
                                       : const Icon(
                                           Icons.person,
-                                          size: 60,
+                                          size: 80,
                                           color: Colors.white,
                                         ),
                                   backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl!) : null,
@@ -227,18 +321,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     child: Column(
                       children: [
                         ListTile(
-                          leading: Icon(Icons.person, color: Colors.green[300]),
+                          leading: Icon(Icons.person, color: Colors.green[800]),
                           title: const Text("Username"),
                           subtitle: Text(userData['username'] ?? ''),
-                          trailing: Icon(Icons.edit, color: Colors.green[300]),
+                          trailing: Icon(Icons.edit, color: Colors.green[800]),
                           onTap: () => editField("username"),
                         ),
                         const Divider(),
                         ListTile(
-                          leading: Icon(Icons.info, color: Colors.green[300]),
+                          leading: Icon(Icons.info, color: Colors.green[800]),
                           title: const Text("Bio"),
                           subtitle: Text(userData['bio'] ?? ''),
-                          trailing: Icon(Icons.edit, color: Colors.green[300]),
+                          trailing: Icon(Icons.edit, color: Colors.green[800]),
                           onTap: () => editField("bio"),
                         ),
                       ],
@@ -271,7 +365,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green[300],
+                              backgroundColor: Colors.green[800],
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                             ),
                             child: const Text(
@@ -286,16 +380,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
-                  const Divider(thickness: 2),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'Additional Information',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  // Add more widgets here
                 ],
               ),
             );
@@ -363,7 +447,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('$field updated successfully!'),
-                      backgroundColor: Colors.green,
+                      backgroundColor: Colors.green[800],
                     ),
                   );
                 }
@@ -440,7 +524,7 @@ class UserProfile extends StatelessWidget {
                             backgroundImage: profileImageUrl != null
                                 ? NetworkImage(profileImageUrl)
                                 : null,
-                            backgroundColor: Colors.green[300],
+                            backgroundColor: Colors.green[800],
                             child: profileImageUrl == null
                                 ? const Icon(Icons.person, size: 40)
                                 : null,
@@ -501,7 +585,7 @@ class UserProfile extends StatelessWidget {
                                 );
                               },
                               text: "Become a Seller",
-                              color: Colors.green.shade300, // Set the button color to green.shade300
+                              color: Colors.green.shade800, // Set the button color to green.shade300
                             ),
                           ),
                         );

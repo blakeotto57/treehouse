@@ -164,10 +164,39 @@ class _RegisterPageState extends State<RegisterPage> {
               
               
                     //email textfield
-                    MyTextField(
+                    TextField(
                       controller: emailTextController,
-                      hintText: "College Email",
-                      obscureText: false,
+                      decoration: InputDecoration(
+                        hintText: "College Email",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: const Icon(
+                            Icons.help_outline,
+                            color: Colors.grey,
+                            size: 20,
+                          ),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('College Email Required'),
+                                content: const Text(
+                                  'We need your college email in order to ensure that users are shown other users in the same college.',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('OK'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
                     ),
               
               

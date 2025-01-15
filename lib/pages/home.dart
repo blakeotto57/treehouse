@@ -31,21 +31,21 @@ class _HomePageState extends State<HomePage> {
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.explore, size: 26),
         title: 'Explore',
-        activeColorPrimary: Colors.green,
+        activeColorPrimary: Colors.green[800] ?? Colors.green,
         inactiveColorPrimary: Colors.grey,
         iconSize: 22,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.message, size: 26),
         title: 'Messages',
-        activeColorPrimary: Colors.green,
+        activeColorPrimary: Colors.green[800] ?? Colors.green,
         inactiveColorPrimary: Colors.grey,
         iconSize: 22,
       ),
       PersistentBottomNavBarItem(
         icon: const Icon(Icons.person_outline, size: 26),
         title: 'Profile',
-        activeColorPrimary: Colors.green,
+        activeColorPrimary: Colors.green[800] ?? Colors.green,
         inactiveColorPrimary: Colors.grey,
         iconSize: 22,
       ),
@@ -54,16 +54,23 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return PersistentTabView(
-      context,
-      controller: _controller,
-      screens: _buildScreens(),
-      items: _navBarsItems(),
-      navBarStyle: NavBarStyle.style1,
-      navBarHeight: 50,
-      decoration: NavBarDecoration(
-        borderRadius: BorderRadius.circular(0),
-        colorBehindNavBar: Colors.white,
+    return Scaffold(
+      body: PersistentTabView(
+        context,
+        controller: _controller,
+        screens: _buildScreens(),
+        items: _navBarsItems(),
+        navBarStyle: NavBarStyle.style1,
+        decoration: NavBarDecoration(
+          border: Border(
+            top: BorderSide(
+              color: Colors.green[800] ?? Colors.green,
+              width: 1.0,
+            ),
+          ),
+          colorBehindNavBar: Colors.white,
+        ),
+        navBarHeight: 50,
       ),
     );
   }
@@ -81,7 +88,7 @@ class HomeContent extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green[300],
+        backgroundColor: Colors.green[800],
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.white),
@@ -104,7 +111,7 @@ class HomeContent extends StatelessWidget {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.green[300],
+                color: Colors.green[800],
               ),
               child: const Text(
                 'Categories',

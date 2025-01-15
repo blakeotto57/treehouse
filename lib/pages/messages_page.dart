@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/pages/chat_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
-import 'package:treehouse/widgets/custom_drawer.dart';
+import 'package:treehouse/pages/user_settings.dart';
+import 'package:treehouse/models/category_model.dart';  // Add this import
 
 class MessagesPage extends StatefulWidget {
-  const MessagesPage({super.key});
+  final List<CategoryModel> categories = CategoryModel.getCategories();
+  MessagesPage({super.key});
 
   @override
   State<MessagesPage> createState() => _MessagesPageState();
@@ -106,7 +108,7 @@ class _MessagesPageState extends State<MessagesPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.check, color: Colors.green),
+                          icon: Icon(Icons.check, color: Colors.green[800]),
                           onPressed: () {
                             _acceptUser(userEmail);
                             Navigator.pop(context);
@@ -138,68 +140,115 @@ class _MessagesPageState extends State<MessagesPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
+            icon: Icon(
+              Icons.menu,
+              color: Colors.green[800],
+            ),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        automaticallyImplyLeading: false,
-        title: const Text(
+        title: Text(
           "Messages",
           style: TextStyle(
-            fontSize: 30,
+            fontSize: 36,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Colors.green[800],
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green[300],
-        actions: [
-          // Add request counter badge
-          StreamBuilder<int>(
-            stream: _newRequestsCount,
-            builder: (context, snapshot) {
-              final count = snapshot.data ?? 0;
-              
-              return Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications,
-                        color: Colors.white),
-                    onPressed: _showRequestsDialog,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.green[800],
+            height: 1.0,
+          ),
+        ),
+      ),
+      drawer: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.65, // Reduced width
+        child: Drawer(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          child: ListView(
+            children: [
+              Container(
+                height: 60,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                ),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Categories',
+                    style: TextStyle(
+                      color: Colors.green[800],
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  if (count > 0)
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 16,
-                          minHeight: 16,
-                        ),
-                        child: Text(
-                          count.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                ),
+              ),
+              const Divider(height: 1, color: Colors.grey),
+              ...widget.categories.map((category) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    leading: Icon(
+                      category.icon,
+                      size: 30,
+                      color: category.boxColor, // Match icon color to category color
+                    ),
+                    title: Text(
+                      (category.name as Text).data ?? '', // Extract string from Text widget
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: category.boxColor, // Use category's boxColor for text
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      category.onTap(context);
+                    },
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
                 ],
-              );
-            },
+              )).toList(),
+              ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                leading: Icon(
+                  Icons.settings,
+                  size: 20,
+                  color: Colors.grey[700],
+                ),
+                title: Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-      drawer: CustomDrawer(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -307,7 +356,7 @@ class _MessagesPageState extends State<MessagesPage> {
             backgroundImage: profileImageUrl != null
                 ? NetworkImage(profileImageUrl) // Display the user's profile picture
                 : null, // If no image URL, show a default icon
-            backgroundColor: Colors.green[300],
+            backgroundColor: Colors.green[800],
             child: profileImageUrl == null
                 ? const Icon(Icons.person, color: Colors.white)
                 : null, // Show placeholder icon if no image
@@ -358,7 +407,7 @@ class SoloSellerProfilePage extends StatelessWidget {
             color: textColor,
           ),
         ),
-        backgroundColor: Colors.green[300],
+        backgroundColor: Colors.green[800],
         centerTitle: true,
         elevation: 2,
       ),
@@ -377,14 +426,14 @@ class SoloSellerProfilePage extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return CircleAvatar(
                     radius: 60,
-                    backgroundColor: Colors.green[300],
+                    backgroundColor: Colors.green[800],
                     child: CircularProgressIndicator(color: Colors.white),
                   );
                 }
                 if (snapshot.hasError) {
                   return CircleAvatar(
                     radius: 60,
-                    backgroundColor: Colors.green[300],
+                    backgroundColor: Colors.green[800],
                     child: Icon(Icons.error, color: Colors.white),
                   );
                 }
@@ -393,7 +442,7 @@ class SoloSellerProfilePage extends StatelessWidget {
                   final profileImageUrl = userData['profileImageUrl'];
                   return CircleAvatar(
                     radius: 60,
-                    backgroundColor: Colors.green[300],
+                    backgroundColor: Colors.green[800],
                     backgroundImage: profileImageUrl != null
                         ? NetworkImage(profileImageUrl)
                         : null,
@@ -408,7 +457,7 @@ class SoloSellerProfilePage extends StatelessWidget {
                 }
                 return CircleAvatar(
                   radius: 60,
-                  backgroundColor: Colors.green[300],
+                  backgroundColor: Colors.green[800],
                   child: Icon(
                     Icons.person,
                     size: 80,

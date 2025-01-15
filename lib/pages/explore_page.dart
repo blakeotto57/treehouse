@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -6,32 +7,81 @@ import 'package:treehouse/pages/user_settings.dart';
 import 'dart:io';
 
 import 'package:video_player/video_player.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
-class ExplorePage extends StatelessWidget {
+class ExplorePage extends StatefulWidget {
   final List<CategoryModel> categories = CategoryModel.getCategories();
 
   ExplorePage({Key? key}) : super(key: key);
 
   @override
+  _ExplorePageState createState() => _ExplorePageState();
+}
+
+class _ExplorePageState extends State<ExplorePage> {
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _uploadVideo() async {
+    final XFile? video = await _picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(seconds: 60),
+    );
+
+    if (video != null) {
+      File videoFile = File(video.path);
+      
+      // Upload to Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('videos/${DateTime.now().toString()}.mp4');
+      
+      try {
+        await storageRef.putFile(videoFile);
+        final videoUrl = await storageRef.getDownloadURL();
+        
+        // Store video metadata in Firestore
+        await FirebaseFirestore.instance.collection('videos').add({
+          'url': videoUrl,
+          'userId': FirebaseAuth.instance.currentUser?.uid,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        print('Error uploading video: $e');
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.green[300],
+        backgroundColor: Colors.white,
+        elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
+            icon: Icon(
+              Icons.menu,
+              color: Colors.green[800],
+            ),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        title: const Text(
-          "Treehouse",
+        title: Text(
+          "Explore Users",
           style: TextStyle(
-            fontSize: 24,
+            fontSize: 36,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
+            color: Colors.green[800],
           ),
         ),
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.green[800],
+            height: 1.0,
+          ),
+        ),
       ),
       drawer: SizedBox(
         width: MediaQuery.of(context).size.width * 0.65, // Reduced width
@@ -39,27 +89,27 @@ class ExplorePage extends StatelessWidget {
           backgroundColor: Colors.white,
           elevation: 1,
           child: ListView(
-            padding: EdgeInsets.zero,
             children: [
               Container(
-                height: 80,
+                height: 60,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
-                  color: Colors.green[300],
+                  color: Colors.white,
                 ),
-                child: const Align(
+                child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Categories',
                     style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
+                      color: Colors.green[800],
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
               ),
-              ...categories.map((category) => Column(
+              const Divider(height: 1, color: Colors.grey),
+              ...widget.categories.map((category) => Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   ListTile(
@@ -67,7 +117,7 @@ class ExplorePage extends StatelessWidget {
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                     leading: Icon(
                       category.icon,
-                      size: 20,
+                      size: 30,
                       color: category.boxColor, // Match icon color to category color
                     ),
                     title: Text(
@@ -114,145 +164,60 @@ class ExplorePage extends StatelessWidget {
           ),
         ),
       ),
-      body: StreamBuilder(
-        stream: FirebaseFirestore.instance.collection('posts').snapshots(),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('videos')
+            .orderBy('timestamp', descending: true)
+            .snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+          if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          }
-
-          final posts = snapshot.data!.docs;
-
-          if (posts.isEmpty) {
-            return const Center(
-              child: Text(
-                'No posts available. Check back later!',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
-              ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16.0),
-            itemCount: posts.length,
+          return GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: 2,
+              mainAxisSpacing: 2,
+            ),
+            itemCount: snapshot.data!.docs.length,
             itemBuilder: (context, index) {
-              final post = posts[index].data() as Map<String, dynamic>;
-              final sellerName = post['sellerName'] ?? 'Unknown';
-              final workTitle = post['workTitle'] ?? 'No title';
-              final description = post['description'] ?? 'No description';
-              final mediaUrl = post['mediaUrl'];
-
-              return Card(
-                margin: const EdgeInsets.symmetric(vertical: 10),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Seller Info
-                      Row(
-                        children: [
-                          CircleAvatar(
-                            backgroundColor: Colors.green[300],
-                            child: Text(
-                              sellerName[0].toUpperCase(),
-                              style: const TextStyle(color: Colors.white),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            sellerName,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Work Title
-                      Text(
-                        workTitle,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Description
-                      Text(
-                        description,
-                        style: const TextStyle(fontSize: 14, color: Colors.black87),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Media (Video/Image)
-                      if (mediaUrl != null)
-                        mediaUrl.endsWith('.mp4')
-                            ? VideoPlayerWidget(mediaUrl: mediaUrl)
-                            : ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.network(
-                                  mediaUrl,
-                                  height: 200,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                      const SizedBox(height: 16),
-
-                      // Contact Button
-                      ElevatedButton(
-                        onPressed: () {
-                          // Implement contact functionality
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[300],
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text('Contact Seller'),
-                      ),
-                    ],
-                  ),
-                ),
-              );
+              final videoData = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+              return VideoThumbnail(videoUrl: videoData['url']);
             },
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _uploadVideo,
+        backgroundColor: Colors.green[800],
+        child: const Icon(Icons.video_call),
       ),
     );
   }
 }
 
-class VideoPlayerWidget extends StatefulWidget {
-  final String mediaUrl;
-
-  const VideoPlayerWidget({super.key, required this.mediaUrl});
-
+class VideoThumbnail extends StatefulWidget {
+  final String videoUrl;
+  
+  const VideoThumbnail({Key? key, required this.videoUrl}) : super(key: key);
+  
   @override
-  State<VideoPlayerWidget> createState() => _VideoPlayerWidgetState();
+  State<VideoThumbnail> createState() => _VideoThumbnailState();
 }
 
-class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
+class _VideoThumbnailState extends State<VideoThumbnail> {
   late VideoPlayerController _controller;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.network(widget.mediaUrl)
+    _controller = VideoPlayerController.network(widget.videoUrl)
       ..initialize().then((_) {
-        setState(() {}); // Update UI once video is loaded
+        setState(() {
+          _initialized = true;
+        });
       });
   }
 
@@ -264,11 +229,8 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return _controller.value.isInitialized
-        ? AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
-          )
+    return _initialized
+        ? VideoPlayer(_controller)
         : const Center(child: CircularProgressIndicator());
   }
 }

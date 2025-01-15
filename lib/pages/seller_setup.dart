@@ -250,7 +250,13 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
               // Submit button
               const SizedBox(height: 10),
               Container(
+                decoration: BoxDecoration(
+                  color: Colors.green[800],
+                ),
                 child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[800],
+                  ),
                   onPressed: isSeller
                       ? null
                       : _submitForm, // Disable button when submitting
