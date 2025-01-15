@@ -21,7 +21,6 @@ class _HomePageState extends State<HomePage> {
       PersistentTabController(initialIndex: 0);
 
   List<Widget> _buildScreens() => [
-        HomeContent(categories: CategoryModel.getCategories()),
         ExplorePage(),
         MessagesPage(),
         UserProfilePage(),
@@ -30,14 +29,7 @@ class _HomePageState extends State<HomePage> {
   List<PersistentBottomNavBarItem> _navBarsItems() {
     return [
       PersistentBottomNavBarItem(
-        icon: const Icon(Icons.home, size: 26),
-        title: 'Home',
-        activeColorPrimary: Colors.green,
-        inactiveColorPrimary: Colors.grey,
-        iconSize: 22, // Lower the icon
-      ),
-      PersistentBottomNavBarItem(
-        icon: const Icon(Icons.store, size: 26),
+        icon: const Icon(Icons.explore, size: 26),
         title: 'Explore',
         activeColorPrimary: Colors.green,
         inactiveColorPrimary: Colors.grey,
@@ -62,15 +54,16 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: PersistentTabView(
-        context,
-        controller: _controller,
-        screens: _buildScreens(),
-        items: _navBarsItems(),
-        navBarStyle: NavBarStyle.style1, // Adjust to preferred style
-        navBarHeight: 50, // Set the height of the bottom nav bar
-        padding: EdgeInsets.symmetric(vertical: 8), // Lower icons
+    return PersistentTabView(
+      context,
+      controller: _controller,
+      screens: _buildScreens(),
+      items: _navBarsItems(),
+      navBarStyle: NavBarStyle.style1,
+      navBarHeight: 50,
+      decoration: NavBarDecoration(
+        borderRadius: BorderRadius.circular(0),
+        colorBehindNavBar: Colors.white,
       ),
     );
   }
@@ -89,14 +82,11 @@ class HomeContent extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green[300],
-        leading: IconButton(
-          icon: const Icon(Icons.feedback, color: Colors.white),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => FeedbackPage()),
-            );
-          },
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
         title: const Text(
           "Treehouse",
@@ -107,18 +97,46 @@ class HomeContent extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings, color: Colors.white),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const UserSettingsPage()),
-              );
-            },
-          ),
-        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.green[300],
+              ),
+              child: const Text(
+                'Categories',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ...categories.map((category) => ListTile(
+              leading: Icon(category.icon),
+              title: category.name,
+              onTap: () {
+                Navigator.pop(context);
+                category.onTap(context);
+              },
+            )).toList(),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(

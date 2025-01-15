@@ -1,57 +1,118 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:treehouse/models/category_model.dart';
+import 'package:treehouse/pages/user_settings.dart';
 import 'dart:io';
 
 import 'package:video_player/video_player.dart';
 
-class ExplorePage extends StatefulWidget {
-  const ExplorePage({super.key});
+class ExplorePage extends StatelessWidget {
+  final List<CategoryModel> categories = CategoryModel.getCategories();
 
-  @override
-  State<ExplorePage> createState() => _ExplorePageState();
-}
-
-class _ExplorePageState extends State<ExplorePage> {
-  final ImagePicker _picker = ImagePicker();
-
-  // Function to handle image or video picking
-  Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.camera,
-      );
-
-    if (image != null) {
-      // Here you can handle the selected image (upload to Firebase or show it)
-      File pickedImage = File(image.path);
-      // Do something with the image, such as uploading to Firestore or displaying
-    }
-  }
+  ExplorePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false, // Remove the back button
+        backgroundColor: Colors.green[300],
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         title: const Text(
-          "Explore",
+          "Treehouse",
           style: TextStyle(
-            fontSize: 30,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green[300],
-        iconTheme: const IconThemeData(
-          color: Colors.white, // Set the icon color to white regardless of the theme
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_a_photo),
-            onPressed: _pickImage, // Call function to pick image or record video
+      ),
+      drawer: SizedBox(
+        width: MediaQuery.of(context).size.width * 0.65, // Reduced width
+        child: Drawer(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: [
+              Container(
+                height: 80,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.green[300],
+                ),
+                child: const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Categories',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+              ...categories.map((category) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ListTile(
+                    dense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    leading: Icon(
+                      category.icon,
+                      size: 20,
+                      color: category.boxColor, // Match icon color to category color
+                    ),
+                    title: Text(
+                      (category.name as Text).data ?? '', // Extract string from Text widget
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: category.boxColor, // Use category's boxColor for text
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      category.onTap(context);
+                    },
+                  ),
+                  Divider(height: 1, color: Colors.grey[200]),
+                ],
+              )).toList(),
+              ListTile(
+                dense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                leading: Icon(
+                  Icons.settings,
+                  size: 20,
+                  color: Colors.grey[700],
+                ),
+                title: Text(
+                  'Settings',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[800],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
       body: StreamBuilder(
         stream: FirebaseFirestore.instance.collection('posts').snapshots(),

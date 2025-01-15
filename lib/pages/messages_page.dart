@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/pages/chat_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
+import 'package:treehouse/widgets/custom_drawer.dart';
 
 class MessagesPage extends StatefulWidget {
   const MessagesPage({super.key});
@@ -98,7 +99,6 @@ class _MessagesPageState extends State<MessagesPage> {
 
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: Colors.green[300],
                       child: Text(userEmail[0].toUpperCase()),
                     ),
                     title: Text(userEmail),
@@ -138,6 +138,12 @@ class _MessagesPageState extends State<MessagesPage> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         automaticallyImplyLeading: false,
         title: const Text(
           "Messages",
@@ -193,6 +199,7 @@ class _MessagesPageState extends State<MessagesPage> {
           ),
         ],
       ),
+      drawer: CustomDrawer(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

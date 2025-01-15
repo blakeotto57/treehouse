@@ -9,6 +9,7 @@ import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/models/reviews_page.dart';
 import 'package:treehouse/pages/seller_setup.dart'; // Import the seller setup page
 import 'package:flutter/services.dart';
+import 'package:treehouse/widgets/custom_drawer.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -62,6 +63,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
+        backgroundColor: Colors.green[300],
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
         title: const Text(
           "Profile",
           style: TextStyle(
@@ -71,7 +79,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green[300],
         elevation: 0,
         actions: [
           StreamBuilder<QuerySnapshot>(
@@ -97,6 +104,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         ],
       ),
+      drawer: CustomDrawer(),
       body: StreamBuilder<DocumentSnapshot>(
         stream: usersCollection.doc(currentUser.email).snapshots(),
         builder: (context, userSnapshot) {
