@@ -61,7 +61,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final textColor = isDarkMode ? Colors.white : Colors.black;
     
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surface,
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.green[300],
         leading: Builder(
@@ -73,13 +73,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
         title: const Text(
           "Profile",
           style: TextStyle(
-            fontSize: 30,
+            fontSize: 24,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
         centerTitle: true,
-        elevation: 0,
+        elevation: 2,
         actions: [
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance.collection('sellers')
@@ -133,60 +133,119 @@ class _UserProfilePageState extends State<UserProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: pickAndUploadImage,
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundImage: profileImageUrl!.isNotEmpty
-                                ? NetworkImage(profileImageUrl!)
-                                : null,
-                            backgroundColor: Colors.green[300],
-                            child: profileImageUrl!.isEmpty
-                                ? const Icon(Icons.person,
-                                    size: 40, color: Colors.white)
-                                : null,
-                          ),
+                  // Profile Header Section
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[850] : Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
                         ),
-                        const SizedBox(width: 20),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        Stack(
                           children: [
-                            Text(
-                              currentUser.email!,
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: textColor,
-                                fontWeight: FontWeight.bold,
+                            GestureDetector(
+                              onTap: pickAndUploadImage,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  radius: 60,
+                                  backgroundColor: Colors.green[300],
+                                  child: profileImageUrl != null 
+                                      ? null 
+                                      : const Icon(
+                                          Icons.person,
+                                          size: 60,
+                                          color: Colors.white,
+                                        ),
+                                  backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl!) : null,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 10),
-
-                            MyTextBox(
-                              text: userData['username'] ?? '',
-                              sectionName: "Username",
-                              onPressed: () => editField("username"),
-                              width: 200,
-                              margin: const EdgeInsets.all(10),
-                            ),
-                            
-                            MyTextBox(
-                              text: userData['bio'] ?? '',
-                              sectionName: "Bio",
-                              onPressed: () => editField("bio"),
-                              width: 200,
-                              margin: const EdgeInsets.all(10),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.grey, // Changed from Colors.green[300] to Colors.grey
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.edit,
+                                  size: 20,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          currentUser.email!,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: textColor,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
+                  ),
+
+                  // User Info Section
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.grey[850] : Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: Icon(Icons.person, color: Colors.green[300]),
+                          title: const Text("Username"),
+                          subtitle: Text(userData['username'] ?? ''),
+                          trailing: Icon(Icons.edit, color: Colors.green[300]),
+                          onTap: () => editField("username"),
+                        ),
+                        const Divider(),
+                        ListTile(
+                          leading: Icon(Icons.info, color: Colors.green[300]),
+                          title: const Text("Bio"),
+                          subtitle: Text(userData['bio'] ?? ''),
+                          trailing: Icon(Icons.edit, color: Colors.green[300]),
+                          onTap: () => editField("bio"),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+
+                  // Seller Button Section
                   StreamBuilder<DocumentSnapshot>(
                     stream: FirebaseFirestore.instance
                         .collection('sellers')
@@ -251,63 +310,81 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   Future<void> editField(String field) async {
-    String newValue = "";
-    int charLimit = field == "username" ? 20 : 200;
+    String currentValue = '';
+    final userDoc = await usersCollection.doc(currentUser.email).get();
+    if (userDoc.exists) {
+      final userData = userDoc.data() as Map<String, dynamic>;
+      currentValue = userData[field] ?? '';
+    }
 
+    final TextEditingController controller = TextEditingController(text: currentValue);
+    
     await showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: Colors.white,
-          title: Text(
-            "Edit $field",
-            style: const TextStyle(color: Colors.black),
+      builder: (context) => AlertDialog(
+        title: Text('Edit ${field.substring(0, 1).toUpperCase() + field.substring(1)}'),
+        content: TextField(
+          controller: controller,
+          decoration: InputDecoration(
+            hintText: 'Enter your ${field.toLowerCase()}',
           ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  style: const TextStyle(color: Colors.black),
-                  decoration: InputDecoration(
-                    hintText: "Enter new $field",
-                    hintStyle: const TextStyle(color: Colors.grey),
-                  ),
-                  inputFormatters: [
-                    LengthLimitingTextInputFormatter(charLimit),
-                  ],
-                  maxLines: field == "bio" ? null : 1,
-                  keyboardType: field == "bio" ? TextInputType.multiline : TextInputType.text,
-                  onChanged: (value) {
-                    setState(() {
-                      newValue = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  '${newValue.length}/$charLimit characters',
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-            ),
-            TextButton(
-              onPressed: () {
-                if (newValue.trim().isNotEmpty) {
-                  usersCollection.doc(currentUser.uid).update({field: newValue});
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text("Save", style: TextStyle(color: Colors.blue)),
-            ),
-          ],
+          maxLines: field == 'bio' ? 3 : 1,
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              // Show loading indicator
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+
+              try {
+                // Update Firestore
+                await usersCollection.doc(currentUser.email).update({
+                  field: controller.text.trim(),
+                });
+
+                // Close loading indicator and edit dialog
+                if (mounted) {
+                  Navigator.pop(context);
+                  Navigator.pop(context);
+                }
+
+                // Show success message
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('$field updated successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                // Close loading indicator
+                if (mounted) Navigator.pop(context);
+                
+                // Show error message
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error updating $field: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }
