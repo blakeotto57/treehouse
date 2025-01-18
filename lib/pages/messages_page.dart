@@ -5,6 +5,7 @@ import 'package:treehouse/pages/chat_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/models/category_model.dart';  // Add this import
+import 'package:firebase_auth/firebase_auth.dart';
 
 class MessagesPage extends StatefulWidget {
   final List<CategoryModel> categories = CategoryModel.getCategories();
@@ -72,7 +73,15 @@ class _MessagesPageState extends State<MessagesPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Message Requests'),
+        title: const Center(
+          child: Text(
+            'Message Requests',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
         content: SizedBox(
           width: double.maxFinite,
           child: StreamBuilder<QuerySnapshot>(
@@ -83,7 +92,12 @@ class _MessagesPageState extends State<MessagesPage> {
                 .snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return const Center(child: CircularProgressIndicator());
+                return const Center(
+                  child: Text(
+                    'No message requests',
+                    textAlign: TextAlign.center,
+                  ),
+                );
               }
 
               final requests = snapshot.data!.docs;
@@ -159,6 +173,31 @@ class _MessagesPageState extends State<MessagesPage> {
             color: Colors.green[800],
           ),
         ),
+        actions: [
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('pending_messages')
+                .doc(FirebaseAuth.instance.currentUser!.email)
+                .collection('requests')
+                .snapshots(),
+            builder: (context, snapshot) {
+              return IconButton(
+                icon: Badge(
+                  isLabelVisible: snapshot.hasData && snapshot.data!.docs.isNotEmpty,
+                  label: Text(
+                    snapshot.hasData ? snapshot.data!.docs.length.toString() : '0',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  child: Icon(
+                    Icons.notification_important,
+                    color: Colors.green[800],
+                  ),
+                ),
+                onPressed: () => _showPendingRequests(context),
+              );
+            },
+          ),
+        ],
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
@@ -382,6 +421,80 @@ class _MessagesPageState extends State<MessagesPage> {
         ),
       ),
     );
+  }
+
+  void _showPendingRequests(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('pending_messages')
+            .doc(FirebaseAuth.instance.currentUser!.email)
+            .collection('requests')
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return AlertDialog(
+            title: const Text('Message Requests'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: snapshot.data!.docs.length,
+                itemBuilder: (context, index) {
+                  final request = snapshot.data!.docs[index];
+                  return ListTile(
+                    title: Text(request['senderEmail']),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.check, color: Colors.green),
+                          onPressed: () => _acceptRequest(request),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.red),
+                          onPressed: () => _denyRequest(request),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _acceptRequest(DocumentSnapshot request) async {
+    // Add to messages collection for both users
+    await FirebaseFirestore.instance
+        .collection('messages')
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .collection('chats')
+        .doc(request['senderEmail'])
+        .set({'lastMessage': '', 'timestamp': DateTime.now()});
+
+    await FirebaseFirestore.instance
+        .collection('messages')
+        .doc(request['senderEmail'])
+        .collection('chats')
+        .doc(FirebaseAuth.instance.currentUser!.email)
+        .set({'lastMessage': '', 'timestamp': DateTime.now()});
+
+    // Delete request
+    await request.reference.delete();
+    Navigator.pop(context);
+  }
+
+  Future<void> _denyRequest(DocumentSnapshot request) async {
+    await request.reference.delete();
+    Navigator.pop(context);
   }
 }
 

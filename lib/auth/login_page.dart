@@ -64,7 +64,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[200],
+      backgroundColor: Colors.green[300],
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -91,7 +91,7 @@ class _LoginPageState extends State<LoginPage> {
                   //email textfield
                   MyTextField(
                     controller: emailTextController,
-                    hintText: "Email",
+                    hintText: "College Email",
                     obscureText: false,
                   ),
             

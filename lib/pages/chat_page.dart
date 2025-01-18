@@ -86,7 +86,7 @@ class ChatPage extends StatelessWidget {
                   }
                 }
                 return CircleAvatar(
-                  backgroundColor: Colors.green[800],
+                  backgroundColor: Colors.grey,
                   child: Text(
                     receiverEmail[0].toUpperCase(),
                     style: const TextStyle(color: Colors.white),
@@ -105,7 +105,7 @@ class ChatPage extends StatelessWidget {
             ),
           ],
         ),
-        backgroundColor: Colors.green[300],
+        backgroundColor: const Color(0xFF305d42),
         elevation: 0,
       ),
       backgroundColor: backgroundColor,

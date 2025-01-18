@@ -100,7 +100,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
             );
           },
         ),
-        backgroundColor: Colors.green[300],
+        backgroundColor: const Color(0xFF305d42),
+
         centerTitle: true,
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -206,7 +207,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                 );
               },
               child: const Icon(Icons.add),
-              backgroundColor: Colors.green[300],
+              backgroundColor: const Color(0xFF305d42),
             ),
     );
   }

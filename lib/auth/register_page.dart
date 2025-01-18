@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/text_field.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:treehouse/pages/user_profile.dart';
 
 import '../components/button.dart';
 import '../pages/home.dart';
@@ -19,48 +20,9 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
- //text editing controllers
-  final emailTextController = TextEditingController();
-  final passwordTextController = TextEditingController();
-  final confirmPasswordTextController = TextEditingController();
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    hostedDomain: 'edu', // Restrict to .edu domains
-    scopes: ['email', 'profile'],
-  );
-
-  Future<bool> verifyEducationalEmail(String email) async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
-      if (googleUser != null) {
-        // Verify if Google email matches the provided email
-        if (googleUser.email == email) {
-          return true;
-        }
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // Add this validation function at class level
-  bool isValidEducationalEmail(String email) {
-    // Check if email is properly formatted and ends with .edu
-    return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email);
-  }
-
-  //sign up user
-  void signUp() async {
-    // Make sure passwords match
-    if (passwordTextController.text != confirmPasswordTextController.text) {
-      // Show error
-      displayMessage("Passwords do not match!");
-      return;
-    }
-
-    // Show loading indicator
+  Future<void> signInWithGoogle() async {
     showDialog(
       context: context,
       builder: (context) => const Center(
@@ -69,205 +31,139 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     try {
-      // Verify email with Google
-      bool isValidUser = await verifyEducationalEmail(emailTextController.text);
-      
-      if (!isValidUser) {
-        Navigator.pop(context); // Remove loading indicator
-        displayMessage("Please verify your .edu email with Google");
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        Navigator.pop(context);
         return;
       }
 
-      // Continue with Firebase registration
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailTextController.text,
-        password: passwordTextController.text,
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
       );
 
-      // After creating new user, create a new document in Firebase for them
-      await FirebaseFirestore.instance.collection("users").doc(emailTextController.text).set({
-        "username": emailTextController.text.split("@")[0],
-        "bio": "Empty bio",
-        "email": emailTextController.text,
-        "password": passwordTextController.text,
-        "profileImageUrl": null, // Add default value for profileImageUrl
-        // Add additional fields if needed
-      });
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      final user = userCredential.user;
 
-      // Pop loading indicator
-      if (mounted) {
-        Navigator.pop(context);
-      }
+      if (user != null) {
+        await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
+          "email": user.email,
+          "username": user.displayName,
+          "profileImageUrl": user.photoURL,
+          "bio": "Empty bio...",
+        });
 
-      // Navigate to the home page or show success message
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) =>  HomePage()),
-        );
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => UserProfilePage()),
+          );
+        }
       }
-    } on FirebaseAuthException catch (e) {
-      // Pop loading indicator
-      if (mounted) {
-        Navigator.pop(context);
-      }
-
-      // Show error to user
-      displayMessage(e.code);
     } catch (e) {
-      // Pop loading indicator
-      if (mounted) {
-        Navigator.pop(context);
-      }
-
-      // Log and show any other errors
-      print('Error: $e');
-      displayMessage('An error occurred. Please try again.');
+      Navigator.pop(context);
+      displayMessage("Error: ${e.toString()}");
     }
   }
 
-  //display a dialog message
   void displayMessage(String message) {
-    showDialog(
-      context: context, 
-      builder: (context) => AlertDialog(
-        title: Text(message),
-      ),
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.green[200],
+      backgroundColor: Colors.green[300],
       body: SafeArea(
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(height: 50),
               
-                    //welcome to treehouse
-                    const Text(
-                      'Lets join treehouse',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, 
-                          color: Colors.white,
-                          letterSpacing: 3,
-                          fontSize: 20,
+              // Logo or welcome text
+              Text(
+                "Welcome to Treehouse!",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 50),
+
+            
+              // Google Sign In button
+              SizedBox(
+                width: double.infinity,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: Colors.grey.shade300),
                       ),
                     ),
-              
-                    const SizedBox(height: 25),
-              
-              
-                    //email textfield
-                    TextField(
-                      controller: emailTextController,
-                      decoration: InputDecoration(
-                        hintText: "College Email",
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    onPressed: signInWithGoogle,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/icons/google_logo.png',
+                          height: 24.0,
                         ),
-                        suffixIcon: IconButton(
-                          icon: const Icon(
-                            Icons.help_outline,
-                            color: Colors.grey,
-                            size: 20,
-                          ),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('College Email Required'),
-                                content: const Text(
-                                  'We need your college email in order to ensure that users are shown other users in the same college.',
-                                  style: TextStyle(fontSize: 16),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('OK'),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-              
-              
-                    const SizedBox(height: 10),
-              
-              
-                    //password textfield
-                   MyTextField(
-                      controller: passwordTextController,
-                      hintText: "Password",
-                      obscureText: true,
-                    ),
-              
-              
-                    const SizedBox(height: 10),
-              
-              
-              
-                     //CONFIRM password textfield
-                   MyTextField(
-                      controller: confirmPasswordTextController,
-                      hintText: "Confirm Password",
-                      obscureText: true,
-                    ),
-              
-              
-                    const SizedBox(height: 10),
-              
-              
-                  //sign up button
-                   MyButton(
-                    onTap: signUp, 
-                    text: "Sign Up",
-                    ),
-              
-              
-              
-                    const SizedBox(height: 10),
-              
-                  //go to register page
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Already have an account?",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold, 
-                          color: Colors.white,
-                        ),    
-                      ),
-              
-                      const SizedBox(width: 4),
-              
-                      GestureDetector(
-                        onTap: widget.onTap,
-                        child: const Text(
-                          "Login now", 
+                        const SizedBox(width: 12),
+                        const Text(
+                          'Use college email (.edu)',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold, 
-                            color: Colors.blue,
-                            ),
+                            color: Colors.black38,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
                           ),
-                      ),
+                        ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-            ),
+              ),
+
+              const SizedBox(height: 50),
+              
+              // Already have an account?
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Already have an account?',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,),
+                  ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: widget.onTap,
+                    child: const Text(
+                      'Login now',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            ],
           ),
         ),
       ),
-      );
-    }
+    );
   }
+}
