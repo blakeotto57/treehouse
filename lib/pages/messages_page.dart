@@ -92,11 +92,13 @@ class _MessagesPageState extends State<MessagesPage> {
                 .snapshots(),
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
-                return const Center(
-                  child: Text(
+                return Text(
                     'No message requests',
                     textAlign: TextAlign.center,
-                  ),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                    ),
                 );
               }
 
@@ -117,7 +119,13 @@ class _MessagesPageState extends State<MessagesPage> {
                     leading: CircleAvatar(
                       child: Text(userEmail[0].toUpperCase()),
                     ),
-                    title: Text(userEmail),
+                    title: Text(
+                      userEmail,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        ),
+                    ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -326,46 +334,28 @@ class _MessagesPageState extends State<MessagesPage> {
   // Build a list of users except currently logged-in user
   Widget _buildUserList() {
     return StreamBuilder(
-      stream: Stream.fromFuture(_chatService.getUsersInChatRooms()),
+      stream: _chatService.getAcceptedChatsStream(),
       builder: (context, snapshot) {
-        // Handle error
         if (snapshot.hasError) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, color: Colors.red, size: 48),
-                const SizedBox(height: 10),
-                Text(
-                  "Error loading messages",
-                  style: TextStyle(fontSize: 18, color: Colors.red),
-                ),
-              ],
-            ),
-          );
+          return Center(child: Text('Error: ${snapshot.error}'));
         }
-
-        // Loading state
+  
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-
-        // Check if data exists and build the list
-        final users = snapshot.data ?? [];
-
+  
+        final users = snapshot.data as List<Map<String, dynamic>>;
+        
         if (users.isEmpty) {
-          return Center(
-            child: Text(
-              "No users found to chat with!",
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-            ),
-          );
+          return const Center(child: Text('No conversations yet'));
         }
-
-        return ListView(
-          children: users.map<Widget>((userData) {
+  
+        return ListView.builder(
+          itemCount: users.length,
+          itemBuilder: (context, index) {
+            final userData = users[index];
             return _buildUserListItem(userData, context);
-          }).toList(),
+          },
         );
       },
     );
@@ -389,9 +379,9 @@ class _MessagesPageState extends State<MessagesPage> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           leading: CircleAvatar(
-            radius: 25,
+            radius: 15,
             backgroundImage: profileImageUrl != null
                 ? NetworkImage(profileImageUrl) // Display the user's profile picture
                 : null, // If no image URL, show a default icon
@@ -403,7 +393,7 @@ class _MessagesPageState extends State<MessagesPage> {
           title: Center(
             child: Text(
               email,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             ),
           ),
           onTap: () {
@@ -427,48 +417,322 @@ class _MessagesPageState extends State<MessagesPage> {
     showDialog(
       context: context,
       builder: (context) => StreamBuilder<QuerySnapshot>(
+        // Update the collection path to match where requests are being stored
         stream: FirebaseFirestore.instance
             .collection('pending_messages')
-            .doc(FirebaseAuth.instance.currentUser!.email)
+            .doc(_authService.currentUser!.email)
             .collection('requests')
+            .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(child: CircularProgressIndicator());
           }
 
+          if (snapshot.data!.docs.isEmpty) {
+            return AlertDialog(
+              title: Text(
+                'Pending Messages',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.green[800],
+                ),
+              ),
+              content: const Text(
+                'No pending messages',
+                style: TextStyle(fontSize: 16),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ],
+            );
+          }
+
           return AlertDialog(
-            title: const Text('Message Requests'),
+            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            title: Text(
+              'Pending Messages',
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[800],
+              ),
+            ),
             content: SizedBox(
-              width: double.maxFinite,
-              child: ListView.builder(
+              width: MediaQuery.of(context).size.width * 0.8,
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: snapshot.data!.docs.length,
+                separatorBuilder: (context, index) => Divider(color: Colors.grey[300]),
                 itemBuilder: (context, index) {
-                  final request = snapshot.data!.docs[index];
-                  return ListTile(
-                    title: Text(request['senderEmail']),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.check, color: Colors.green),
-                          onPressed: () => _acceptRequest(request),
+                  final message = snapshot.data!.docs[index];
+                  final senderEmail = message['senderEmail'];
+                  final messageText = message['message'];
+                  final timestamp = message['timestamp'] as Timestamp;
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withOpacity(0.1),
+                            spreadRadius: 1,
+                            blurRadius: 3,
+                            offset: const Offset(0, 1),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Left side: User info and message
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  // Avatar
+                                  CircleAvatar(
+                                    backgroundColor: Colors.green[800],
+                                    radius: 20,
+                                    child: Text(
+                                      senderEmail[0].toUpperCase(),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Message content
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          senderEmail,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        Text(
+                                          messageText,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Colors.grey[800],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Right side: Action buttons
+                            Padding(
+                              padding: const EdgeInsets.only(right: 12.0),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  SizedBox(
+                                    width: 28,
+                                    height: 28,
+                                    child: IconButton(
+                                      padding: EdgeInsets.zero,
+                                      iconSize: 18,
+                                      icon: Icon(Icons.check, color: Colors.blue[600]),
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: Colors.blue[50],
+                                      ),
+                                      onPressed: () async {
+                                        try {
+                                          // Show loading
+                                          showDialog(
+                                            context: context,
+                                            barrierDismissible: false,
+                                            builder: (context) => const Center(child: CircularProgressIndicator()),
+                                          );
+                                    
+                                          final currentUserEmail = FirebaseAuth.instance.currentUser!.email!;
+                                          final messageData = {
+                                            'senderEmail': senderEmail,
+                                            'message': message['message'],
+                                            'timestamp': FieldValue.serverTimestamp(),
+                                          };
+                                    
+                                          // Add message to both users' collections and add to accepted chats
+                                          await FirebaseFirestore.instance.batch()
+                                            // Set chat for current user
+                                            ..set(
+                                              FirebaseFirestore.instance
+                                                .collection('messages')
+                                                .doc(currentUserEmail)
+                                                .collection('chats')
+                                                .doc(senderEmail), 
+                                              {'lastMessage': message['message'], 'timestamp': FieldValue.serverTimestamp()}
+                                            )
+                                            // Add message to current user's messages
+                                            ..set(
+                                              FirebaseFirestore.instance
+                                                .collection('messages')
+                                                .doc(currentUserEmail)
+                                                .collection('chats')
+                                                .doc(senderEmail)
+                                                .collection('messages')
+                                                .doc(),
+                                              messageData
+                                            )
+                                            // Set chat for sender
+                                            ..set(
+                                              FirebaseFirestore.instance
+                                                .collection('messages')
+                                                .doc(senderEmail)
+                                                .collection('chats')
+                                                .doc(currentUserEmail),
+                                              {'lastMessage': message['message'], 'timestamp': FieldValue.serverTimestamp()}
+                                            )
+                                            // Add message to sender's messages
+                                            ..set(
+                                              FirebaseFirestore.instance
+                                                .collection('messages')
+                                                .doc(senderEmail)
+                                                .collection('chats')
+                                                .doc(currentUserEmail)
+                                                .collection('messages')
+                                                .doc(),
+                                              messageData
+                                            )
+                                            // Add to current user's accepted chats
+                                            ..set(
+                                              FirebaseFirestore.instance
+                                                .collection('accepted_chats')
+                                                .doc(currentUserEmail)
+                                                .collection('users')
+                                                .doc(senderEmail),
+                                              {'email': senderEmail, 'timestamp': FieldValue.serverTimestamp()}
+                                            )
+                                            // Add to sender's accepted chats  
+                                            ..set(
+                                              FirebaseFirestore.instance
+                                                .collection('accepted_chats')
+                                                .doc(senderEmail)
+                                                .collection('users')
+                                                .doc(currentUserEmail),
+                                              {'email': currentUserEmail, 'timestamp': FieldValue.serverTimestamp()}  
+                                            )
+                                            // Delete the pending message
+                                            ..delete(message.reference)
+                                            ..commit();
+                                    
+                                          // Close dialogs
+                                          if (context.mounted) {
+                                            Navigator.pop(context); // Loading dialog
+                                            Navigator.pop(context); // Pending messages dialog
+                                          }
+                                    
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            Navigator.pop(context);
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(content: Text('Error: ${e.toString()}')),
+                                            );
+                                          }
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 28,
+                                    height: 28,
+                                    child: IconButton(
+                                      padding: EdgeInsets.zero,
+                                      iconSize: 18,
+                                      icon: Icon(Icons.close, color: Colors.red[600]),
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: Colors.red[50],
+                                      ),
+                                      onPressed: () {
+                                        // existing decline logic
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.red),
-                          onPressed: () => _denyRequest(request),
-                        ),
-                      ],
+                      ),
                     ),
                   );
                 },
               ),
             ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  'Close',
+                  style: TextStyle(
+                    color: Colors.green[800],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
           );
         },
       ),
     );
+  }
+
+  String _formatTimestamp(Timestamp timestamp) {
+    final now = DateTime.now();
+    final date = timestamp.toDate();
+    final diff = now.difference(date);
+
+    if (diff.inDays > 0) {
+      return '${diff.inDays}d ago';
+    } else if (diff.inHours > 0) {
+      return '${diff.inHours}h ago';
+    } else if (diff.inMinutes > 0) {
+      return '${diff.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
+  }
+
+  Future<void> _acceptPendingMessage(DocumentSnapshot message) async {
+    final currentUserEmail = _authService.currentUser!.email!;
+    final senderEmail = message['senderEmail'];
+    final messageData = {
+      'message': message['message'],
+      'senderEmail': senderEmail,
+      'timestamp': message['timestamp'], 
+    };
+  
+    // Add message to both users' chat collections
+    await FirebaseFirestore.instance
+      .collection('messages')
+      .doc(currentUserEmail)
+      .collection('chats')
+      .doc(senderEmail)
+      .collection('messages')
+      .add(messageData);
+  
+    // Delete pending message
+    await message.reference.delete();
   }
 
   Future<void> _acceptRequest(DocumentSnapshot request) async {

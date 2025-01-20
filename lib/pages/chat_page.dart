@@ -4,6 +4,7 @@ import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/components/chat_bubble.dart';
 import 'package:treehouse/components/text_field.dart';
 import 'package:treehouse/auth/chat_service.dart';
+import 'package:intl/intl.dart';
 
 class ChatPage extends StatelessWidget {
   final String receiverEmail;
@@ -23,11 +24,53 @@ class ChatPage extends StatelessWidget {
   final AuthService _authService = AuthService();
 
   // Send message
-  void sendMessage() async {
+  void sendMessage(BuildContext context) async {
     if (_messageController.text.isNotEmpty) {
       await _chatService.sendMessage(receiverID, _messageController.text);
       _messageController.clear();
     }
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Chat History'),
+        content: const Text('Are you sure you want to delete all messages with this user? This cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                // Get chat room ID
+                String chatRoomId = _getChatRoomId(_authService.currentUser!.email!);
+
+                // Delete entire chat collection
+                await FirebaseFirestore.instance
+                    .collection('chat_rooms')
+                    .doc(chatRoomId)
+                    .delete();
+
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Return to messages page
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Chat history deleted')),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error deleting chat: $e')),
+                );
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -41,6 +84,12 @@ class ChatPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => _showDeleteDialog(context),
+          ),
+        ],
         title: Row(
           children: [
             FutureBuilder<QuerySnapshot>(
@@ -116,7 +165,7 @@ class ChatPage extends StatelessWidget {
             child: _buildMessageList(),
           ),
           // User input box
-          _buildUserInput(backgroundColor, boxShadowColor, isDarkMode),
+          _buildUserInput(context, backgroundColor, boxShadowColor, isDarkMode),
         ],
       ),
     );
@@ -144,7 +193,7 @@ class ChatPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
           children: snapshot.data!.docs
-              .map((document) => _buildMessageItem(document))
+              .map((document) => _buildMessageItem(context, document))
               .toList(),
         );
       },
@@ -152,7 +201,7 @@ class ChatPage extends StatelessWidget {
   }
 
   // Build user input area
-  Widget _buildUserInput(
+  Widget _buildUserInput(BuildContext context,
       Color backgroundColor, Color boxShadowColor, bool isDarkMode) {
     return Container(
       padding: const EdgeInsets.all(10),
@@ -211,7 +260,7 @@ class ChatPage extends StatelessWidget {
             IconButton(
               icon: Icon(Icons.send,
                   color: isDarkMode ? Colors.white : Colors.black),
-              onPressed: sendMessage,
+              onPressed: () => sendMessage(context),
             ),
           ],
         ),
@@ -220,15 +269,10 @@ class ChatPage extends StatelessWidget {
   }
 
   // Build message item
-  Widget _buildMessageItem(DocumentSnapshot doc) {
-    Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-
-    // Check if the message is sent by the current user
+  Widget _buildMessageItem(BuildContext context, DocumentSnapshot document) {
+    Map<String, dynamic> data = document.data() as Map<String, dynamic>;
     bool isCurrentUser = data["senderID"] == _authService.currentUser!.email!;
-
-    // Align the message to the right if sender, to the left otherwise
-    var alignment =
-        isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
+    var alignment = isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
 
     return Container(
       alignment: alignment,
@@ -237,12 +281,33 @@ class ChatPage extends StatelessWidget {
         crossAxisAlignment:
             isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
-          ChatBubble(
-            message: data["message"],
-            isCurrentUser: isCurrentUser,
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            children: [
+              ChatBubble(
+                message: data["message"],
+                isCurrentUser: isCurrentUser,
+              ),
+              
+                  
+              Text(
+                DateFormat('MM/dd/yyyy h:mm a').format(data["timestamp"].toDate()),
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  String _getChatRoomId(String userEmail) {
+    List<String> emails = [userEmail, receiverEmail];
+    emails.sort();
+    return emails.join('_');
   }
 }

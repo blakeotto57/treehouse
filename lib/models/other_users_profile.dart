@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/models/reviews_page.dart';
 import 'package:treehouse/payment/pay.dart';
 import 'package:treehouse/stripe/stripe_service.dart';
@@ -19,6 +20,7 @@ class OtherUsersProfilePage extends StatefulWidget {
 class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
   final sellersCollection = FirebaseFirestore.instance.collection("sellers");
   final usersCollection = FirebaseFirestore.instance.collection("users");
+  final currentUser = FirebaseAuth.instance.currentUser; // Add this line
 
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
@@ -43,6 +45,9 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Add check for current user 
+    final isOwnProfile = currentUser?.email == widget.userId;
+
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black;
 
@@ -57,46 +62,37 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
         backgroundColor: Colors.green[300],
         elevation: 2,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.message),
-            onPressed: () async {
-              // First try to get seller data
-              final sellerDoc =
-                  await sellersCollection.doc(widget.userId).get();
-              String userEmail;
+          // Only show message icon if not viewing own profile
+          if (!isOwnProfile)
+            IconButton(
+              icon: const Icon(Icons.message),
+              onPressed: () async {
+                try {
+                  final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
+                  if (currentUserEmail == null) return;
 
-              if (sellerDoc.exists) {
-                // If they're a seller, use seller email
-                final sellerData = sellerDoc.data() as Map<String, dynamic>;
-                userEmail = sellerData['email'] ?? 'Unknown Email';
-              } else {
-                // If not a seller, get email from users collection
-                final userDoc = await FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(widget.userId)
-                    .get();
+                  // Create pending message request
+                  await FirebaseFirestore.instance
+                      .collection('pending_messages')
+                      .doc(widget.userId) // Receiver's email
+                      .collection('requests')
+                      .doc(currentUserEmail) // Sender's email as document ID
+                      .set({
+                    'senderEmail': currentUserEmail,
+                    'message': 'Hi! I would like to chat with you.',
+                    'timestamp': FieldValue.serverTimestamp(),
+                  });
 
-                if (userDoc.exists) {
-                  final userData = userDoc.data() as Map<String, dynamic>;
-                  userEmail = userData['email'] ?? 'Unknown Email';
-                } else {
-                  userEmail = 'Unknown Email';
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Message request sent!')),
+                  );
+
+                } catch (e) {
+                  print('Error sending message request: $e');
                 }
-              }
-
-              if (!mounted) return;
-
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatPage(
-                    receiverEmail: userEmail,
-                    receiverID: widget.userId,
-                  ),
-                ),
-              );
-            },
-          ),
+              },
+            ),
         ],
       ),
       body: StreamBuilder<DocumentSnapshot>(

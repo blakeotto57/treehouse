@@ -87,66 +87,79 @@ class ChatService {
     }
   }
 
+  // Get accepted chat users
+  Stream<List<Map<String, dynamic>>> getAcceptedChatsStream() {
+    final currentUserEmail = _firebaseAuth.currentUser?.email;
+    if (currentUserEmail == null) return Stream.value([]);
+
+    return _fireStore
+        .collection('accepted_chats')
+        .doc(currentUserEmail)
+        .collection('users')
+        .snapshots()
+        .asyncMap((snapshot) async {
+      final userEmails = snapshot.docs.map((doc) => doc['email'] as String).toList();
+      if (userEmails.isEmpty) return [];
+
+      // Get user details for each email
+      final userDetails = await Future.wait(
+        userEmails.map((email) => _fireStore
+            .collection('users')
+            .where('email', isEqualTo: email)
+            .get()
+            .then((snapshot) => snapshot.docs.first.data())),
+      );
+
+      return userDetails;
+    });
+  }
+
 
   //send messages
   Future<void> sendMessage(String receiverID, String message) async {
-    // Check if this is first message and receiver hasn't accepted yet
     final currentUserEmail = _firebaseAuth.currentUser!.email!;
-    final acceptedDoc = await _fireStore
-        .collection('accepted_chats')
-        .doc(receiverID)
-        .collection('users')
-        .doc(currentUserEmail)
-        .get();
+    final timestamp = Timestamp.now();
 
-    if (!acceptedDoc.exists) {
-      // Create message request
-      await _fireStore
-          .collection('message_requests')
-          .doc(receiverID)
-          .collection('requests')
+    // First ensure users are in each other's accepted chats
+    await FirebaseFirestore.instance.batch()
+      ..set(
+        _fireStore
+          .collection('accepted_chats')
           .doc(currentUserEmail)
-          .set({
-        'senderEmail': currentUserEmail,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-      return;
-    }
+          .collection('users')
+          .doc(receiverID),
+        {'email': receiverID, 'timestamp': timestamp}
+      )
+      ..set(
+        _fireStore
+          .collection('accepted_chats')
+          .doc(receiverID)
+          .collection('users')
+          .doc(currentUserEmail),
+        {'email': currentUserEmail, 'timestamp': timestamp}
+      )
+      ..commit();
 
-    // get current user info
-    final String currentUserID = _firebaseAuth.currentUser!.uid!;
-    final Timestamp timestamp = Timestamp.now();
-
-
-    // create a new message
+    // Create message
     Message newMessage = Message(
       senderID: currentUserEmail,
-      senderEmail: currentUserID,
+      senderEmail: currentUserEmail,
       receiverID: receiverID,
       message: message,
       timestamp: timestamp,
     );
 
-
-    //construct chat room ID for the 2 users
+    // Construct chat room ID
     List<String> ids = [currentUserEmail, receiverID];
-    ids.sort();// sorts the id's to make sure the chatroom is the same for both people
+    ids.sort();
     String chatRoomID = ids.join("_");
 
-    //creates particiapnts section in firebase
-    final chatRoomRef = _fireStore.collection("chat_rooms").doc(chatRoomID);
-    await chatRoomRef.set({
-    "participants": ids, // Add participants to the chat room
-     }, SetOptions(merge: true)); // Merge to avoid overwriting existing data
-
-
-    // add new message to database
+    // Add message to chat room
     await _fireStore
       .collection("chat_rooms")
       .doc(chatRoomID)
       .collection("messages")
-      .doc(timestamp.toDate().toIso8601String()) //title of doc of each message is time it was sent
-      .set(newMessage.toMap());
+      .add(newMessage.toMap());
   }
 
 
