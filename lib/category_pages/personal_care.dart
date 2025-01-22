@@ -43,7 +43,15 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Personal Care"),
+        title: const Text(
+          "Personal Care",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
         backgroundColor: Color.fromRGBO(178, 129, 243, 1),
       ),
       body: Center(

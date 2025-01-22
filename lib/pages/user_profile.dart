@@ -216,10 +216,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
               return const Center(child: Text("User data is null"));
             }
 
-            if (userData == null) {
-              return const Center(child: Text("User data is null"));
-            }
-
             // Fetch profile image URL
             profileImageUrl = userData['profileImageUrl'] ?? "";
 
@@ -360,7 +356,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => SellerSetupPage(onTap: () {}),
+                                  builder: (context) => SellerSetupPage(onTap: () {}), // Update this line
                                 ),
                               );
                             },
@@ -471,157 +467,5 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ],
       ),
     );
-  }
-}
-
-
-class UserProfile extends StatelessWidget {
-  final currentUser;
-  final usersCollection;
-  final sellersCollection;
-
-  UserProfile({required this.currentUser, required this.usersCollection, required this.sellersCollection});
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? Colors.white : Colors.black;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('User Profile'),
-      ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: usersCollection.where('email', isEqualTo: currentUser.email).snapshots(),
-        builder: (context, userSnapshot) {
-          if (userSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (userSnapshot.hasError) {
-            return const Center(child: Text("Error loading user data"));
-          }
-
-          if (userSnapshot.hasData && userSnapshot.data != null && userSnapshot.data!.docs.isNotEmpty) {
-            final userData = userSnapshot.data!.docs.first.data() as Map<String, dynamic>;
-
-            // Fetch profile image URL
-            final profileImageUrl = userData['profileImageUrl'];
-
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      children: [
-                        GestureDetector(
-                          onTap: pickAndUploadImage,
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundImage: profileImageUrl != null
-                                ? NetworkImage(profileImageUrl)
-                                : null,
-                            backgroundColor: Colors.green[800],
-                            child: profileImageUrl == null
-                                ? const Icon(Icons.person, size: 40)
-                                : null,
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              currentUser.email!,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: Colors.black54,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            MyTextBox(
-                              text: userData['username'] ?? '',
-                              sectionName: "Username",
-                              onPressed: () => editField("username"),
-                              width: 200,
-                              margin: const EdgeInsets.all(10),
-                            ),
-                            MyTextBox(
-                              text: userData['bio'] ?? '',
-                              sectionName: "Bio",
-                              onPressed: () => editField("bio"),
-                              width: 200,
-                              margin: const EdgeInsets.all(10),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  FutureBuilder<QuerySnapshot>(
-                    future: sellersCollection
-                        .where('email', isEqualTo: currentUser.email)
-                        .get(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Container();
-                      }
-                      if (snapshot.hasError || !snapshot.hasData || snapshot.data == null || snapshot.data!.docs.isEmpty) {
-                        return Center(
-                          child: Container(
-                            width: 250, // Adjust the width to ensure the text is all on one line
-                            child: MyButton(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => SellerSetupPage(onTap: () {}),
-                                  ),
-                                );
-                              },
-                              text: "Become a Seller",
-                              color: Colors.green.shade800, // Set the button color to green.shade300
-                            ),
-                          ),
-                        );
-                      }
-                      return Container();
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  const Divider(thickness: 2),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      'Additional Information',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  // Add more widgets here
-                ],
-              ),
-            );
-          }
-
-          return const Center(child: Text("No user data found"));
-        },
-      ),
-    );
-  }
-
-  void pickAndUploadImage() {
-    // Implement the function to pick and upload image
-  }
-
-  void editField(String field) {
-    // Implement the function to edit field
   }
 }

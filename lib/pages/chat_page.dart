@@ -6,7 +6,7 @@ import 'package:treehouse/components/text_field.dart';
 import 'package:treehouse/auth/chat_service.dart';
 import 'package:intl/intl.dart';
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
   final String receiverEmail;
   final String receiverID;
 
@@ -15,6 +15,14 @@ class ChatPage extends StatelessWidget {
     required this.receiverEmail,
     required this.receiverID,
   });
+
+  @override
+  _ChatPageState createState() => _ChatPageState();
+}
+
+class _ChatPageState extends State<ChatPage> {
+  DateTime? _previousMessageDate;
+  bool _isDeleting = false;
 
   // Text controller
   final TextEditingController _messageController = TextEditingController();
@@ -26,45 +34,59 @@ class ChatPage extends StatelessWidget {
   // Send message
   void sendMessage(BuildContext context) async {
     if (_messageController.text.isNotEmpty) {
-      await _chatService.sendMessage(receiverID, _messageController.text);
+      await _chatService.sendMessage(widget.receiverID, _messageController.text);
       _messageController.clear();
     }
   }
 
-  void _showDeleteDialog(BuildContext context) {
+  Future<void> _deleteChat() async {
+    try {
+      final chatRoomId = _getChatRoomId(_authService.currentUser!.email!);
+      final chatRoomRef = FirebaseFirestore.instance
+          .collection('chat_rooms')
+          .doc(chatRoomId);
+
+      final messages = await chatRoomRef.collection('messages').get();
+      final batch = FirebaseFirestore.instance.batch();
+
+      for (var message in messages.docs) {
+        batch.delete(message.reference);
+      }
+      batch.delete(chatRoomRef);
+      await batch.commit();
+
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting chat: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isDeleting = false);
+      }
+    }
+  }
+
+  void _showDeleteDialog() {
+    if (_isDeleting) return;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Delete Chat History'),
         content: const Text('Are you sure you want to delete all messages with this user? This cannot be undone.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           TextButton(
-            onPressed: () async {
-              try {
-                // Get chat room ID
-                String chatRoomId = _getChatRoomId(_authService.currentUser!.email!);
-
-                // Delete entire chat collection
-                await FirebaseFirestore.instance
-                    .collection('chat_rooms')
-                    .doc(chatRoomId)
-                    .delete();
-
-                Navigator.pop(context); // Close dialog
-                Navigator.pop(context); // Return to messages page
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Chat history deleted')),
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error deleting chat: $e')),
-                );
-              }
+            onPressed: _isDeleting ? null : () async {
+              setState(() => _isDeleting = true);
+              Navigator.pop(dialogContext);
+              await _deleteChat();
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
@@ -86,8 +108,8 @@ class ChatPage extends StatelessWidget {
       appBar: AppBar(
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () => _showDeleteDialog(context),
+            icon: const Icon(Icons.edit),
+            onPressed: () => _showDeleteDialog(),
           ),
         ],
         title: Row(
@@ -95,7 +117,7 @@ class ChatPage extends StatelessWidget {
             FutureBuilder<QuerySnapshot>(
               future: FirebaseFirestore.instance
                   .collection('users')
-                  .where('email', isEqualTo: receiverEmail)
+                  .where('email', isEqualTo: widget.receiverEmail)
                   .limit(1)
                   .get(),
               builder: (context, snapshot) {
@@ -127,7 +149,7 @@ class ChatPage extends StatelessWidget {
                       return CircleAvatar(
                         backgroundColor: Colors.green[800],
                         child: Text(
-                          receiverEmail[0].toUpperCase(),
+                          widget.receiverEmail[0].toUpperCase(),
                           style: const TextStyle(color: Colors.white),
                         ),
                       );
@@ -137,7 +159,7 @@ class ChatPage extends StatelessWidget {
                 return CircleAvatar(
                   backgroundColor: Colors.grey,
                   child: Text(
-                    receiverEmail[0].toUpperCase(),
+                    widget.receiverEmail[0].toUpperCase(),
                     style: const TextStyle(color: Colors.white),
                   ),
                 );
@@ -145,11 +167,11 @@ class ChatPage extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              receiverEmail,
+              widget.receiverEmail,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : Colors.black,
+                color: isDarkMode ? Colors.white : Colors.white,
               ),
             ),
           ],
@@ -175,7 +197,7 @@ class ChatPage extends StatelessWidget {
   Widget _buildMessageList() {
     return StreamBuilder(
       stream: _chatService.getMessages(
-          receiverID, _authService.currentUser!.email!),
+          widget.receiverID, _authService.currentUser!.email!),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return Center(
@@ -193,7 +215,7 @@ class ChatPage extends StatelessWidget {
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
           children: snapshot.data!.docs
-              .map((document) => _buildMessageItem(context, document))
+              .map((document) => _buildMessageItem(document))
               .toList(),
         );
       },
@@ -269,44 +291,76 @@ class ChatPage extends StatelessWidget {
   }
 
   // Build message item
-  Widget _buildMessageItem(BuildContext context, DocumentSnapshot document) {
+  Widget _buildMessageItem(DocumentSnapshot document) {
     Map<String, dynamic> data = document.data() as Map<String, dynamic>;
+    DateTime messageDateTime = data["timestamp"].toDate();
+    
+    // Check if we need to show date header
+    bool showDateHeader = false;
+    if (_previousMessageDate == null || 
+        !isSameDay(_previousMessageDate!, messageDateTime)) {
+      showDateHeader = true;
+      _previousMessageDate = messageDateTime;
+    }
+
     bool isCurrentUser = data["senderID"] == _authService.currentUser!.email!;
     var alignment = isCurrentUser ? Alignment.centerRight : Alignment.centerLeft;
 
-    return Container(
-      alignment: alignment,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        crossAxisAlignment:
-            isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
-            children: [
-              ChatBubble(
-                message: data["message"],
-                isCurrentUser: isCurrentUser,
+    return Column(
+      children: [
+        if (showDateHeader)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: Text(
+              DateFormat('MM/dd/yyyy').format(messageDateTime),
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
-              
+            ),
+          ),
+        Container(
+          alignment: alignment,
+          margin: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment:
+                isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                children: [
+                  ChatBubble(
+                    message: data["message"],
+                    isCurrentUser: isCurrentUser,
+                  ),
                   
-              Text(
-                DateFormat('MM/dd/yyyy h:mm a').format(data["timestamp"].toDate()),
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
+                      
+                  Text(
+                    DateFormat('h:mm a').format(data["timestamp"].toDate()),
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
+  bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year && 
+           date1.month == date2.month && 
+           date1.day == date2.day;
+  }
+
   String _getChatRoomId(String userEmail) {
-    List<String> emails = [userEmail, receiverEmail];
+    List<String> emails = [userEmail, widget.receiverEmail];
     emails.sort();
     return emails.join('_');
   }

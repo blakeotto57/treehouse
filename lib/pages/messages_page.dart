@@ -4,7 +4,7 @@ import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/pages/chat_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
 import 'package:treehouse/pages/user_settings.dart';
-import 'package:treehouse/models/category_model.dart';  // Add this import
+import 'package:treehouse/models/category_model.dart'; // Add this import
 import 'package:firebase_auth/firebase_auth.dart';
 
 class MessagesPage extends StatefulWidget {
@@ -18,7 +18,8 @@ class MessagesPage extends StatefulWidget {
 class _MessagesPageState extends State<MessagesPage> {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
-  
+  bool _isDeleting = false;
+
   // Add counter for new message requests
   Stream<int> get _newRequestsCount {
     return FirebaseFirestore.instance
@@ -93,17 +94,17 @@ class _MessagesPageState extends State<MessagesPage> {
             builder: (context, snapshot) {
               if (!snapshot.hasData) {
                 return Text(
-                    'No message requests',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                  'No message requests',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
                 );
               }
 
               final requests = snapshot.data!.docs;
-              
+
               if (requests.isEmpty) {
                 return const Text('No pending requests');
               }
@@ -112,7 +113,8 @@ class _MessagesPageState extends State<MessagesPage> {
                 shrinkWrap: true,
                 itemCount: requests.length,
                 itemBuilder: (context, index) {
-                  final request = requests[index].data() as Map<String, dynamic>;
+                  final request =
+                      requests[index].data() as Map<String, dynamic>;
                   final userEmail = request['senderEmail'] as String;
 
                   return ListTile(
@@ -124,7 +126,7 @@ class _MessagesPageState extends State<MessagesPage> {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
-                        ),
+                      ),
                     ),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -151,6 +153,81 @@ class _MessagesPageState extends State<MessagesPage> {
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _removeUserChat(String userEmail) async {
+    try {
+      final currentUserEmail = _authService.currentUser!.email!;
+      
+      // Create batch write
+      final batch = FirebaseFirestore.instance.batch();
+  
+      // Delete chat room and messages
+      final List<String> ids = [currentUserEmail, userEmail];
+      ids.sort();
+      final String chatRoomId = ids.join('_');
+      
+      // Get chat room reference
+      final chatRoomRef = FirebaseFirestore.instance
+          .collection('chat_rooms')
+          .doc(chatRoomId);
+  
+      // Delete all messages
+      final messages = await chatRoomRef.collection('messages').get();
+      for (var message in messages.docs) {
+        batch.delete(message.reference);
+      }
+  
+      // Delete chat room
+      batch.delete(chatRoomRef);
+  
+      // Remove from accepted_chats collection
+      batch.delete(
+        FirebaseFirestore.instance
+            .collection('accepted_chats')
+            .doc(currentUserEmail)
+            .collection('users')
+            .doc(userEmail)
+      );
+  
+      await batch.commit();
+  
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('User removed successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error removing user: $e')),
+      );
+    }
+  }
+
+  void _showRemoveDialog(String userEmail) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove User'),
+        content: const Text('Remove this user and delete all messages?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _removeUserChat(userEmail);
+            },
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
@@ -191,9 +268,12 @@ class _MessagesPageState extends State<MessagesPage> {
             builder: (context, snapshot) {
               return IconButton(
                 icon: Badge(
-                  isLabelVisible: snapshot.hasData && snapshot.data!.docs.isNotEmpty,
+                  isLabelVisible:
+                      snapshot.hasData && snapshot.data!.docs.isNotEmpty,
                   label: Text(
-                    snapshot.hasData ? snapshot.data!.docs.length.toString() : '0',
+                    snapshot.hasData
+                        ? snapshot.data!.docs.length.toString()
+                        : '0',
                     style: const TextStyle(color: Colors.white),
                   ),
                   child: Icon(
@@ -241,33 +321,39 @@ class _MessagesPageState extends State<MessagesPage> {
                 ),
               ),
               const Divider(height: 1, color: Colors.grey),
-              ...widget.categories.map((category) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    dense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    leading: Icon(
-                      category.icon,
-                      size: 30,
-                      color: category.boxColor, // Match icon color to category color
-                    ),
-                    title: Text(
-                      (category.name as Text).data ?? '', // Extract string from Text widget
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: category.boxColor, // Use category's boxColor for text
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      category.onTap(context);
-                    },
-                  ),
-                  Divider(height: 1, color: Colors.grey[200]),
-                ],
-              )).toList(),
+              ...widget.categories
+                  .map((category) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            dense: true,
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            leading: Icon(
+                              category.icon,
+                              size: 30,
+                              color: category
+                                  .boxColor, // Match icon color to category color
+                            ),
+                            title: Text(
+                              (category.name as Text).data ??
+                                  '', // Extract string from Text widget
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: category
+                                    .boxColor, // Use category's boxColor for text
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              category.onTap(context);
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                        ],
+                      ))
+                  .toList(),
               ListTile(
                 dense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -288,7 +374,8 @@ class _MessagesPageState extends State<MessagesPage> {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                    MaterialPageRoute(
+                        builder: (context) => const UserSettingsPage()),
                   );
                 },
               ),
@@ -300,7 +387,10 @@ class _MessagesPageState extends State<MessagesPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           StreamBuilder<DocumentSnapshot>(
-            stream: FirebaseFirestore.instance.collection('users').doc('user_id').snapshots(),
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .doc('user_id')
+                .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
@@ -339,17 +429,17 @@ class _MessagesPageState extends State<MessagesPage> {
         if (snapshot.hasError) {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
-  
+
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
-  
+
         final users = snapshot.data as List<Map<String, dynamic>>;
-        
+
         if (users.isEmpty) {
           return const Center(child: Text('No conversations yet'));
         }
-  
+
         return ListView.builder(
           itemCount: users.length,
           itemBuilder: (context, index) {
@@ -362,7 +452,8 @@ class _MessagesPageState extends State<MessagesPage> {
   }
 
   // Build individual list tile for user
-  Widget _buildUserListItem(Map<String, dynamic> userData, BuildContext context) {
+  Widget _buildUserListItem(
+      Map<String, dynamic> userData, BuildContext context) {
     final email = userData["email"];
     final profileImageUrl = userData["profileImageUrl"];
 
@@ -379,11 +470,13 @@ class _MessagesPageState extends State<MessagesPage> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: ListTile(
-          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           leading: CircleAvatar(
             radius: 15,
             backgroundImage: profileImageUrl != null
-                ? NetworkImage(profileImageUrl) // Display the user's profile picture
+                ? NetworkImage(
+                    profileImageUrl) // Display the user's profile picture
                 : null, // If no image URL, show a default icon
             backgroundColor: Colors.green[800],
             child: profileImageUrl == null
@@ -393,8 +486,15 @@ class _MessagesPageState extends State<MessagesPage> {
           title: Center(
             child: Text(
               email,
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.normal,
+              ),
             ),
+          ),
+          trailing: IconButton(
+            icon: const Icon(Icons.person_remove),
+            onPressed: () => _showRemoveDialog(email),
           ),
           onTap: () {
             // Navigate to the chat page with the user's email and UID
@@ -453,7 +553,8 @@ class _MessagesPageState extends State<MessagesPage> {
           }
 
           return AlertDialog(
-            contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
             title: Text(
               'Pending Messages',
               style: TextStyle(
@@ -468,7 +569,8 @@ class _MessagesPageState extends State<MessagesPage> {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: snapshot.data!.docs.length,
-                separatorBuilder: (context, index) => Divider(color: Colors.grey[300]),
+                separatorBuilder: (context, index) =>
+                    Divider(color: Colors.grey[300]),
                 itemBuilder: (context, index) {
                   final message = snapshot.data!.docs[index];
                   final senderEmail = message['senderEmail'];
@@ -515,7 +617,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                   // Message content
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           senderEmail,
@@ -550,7 +653,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                     child: IconButton(
                                       padding: EdgeInsets.zero,
                                       iconSize: 18,
-                                      icon: Icon(Icons.check, color: Colors.blue[600]),
+                                      icon: Icon(Icons.check,
+                                          color: Colors.blue[600]),
                                       style: IconButton.styleFrom(
                                         backgroundColor: Colors.blue[50],
                                       ),
@@ -560,91 +664,114 @@ class _MessagesPageState extends State<MessagesPage> {
                                           showDialog(
                                             context: context,
                                             barrierDismissible: false,
-                                            builder: (context) => const Center(child: CircularProgressIndicator()),
+                                            builder: (context) => const Center(
+                                                child:
+                                                    CircularProgressIndicator()),
                                           );
-                                    
-                                          final currentUserEmail = FirebaseAuth.instance.currentUser!.email!;
+
+                                          final currentUserEmail = FirebaseAuth
+                                              .instance.currentUser!.email!;
                                           final messageData = {
                                             'senderEmail': senderEmail,
                                             'message': message['message'],
-                                            'timestamp': FieldValue.serverTimestamp(),
+                                            'timestamp':
+                                                FieldValue.serverTimestamp(),
                                           };
-                                    
+
                                           // Add message to both users' collections and add to accepted chats
-                                          await FirebaseFirestore.instance.batch()
+                                          await FirebaseFirestore.instance
+                                              .batch()
                                             // Set chat for current user
                                             ..set(
-                                              FirebaseFirestore.instance
-                                                .collection('messages')
-                                                .doc(currentUserEmail)
-                                                .collection('chats')
-                                                .doc(senderEmail), 
-                                              {'lastMessage': message['message'], 'timestamp': FieldValue.serverTimestamp()}
-                                            )
+                                                FirebaseFirestore.instance
+                                                    .collection('messages')
+                                                    .doc(currentUserEmail)
+                                                    .collection('chats')
+                                                    .doc(senderEmail),
+                                                {
+                                                  'lastMessage':
+                                                      message['message'],
+                                                  'timestamp': FieldValue
+                                                      .serverTimestamp()
+                                                })
                                             // Add message to current user's messages
                                             ..set(
-                                              FirebaseFirestore.instance
-                                                .collection('messages')
-                                                .doc(currentUserEmail)
-                                                .collection('chats')
-                                                .doc(senderEmail)
-                                                .collection('messages')
-                                                .doc(),
-                                              messageData
-                                            )
+                                                FirebaseFirestore.instance
+                                                    .collection('messages')
+                                                    .doc(currentUserEmail)
+                                                    .collection('chats')
+                                                    .doc(senderEmail)
+                                                    .collection('messages')
+                                                    .doc(),
+                                                messageData)
                                             // Set chat for sender
                                             ..set(
-                                              FirebaseFirestore.instance
-                                                .collection('messages')
-                                                .doc(senderEmail)
-                                                .collection('chats')
-                                                .doc(currentUserEmail),
-                                              {'lastMessage': message['message'], 'timestamp': FieldValue.serverTimestamp()}
-                                            )
+                                                FirebaseFirestore.instance
+                                                    .collection('messages')
+                                                    .doc(senderEmail)
+                                                    .collection('chats')
+                                                    .doc(currentUserEmail),
+                                                {
+                                                  'lastMessage':
+                                                      message['message'],
+                                                  'timestamp': FieldValue
+                                                      .serverTimestamp()
+                                                })
                                             // Add message to sender's messages
                                             ..set(
-                                              FirebaseFirestore.instance
-                                                .collection('messages')
-                                                .doc(senderEmail)
-                                                .collection('chats')
-                                                .doc(currentUserEmail)
-                                                .collection('messages')
-                                                .doc(),
-                                              messageData
-                                            )
+                                                FirebaseFirestore.instance
+                                                    .collection('messages')
+                                                    .doc(senderEmail)
+                                                    .collection('chats')
+                                                    .doc(currentUserEmail)
+                                                    .collection('messages')
+                                                    .doc(),
+                                                messageData)
                                             // Add to current user's accepted chats
                                             ..set(
-                                              FirebaseFirestore.instance
-                                                .collection('accepted_chats')
-                                                .doc(currentUserEmail)
-                                                .collection('users')
-                                                .doc(senderEmail),
-                                              {'email': senderEmail, 'timestamp': FieldValue.serverTimestamp()}
-                                            )
-                                            // Add to sender's accepted chats  
+                                                FirebaseFirestore.instance
+                                                    .collection(
+                                                        'accepted_chats')
+                                                    .doc(currentUserEmail)
+                                                    .collection('users')
+                                                    .doc(senderEmail),
+                                                {
+                                                  'email': senderEmail,
+                                                  'timestamp': FieldValue
+                                                      .serverTimestamp()
+                                                })
+                                            // Add to sender's accepted chats
                                             ..set(
-                                              FirebaseFirestore.instance
-                                                .collection('accepted_chats')
-                                                .doc(senderEmail)
-                                                .collection('users')
-                                                .doc(currentUserEmail),
-                                              {'email': currentUserEmail, 'timestamp': FieldValue.serverTimestamp()}  
-                                            )
+                                                FirebaseFirestore.instance
+                                                    .collection(
+                                                        'accepted_chats')
+                                                    .doc(senderEmail)
+                                                    .collection('users')
+                                                    .doc(currentUserEmail),
+                                                {
+                                                  'email': currentUserEmail,
+                                                  'timestamp': FieldValue
+                                                      .serverTimestamp()
+                                                })
                                             // Delete the pending message
                                             ..delete(message.reference)
                                             ..commit();
-                                    
+
                                           // Close dialogs
                                           if (context.mounted) {
-                                            Navigator.pop(context); // Loading dialog
-                                            Navigator.pop(context); // Pending messages dialog
+                                            Navigator.pop(
+                                                context); // Loading dialog
+                                            Navigator.pop(
+                                                context); // Pending messages dialog
                                           }
-                                    
                                         } catch (e) {
                                           if (context.mounted) {
                                             Navigator.pop(context);
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(content: Text('Error: ${e.toString()}')),
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              SnackBar(
+                                                  content: Text(
+                                                      'Error: ${e.toString()}')),
                                             );
                                           }
                                         }
@@ -658,7 +785,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                     child: IconButton(
                                       padding: EdgeInsets.zero,
                                       iconSize: 18,
-                                      icon: Icon(Icons.close, color: Colors.red[600]),
+                                      icon: Icon(Icons.close,
+                                          color: Colors.red[600]),
                                       style: IconButton.styleFrom(
                                         backgroundColor: Colors.red[50],
                                       ),
@@ -719,18 +847,18 @@ class _MessagesPageState extends State<MessagesPage> {
     final messageData = {
       'message': message['message'],
       'senderEmail': senderEmail,
-      'timestamp': message['timestamp'], 
+      'timestamp': message['timestamp'],
     };
-  
+
     // Add message to both users' chat collections
     await FirebaseFirestore.instance
-      .collection('messages')
-      .doc(currentUserEmail)
-      .collection('chats')
-      .doc(senderEmail)
-      .collection('messages')
-      .add(messageData);
-  
+        .collection('messages')
+        .doc(currentUserEmail)
+        .collection('chats')
+        .doc(senderEmail)
+        .collection('messages')
+        .add(messageData);
+
     // Delete pending message
     await message.reference.delete();
   }
@@ -765,7 +893,8 @@ class _MessagesPageState extends State<MessagesPage> {
 class SoloSellerProfilePage extends StatelessWidget {
   final String userId;
 
-  const SoloSellerProfilePage({Key? key, required this.userId}) : super(key: key);
+  const SoloSellerProfilePage({Key? key, required this.userId})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -773,8 +902,7 @@ class SoloSellerProfilePage extends StatelessWidget {
     final textColor = isDarkMode ? Colors.white : Colors.black;
 
     return Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
           'Seller Profile',
@@ -815,7 +943,8 @@ class SoloSellerProfilePage extends StatelessWidget {
                   );
                 }
                 if (snapshot.hasData && snapshot.data != null) {
-                  final userData = snapshot.data!.data() as Map<String, dynamic>;
+                  final userData =
+                      snapshot.data!.data() as Map<String, dynamic>;
                   final profileImageUrl = userData['profileImageUrl'];
                   return CircleAvatar(
                     radius: 60,
@@ -859,7 +988,8 @@ class SoloSellerProfilePage extends StatelessWidget {
                   return const Text('Error loading email');
                 }
                 if (snapshot.hasData && snapshot.data != null) {
-                  final userData = snapshot.data!.data() as Map<String, dynamic>;
+                  final userData =
+                      snapshot.data!.data() as Map<String, dynamic>;
                   final email = userData['email'] ?? 'Unknown Email';
                   return Text(
                     email,
@@ -873,7 +1003,6 @@ class SoloSellerProfilePage extends StatelessWidget {
               },
             ),
             const SizedBox(height: 20),
-      
           ],
         ),
       ),

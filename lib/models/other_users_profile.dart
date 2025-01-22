@@ -43,9 +43,34 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
     // Handle Google Pay result
   }
 
+  Future<String> createOrGetChatRoom(
+      String currentUserEmail, String otherUserEmail) async {
+    // Sort emails to ensure consistent room ID
+    final List<String> emails = [currentUserEmail, otherUserEmail];
+    emails.sort();
+    final String chatRoomId = emails.join('_');
+
+    // Check if room exists
+    final chatRoomRef =
+        FirebaseFirestore.instance.collection('chat_rooms').doc(chatRoomId);
+    final chatRoom = await chatRoomRef.get();
+
+    // Create room if it doesn't exist
+    if (!chatRoom.exists) {
+      await chatRoomRef.set({
+        'participants': [currentUserEmail, otherUserEmail],
+        'created_at': FieldValue.serverTimestamp(),
+        'last_message': '',
+        'last_message_time': FieldValue.serverTimestamp()
+      });
+    }
+
+    return chatRoomId;
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Add check for current user 
+    // Add check for current user
     final isOwnProfile = currentUser?.email == widget.userId;
 
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -56,40 +81,45 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
       appBar: AppBar(
         title: Text(
           "${widget.userId}",
-          style: TextStyle(color: textColor),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.green[300],
+        backgroundColor: Colors.green[800],
         elevation: 2,
         actions: [
           // Only show message icon if not viewing own profile
           if (!isOwnProfile)
             IconButton(
-              icon: const Icon(Icons.message),
+              icon: const Icon(
+                Icons.message,
+                color: Colors.white,
+                ),
               onPressed: () async {
                 try {
-                  final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
-                  if (currentUserEmail == null) return;
-
-                  // Create pending message request
-                  await FirebaseFirestore.instance
-                      .collection('pending_messages')
-                      .doc(widget.userId) // Receiver's email
-                      .collection('requests')
-                      .doc(currentUserEmail) // Sender's email as document ID
-                      .set({
-                    'senderEmail': currentUserEmail,
-                    'message': 'Hi! I would like to chat with you.',
-                    'timestamp': FieldValue.serverTimestamp(),
-                  });
+                  final currentUser = FirebaseAuth.instance.currentUser!;
+                  final chatRoomId = await createOrGetChatRoom(
+                      currentUser.email!, widget.userId);
 
                   if (!mounted) return;
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Message request sent!')),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatPage(
+                        receiverEmail: widget.userId,
+                        receiverID: widget.userId,
+                      ),
+                    ),
                   );
-
                 } catch (e) {
-                  print('Error sending message request: $e');
+                  print('Error creating/getting chat room: $e');
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Error opening chat')),
+                  );
                 }
               },
             ),
@@ -138,7 +168,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundColor: Colors.green[300],
+                      backgroundColor: Colors.green[800],
                       backgroundImage: profileImageUrl != null
                           ? NetworkImage(profileImageUrl)
                           : null,
@@ -159,10 +189,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-
                     const SizedBox(height: 10),
-
-
                     FutureBuilder<DocumentSnapshot>(
                       future: FirebaseFirestore.instance
                           .collection('sellers')
@@ -170,7 +197,6 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                           .get(),
                       builder: (BuildContext context,
                           AsyncSnapshot<DocumentSnapshot> snapshot) {
-                            
                         if (snapshot.hasData && snapshot.data!.exists) {
                           return Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -320,84 +346,54 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                     ),
                     const SizedBox(height: 20),
                     StreamBuilder<DocumentSnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('sellers')
-                          .doc(widget.userId)
-                          .snapshots(),
+                      stream: usersCollection.doc(widget.userId).snapshots(),
                       builder: (context, snapshot) {
-                        return Center( // Wrap entire content
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (snapshot.hasData && snapshot.data!.exists)
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black26,
-                                          blurRadius: 6,
-                                          offset: Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          "Previous Work",
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        sellerData?['workImages'] != null
-                                            ? SizedBox(
-                                                height: 150,
-                                                child: ListView.builder(
-                                                  scrollDirection: Axis.horizontal,
-                                                  itemCount: (sellerData?['workImages']
-                                                          as List)
-                                                      .length,
-                                                  itemBuilder: (context, index) {
-                                                    return Container(
-                                                      margin: const EdgeInsets.only(
-                                                          right: 10),
-                                                      child: ClipRRect(
-                                                        borderRadius:
-                                                            BorderRadius.circular(8),
-                                                        child: Image.network(
-                                                          sellerData?['workImages']
-                                                              [index],
-                                                          height: 150,
-                                                          width: 150,
-                                                          fit: BoxFit.cover,
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              )
-                                            : const Text(
-                                                "No previous work available.",
-                                                style: TextStyle(
-                                                    fontSize: 14,
-                                                    color: Colors.black54),
-                                              ),
-                                      ],
-                                    ),
+                        if (snapshot.hasData && snapshot.data != null) {
+                          final userData =
+                              snapshot.data!.data() as Map<String, dynamic>?;
+                          final bio = userData?['bio'] ?? 'No bio available';
+
+                          return Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: Colors.grey.withOpacity(0.2)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Bio',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: textColor,
                                   ),
                                 ),
-                            ],
-                          ),
-                        );
+                                const SizedBox(height: 8),
+                                Text(
+                                  bio,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: textColor.withOpacity(0.8),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        return const SizedBox.shrink();
                       },
                     ),
                     const SizedBox(height: 30),

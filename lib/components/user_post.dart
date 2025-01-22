@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +8,9 @@ import 'package:treehouse/components/delete_button.dart';
 import 'package:treehouse/components/like_button.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/pages/user_profile.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
 
 import '../helper/helper_methods.dart';
 
@@ -33,6 +37,7 @@ class UserPost extends StatefulWidget {
 class _UserPostState extends State<UserPost> {
   final currentUser = FirebaseAuth.instance.currentUser!;
   bool isLiked = false;
+  String? profileImageUrl;
 
   // comment
   final _commentTextController = TextEditingController();
@@ -281,6 +286,89 @@ class _UserPostState extends State<UserPost> {
     );
   }
 
+  Future<void> pickAndUploadImage() async {
+    try {
+      // Initialize Firebase App Check if not already done
+      await FirebaseAppCheck.instance.activate(
+        androidProvider: AndroidProvider.playIntegrity,
+        // Use debug provider for development
+        // androidProvider: AndroidProvider.debug,
+      );
+
+      // Get current user
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) {
+        throw 'No user logged in';
+      }
+
+      // Pick image
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 75,
+      );
+
+      if (image == null) return;
+
+      // Get reference to Firestore
+      final userDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.email);
+
+      // Create user document if it doesn't exist
+      if (!(await userDoc.get()).exists) {
+        await userDoc.set({
+          'email': currentUser.email,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Upload image to Firebase Storage
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('profile_images/${currentUser.email}');
+
+      final File imageFile = File(image.path);
+      await storageRef.putFile(imageFile);
+
+      // Get download URL
+      final downloadUrl = await storageRef.getDownloadURL();
+
+      // Update Firestore with new image URL
+      await userDoc.update({
+        'profileImageUrl': downloadUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      // Update UI
+      setState(() {
+        profileImageUrl = downloadUrl;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profile picture updated successfully!'),
+            backgroundColor: Colors.green[800],
+          ),
+        );
+      }
+
+    } catch (e) {
+      print('Error updating profile picture: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error updating profile picture: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   // Build your widget tree (unchanged, except for toggleLike usage).
   @override
   Widget build(BuildContext context) {
@@ -297,74 +385,70 @@ class _UserPostState extends State<UserPost> {
           // Top Row: Avatar, user, date, delete button
           Row(
             children: [
-              CircleAvatar(
-                backgroundColor: Colors.green,
-                radius: 20,
-                child: const Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 25,
-                ),
-              ),
+              // Profile picture
+              StreamBuilder<DocumentSnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(widget.user)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.grey,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    );
+                  }
 
-              const SizedBox(width: 10),
+                  if (snapshot.hasError || !snapshot.hasData) {
+                    return CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.green[300],
+                      child: const Icon(Icons.person, color: Colors.white),
+                    );
+                  }
 
-              //user
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => OtherUsersProfilePage(userId: widget.user),
+                  final userData = snapshot.data!.data() as Map<String, dynamic>?;
+                  final profileImageUrl = userData?['profileImageUrl'] as String?;
+
+                  return GestureDetector(
+                    onTap: () {
+                      // Navigate to user profile or show details
+                    },
+                    child: CircleAvatar(
+                      radius: 20,
+                      backgroundColor: Colors.green[300],
+                      backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
+                          ? NetworkImage(profileImageUrl)
+                          : null,
+                      child: profileImageUrl == null || profileImageUrl.isEmpty
+                          ? const Icon(Icons.person, color: Colors.white)
+                          : null,
                     ),
                   );
                 },
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  widget.user,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[700],
-                  ),
-                ),
               ),
-
-              const SizedBox(width: 5),
-
+              const SizedBox(width: 10),
+              // Username
               Text(
-                "•",
-                style: const TextStyle(
+                widget.user,
+                style: TextStyle(
                   color: Colors.grey,
-                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-
-              const SizedBox(width: 5),
-
-              //date
-              Text(
-                DateFormat('MM/dd/yyyy').format(widget.timestamp.toDate()),
-                style: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 12,
-                ),
-              ),
-
-              const SizedBox(width: 2),
-
-              // delete button
+              const Spacer(),
               if (currentUser.email == widget.user)
                 DeleteButton(
                   onTap: deletePost,
                 ),
             ],
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
           ),
-
-          const SizedBox(height: 5),
 
           // Message
           Row(
