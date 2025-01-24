@@ -123,7 +123,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     title: Text(
                       (category.name as Text).data ?? '', // Extract string from Text widget
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 18,
                         color: category.boxColor, // Use category's boxColor for text
                         fontWeight: FontWeight.bold,
                       ),
@@ -141,13 +141,13 @@ class _ExplorePageState extends State<ExplorePage> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 leading: Icon(
                   Icons.settings,
-                  size: 20,
+                  size: 30,
                   color: Colors.grey[700],
                 ),
                 title: Text(
                   'Settings',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 18,
                     color: Colors.grey[800],
                     fontWeight: FontWeight.w500,
                   ),

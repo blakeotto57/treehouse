@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:treehouse/auth/login_page.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:treehouse/pages/feedback.dart';
 
 class UserSettingsPage extends StatefulWidget {
   const UserSettingsPage({super.key});
@@ -15,8 +16,10 @@ class UserSettingsPage extends StatefulWidget {
 class _UserSettingsPageState extends State<UserSettingsPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  final TextEditingController _currentPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
+  final TextEditingController _currentPasswordController =
+      TextEditingController();
   bool _isLoading = false;
 
   // Sign user out
@@ -30,6 +33,15 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         builder: (context) => LoginPage(
           onTap: () {}, // Add any necessary callback
         ),
+      ),
+    );
+  }
+
+  void navigateToFeedback() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FeedbackPage(),
       ),
     );
   }
@@ -49,10 +61,13 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
             color: Colors.white,
           ),
         ),
+        centerTitle: true,
         backgroundColor: Colors.green[800],
         elevation: 2,
         iconTheme: IconThemeData(
-          color: isDarkMode ? Colors.white : Colors.black, // Change icon color based on theme
+          color: isDarkMode
+              ? Colors.white
+              : Colors.black, // Change icon color based on theme
         ),
         actions: [
           IconButton(
@@ -65,11 +80,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          
           // Section 1: Security
-          buildSectionHeader('Security'),
-          
-         buildListTile(
+          buildSectionHeader(
+            'Security',
+          ),
+
+          buildListTile(
             title: "Change Password",
             icon: Icons.lock,
             onTap: () {
@@ -86,28 +102,36 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                             color: textColor,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey,
                             ),
                           ),
-                          const SizedBox(width: 16),
-
-                           TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                            child: const Text(
-                              "Cancel",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey,
-                                ),
-                              ),
                         ),
                       ],
                     ),
                     content: SingleChildScrollView(
                       child: Container(
                         height: 200,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.grey[300]!,
+                            width: 1.0,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.white,
+                        ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -127,7 +151,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                                 border: OutlineInputBorder(),
                               ),
                               obscureText: true,
-                            ),                            
+                            ),
                             const SizedBox(height: 16),
                             TextField(
                               controller: _confirmPasswordController,
@@ -145,7 +169,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                       _isLoading
                           ? const Center(child: CircularProgressIndicator())
                           : Center(
-                            child: ElevatedButton(
+                              child: ElevatedButton(
                                 onPressed: () {
                                   _changePassword();
                                   Navigator.of(context).pop();
@@ -163,30 +187,50 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                                   ),
                                 ),
                               ),
-                          ),
+                            ),
                     ],
                   ),
                 ),
-            
               );
             },
           ),
-          
-          const Divider(),
+          const Divider(
+            color: Colors.grey,
+          ),
 
           // Section 2: Theme Customization
           buildSectionHeader('Theme Customization'),
           SwitchListTile(
-            title: Text('Dark Mode'),
+            title: Text(
+              'Dark Mode',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.normal,
+                color: textColor,
+              ),
+            ),
             value: Provider.of<ThemeProvider>(context).isDarkMode,
             onChanged: (bool value) {
               Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
             },
           ),
-          
-          const Divider(),
 
-         
+          const Divider(
+            color: Colors.grey,
+          ),
+
+          buildSectionHeader(
+            'App Feedback',
+          ),
+
+          buildListTile(
+            title: 'Send Feedback',
+            icon: Icons.feedback,
+            onTap: navigateToFeedback,
+          ),
+          const Divider(
+            color: Colors.grey,
+          ),
         ],
       ),
     );
@@ -204,11 +248,10 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         await user.reauthenticateWithCredential(credential);
 
         // Update the password
-        FirebaseFirestore.instance.collection('users').doc(user.email!)
-        .update({
+        FirebaseFirestore.instance.collection('users').doc(user.email!).update({
           'password': _newPasswordController.text,
         });
-          
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Password successfully updated')),
         );
@@ -247,7 +290,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     return ListTile(
       title: Text(
         title,
-        style: const TextStyle(fontWeight: FontWeight.bold),
+        style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 18),
       ),
       subtitle: subtitle != null ? Text(subtitle) : null,
       trailing: icon != null
@@ -257,7 +300,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
             )
           : null,
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+      contentPadding:
+          const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
       ),

@@ -160,40 +160,37 @@ class _MessagesPageState extends State<MessagesPage> {
   Future<void> _removeUserChat(String userEmail) async {
     try {
       final currentUserEmail = _authService.currentUser!.email!;
-      
+
       // Create batch write
       final batch = FirebaseFirestore.instance.batch();
-  
+
       // Delete chat room and messages
       final List<String> ids = [currentUserEmail, userEmail];
       ids.sort();
       final String chatRoomId = ids.join('_');
-      
+
       // Get chat room reference
-      final chatRoomRef = FirebaseFirestore.instance
-          .collection('chat_rooms')
-          .doc(chatRoomId);
-  
+      final chatRoomRef =
+          FirebaseFirestore.instance.collection('chat_rooms').doc(chatRoomId);
+
       // Delete all messages
       final messages = await chatRoomRef.collection('messages').get();
       for (var message in messages.docs) {
         batch.delete(message.reference);
       }
-  
+
       // Delete chat room
       batch.delete(chatRoomRef);
-  
+
       // Remove from accepted_chats collection
-      batch.delete(
-        FirebaseFirestore.instance
-            .collection('accepted_chats')
-            .doc(currentUserEmail)
-            .collection('users')
-            .doc(userEmail)
-      );
-  
+      batch.delete(FirebaseFirestore.instance
+          .collection('accepted_chats')
+          .doc(currentUserEmail)
+          .collection('users')
+          .doc(userEmail));
+
       await batch.commit();
-  
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('User removed successfully')),
@@ -339,7 +336,7 @@ class _MessagesPageState extends State<MessagesPage> {
                               (category.name as Text).data ??
                                   '', // Extract string from Text widget
                               style: TextStyle(
-                                fontSize: 14,
+                                fontSize: 18,
                                 color: category
                                     .boxColor, // Use category's boxColor for text
                                 fontWeight: FontWeight.bold,
@@ -359,13 +356,13 @@ class _MessagesPageState extends State<MessagesPage> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 leading: Icon(
                   Icons.settings,
-                  size: 20,
+                  size: 30,
                   color: Colors.grey[700],
                 ),
                 title: Text(
                   'Settings',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 18,
                     color: Colors.grey[800],
                     fontWeight: FontWeight.w500,
                   ),
@@ -437,7 +434,9 @@ class _MessagesPageState extends State<MessagesPage> {
         final users = snapshot.data as List<Map<String, dynamic>>;
 
         if (users.isEmpty) {
-          return const Center(child: Text('No conversations yet'));
+          return const Center(
+              child: Text('No conversations yet',
+                  style: TextStyle(color: Colors.grey, fontSize: 18)));
         }
 
         return ListView.builder(
@@ -534,14 +533,21 @@ class _MessagesPageState extends State<MessagesPage> {
               title: Text(
                 'Pending Messages',
                 style: TextStyle(
-                  fontSize: 20,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.green[800],
                 ),
               ),
-              content: const Text(
-                'No pending messages',
-                style: TextStyle(fontSize: 16),
+              content: Padding(
+                padding: EdgeInsets.only(top: 16.0),
+                child: Text(
+                  'No pending messages',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                    ),
+                  textAlign: TextAlign.center,
+                ),
               ),
               actions: [
                 TextButton(

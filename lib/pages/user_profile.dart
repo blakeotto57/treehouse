@@ -158,7 +158,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     title: Text(
                       (category.name as Text).data ?? '', // Extract string from Text widget
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 18,
                         color: category.boxColor, // Use category's boxColor for text
                         fontWeight: FontWeight.bold,
                       ),
@@ -176,13 +176,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                 leading: Icon(
                   Icons.settings,
-                  size: 20,
+                  size: 30,
                   color: Colors.grey[700],
                 ),
                 title: Text(
                   'Settings',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 18,
                     color: Colors.grey[800],
                     fontWeight: FontWeight.w500,
                   ),
@@ -257,14 +257,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 child: CircleAvatar(
                                   radius: 60,
                                   backgroundColor: Colors.green[800],
-                                  child: profileImageUrl == null 
-                                      ? null 
-                                      : const Icon(
-                                          Icons.person,
-                                          size: 80,
-                                          color: Colors.white,
-                                        ),
+                                  
                                   backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl!) : null,
+                                  child: profileImageUrl == null ? Icon(Icons.person, size: 60, color: Colors.white) : null,
                                 ),
                               ),
                             ),
