@@ -16,7 +16,9 @@ class FoodSellersPage extends StatefulWidget {
 
 class _FoodSellersPageState extends State<FoodSellersPage> {
   final textController = TextEditingController();
+  final searchController = TextEditingController();
   final currentUser = FirebaseAuth.instance.currentUser!;
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -42,26 +44,69 @@ class _FoodSellersPageState extends State<FoodSellersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Food Services"),
-        backgroundColor: Color.fromRGBO(215, 57, 239, 1),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(60),
+        child: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: Color.fromRGBO(215, 57, 239, 1),
+          flexibleSpace: Padding(
+            padding: const EdgeInsets.only(top: 40, left: 10, right: 10, bottom: 5),
+            child: TextField(
+              controller: searchController,
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                hintText: 'Search food services...',
+                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                hintStyle: TextStyle(color: Colors.white),
+                prefixIcon: Icon(Icons.search, color: Colors.white),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              style: TextStyle(color: Colors.white),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value.toLowerCase();
+                });
+              },
+            ),
+          ),
+        ),
       ),
       body: Center(
-        child: Column(
-          children: [
-            Expanded(
-              child: StreamBuilder<QuerySnapshot>(
+        child: GestureDetector(
+          onTap: () {
+            FocusScope.of(context).unfocus();
+          },
+          child: Column(
+            children: [
+              Expanded(
+                child: StreamBuilder<QuerySnapshot>(
                   stream: FirebaseFirestore.instance
                       .collection("food_posts")
                       .orderBy("timestamp", descending: true)
                       .snapshots(),
                   builder: (context, snapshot) {
                     if (snapshot.hasData) {
-                      return ListView.builder(
-                        itemCount: snapshot.data!.docs.length,
-                        itemBuilder: (context, index) {
-                          final post = snapshot.data!.docs[index].data() as Map<String, dynamic>;
+                      var filteredPosts = snapshot.data!.docs.where((doc) {
+                        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                        return searchQuery.isEmpty || 
+                               data["message"].toString().toLowerCase().contains(searchQuery);
+                      }).toList();
 
+                      return ListView.builder(
+                        itemCount: filteredPosts.length,
+                        itemBuilder: (context, index) {
+                          final post = filteredPosts[index].data() as Map<String, dynamic>;
                           return UserPost(
                             message: post["message"],
                             user: post["email"],
@@ -72,43 +117,58 @@ class _FoodSellersPageState extends State<FoodSellersPage> {
                         },
                       );
                     } else if (snapshot.hasError) {
-                      return Center(
-                        child: Text("Error:${snapshot.error}"),
-                      );
-                    } else {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return Center(child: Text("Error:${snapshot.error}"));
                     }
-                  }),
-            ),
-
-            // Message Input
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: textController,
-                      decoration: const InputDecoration(
-                        hintText: "What food services do you need?",
-                        hintStyle: TextStyle(color: Colors.grey),
-                        border: OutlineInputBorder(),
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: textController,
+                        style: TextStyle(color: Colors.black),
+                        decoration: InputDecoration(
+                          hintText: "What do you need?",
+                          hintStyle: TextStyle(color: Colors.grey),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: BorderSide(color: Colors.black),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: BorderSide(color: Colors.black),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(25),
+                            borderSide: BorderSide(color: Colors.black),
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                        ),
                       ),
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.send),
-                    onPressed: postMessage,
-                  ),
-                ],
+                    IconButton(
+                      icon: const Icon(Icons.send),
+                      onPressed: postMessage,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    textController.dispose();
+    super.dispose();
   }
 }
 

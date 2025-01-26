@@ -433,13 +433,36 @@ class _UserPostState extends State<UserPost> {
               ),
               const SizedBox(width: 10),
               // Username
-              Text(
-                widget.user,
-                style: TextStyle(
-                  color: Colors.grey,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              widget.user == currentUser.email
+                  ? Text(
+                      widget.user,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    )
+                  : TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OtherUsersProfilePage(userId: widget.user),
+                          ),
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        widget.user,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
               const Spacer(),
               if (currentUser.email == widget.user)
                 DeleteButton(

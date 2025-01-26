@@ -17,8 +17,10 @@ class ErrandsMovingSellersPage extends StatefulWidget {
 
 class _ErrandsMovingSellersPageState extends State<ErrandsMovingSellersPage> {
   final textController = TextEditingController();
+  final searchController = TextEditingController(); // Add this controller to the state class
   final currentUser = FirebaseAuth.instance.currentUser!;
   late Stream<QuerySnapshot> _sellersStream;
+  String searchQuery = ''; // Add searchQuery to state class
 
   @override
   void initState() {
@@ -48,9 +50,43 @@ class _ErrandsMovingSellersPageState extends State<ErrandsMovingSellersPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Errands & Moving Services"),
-        backgroundColor: Color.fromRGBO(255, 193, 7, 1),
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(60),
+        child: AppBar(
+          automaticallyImplyLeading: false,
+          backgroundColor: Color.fromRGBO(255, 193, 7, 1),
+          flexibleSpace: Padding(
+            padding: const EdgeInsets.only(top: 40, left: 10, right: 10, bottom: 5),
+            child: TextField(
+              controller: searchController,
+              textAlignVertical: TextAlignVertical.center,
+              decoration: InputDecoration(
+                hintText: 'Search errands & moving services...',
+                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                hintStyle: TextStyle(color: Colors.white),
+                prefixIcon: Icon(Icons.search, color: Colors.white),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+              style: TextStyle(color: Colors.white),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value.toLowerCase();
+                });
+              },
+            ),
+          ),
+        ),
       ),
       body: Center(
         child: Column(
@@ -96,10 +132,23 @@ class _ErrandsMovingSellersPageState extends State<ErrandsMovingSellersPage> {
                   Expanded(
                     child: TextField(
                       controller: textController,
-                      decoration: const InputDecoration(
-                        hintText: "What errands or moving services do you need?",
+                      style: TextStyle(color: Colors.black),
+                      decoration: InputDecoration(
+                        hintText: "What do you need?",
                         hintStyle: TextStyle(color: Colors.grey),
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide(color: Colors.black),
+                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
                       ),
                     ),
                   ),
