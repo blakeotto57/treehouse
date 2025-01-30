@@ -79,8 +79,8 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(
                         fontWeight: FontWeight.bold, 
                         color: Colors.white,
-                        letterSpacing: 3,
-                        fontSize: 20,
+                        letterSpacing: 1,
+                        fontSize: 25,
                     ),
                   ),
             
@@ -118,7 +118,7 @@ class _LoginPageState extends State<LoginPage> {
             
             
             
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 25),
             
                 //go to register page
                 Row(
@@ -129,6 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold, 
                         color: Colors.white,
+                        fontSize: 16,
                       ),    
                     ),
             
@@ -141,6 +142,7 @@ class _LoginPageState extends State<LoginPage> {
                         style: TextStyle(
                           fontWeight: FontWeight.bold, 
                           color: Colors.blue,
+                          fontSize: 16,
                           ),
                         ),
                     ),
