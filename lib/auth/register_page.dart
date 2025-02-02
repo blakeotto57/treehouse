@@ -2,10 +2,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/text_field.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import '../components/button.dart';
 import '../pages/home.dart';
+import '../pages/explore_page.dart';
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -24,26 +24,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final passwordTextController = TextEditingController();
   final confirmPasswordTextController = TextEditingController();
 
-  final GoogleSignIn _googleSignIn = GoogleSignIn(
-    hostedDomain: 'edu',
-    scopes: ['email', 'profile'],
-  );
-
-  Future<bool> verifyEducationalEmail(String email) async {
-    try {
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-      
-      if (googleUser != null) {
-        // Verify if Google email matches the provided email
-        if (googleUser.email == email) {
-          return true;
-        }
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
 
   // Add this validation function at class level
   bool isValidEducationalEmail(String email) {
@@ -52,7 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   //sign up user
-  void signUp() async {
+  Future<void> signUp() async {
     // Make sure passwords match
     if (passwordTextController.text != confirmPasswordTextController.text) {
       // Show error
@@ -69,60 +49,67 @@ class _RegisterPageState extends State<RegisterPage> {
     );
 
     try {
-      // Verify email with Google
-      bool isValidUser = await verifyEducationalEmail(emailTextController.text);
-      
-      if (!isValidUser) {
-        Navigator.pop(context); // Remove loading indicator
-        displayMessage("Please verify your .edu email with Google");
-        return;
-      }
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+            email: emailTextController.text,
+            password: passwordTextController.text,
+          );
 
-      // Continue with Firebase registration
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailTextController.text,
-        password: passwordTextController.text,
-      );
+      User? user = userCredential.user;
+      if (user != null) {
+        // Save user info to Firestore
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'email': user.email,
+          // add additional fields as needed
+        });
 
-      // After creating new user, create a new document in Firebase for them
-      await FirebaseFirestore.instance.collection("users").doc(emailTextController.text).set({
-        "username": emailTextController.text.split("@")[0],
-        "bio": "Empty bio",
-        "email": emailTextController.text,
-        "password": passwordTextController.text,
-        "profileImageUrl": null, // Add default value for profileImageUrl
-        // Add additional fields if needed
-      });
+        // Send email verification
+        await user.sendEmailVerification();
 
-      // Pop loading indicator
-      if (mounted) {
-        Navigator.pop(context);
-      }
-
-      // Navigate to the home page or show success message
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) =>  HomePage()),
+        if (!mounted) return; // Check if widget is still active
+        
+        // Show a dialog to inform user to check their email
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Verify your email'),
+            content: const Text('A verification email has been sent. Please verify your account.'),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  // Ensure widget is still mounted before proceeding
+                  if (!mounted) return;
+                  await user.reload();
+                  if (FirebaseAuth.instance.currentUser!.emailVerified) {
+                    if (!mounted) return;
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => ExplorePage()),
+                    );
+                  } else {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Email not verified yet.')),
+                    );
+                  }
+                },
+                child: const Text('I have verified'),
+              ),
+            ],
+          ),
         );
       }
     } on FirebaseAuthException catch (e) {
-      // Pop loading indicator
       if (mounted) {
         Navigator.pop(context);
+        displayMessage(e.code);
       }
-
-      // Show error to user
-      displayMessage(e.code);
     } catch (e) {
-      // Pop loading indicator
       if (mounted) {
         Navigator.pop(context);
+        print('Error: $e');
+        displayMessage('An error occurred. Please try again.');
       }
-
-      // Log and show any other errors
-      print('Error: $e');
-      displayMessage('An error occurred. Please try again.');
     }
   }
 

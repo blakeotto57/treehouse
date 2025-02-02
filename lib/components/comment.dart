@@ -66,6 +66,9 @@ class _CommentState extends State<Comment> {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserEmail = FirebaseAuth.instance.currentUser?.email;
+    final isCurrentUser = currentUserEmail == widget.user;
+    
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: Column(
@@ -75,39 +78,44 @@ class _CommentState extends State<Comment> {
           Row(
             children: [
               const SizedBox(width: 8),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/profile',
-                    arguments: widget.user, // Pass the email as argument
-                  );
-                },
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  widget.user,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green[700],
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                widget.time,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                ),
-              ),
+              isCurrentUser
+                  ? Text(
+                      widget.user.contains('@')
+                          ? widget.user.split('@')[0]
+                          : widget.user,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.black,
+                      ),
+                    )
+                  : TextButton(
+                      onPressed: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/profile',
+                          arguments: widget.user, // Pass the email as argument
+                        );
+                      },
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      child: Text(
+                        widget.user.contains('@')
+                            ? widget.user.split('@')[0]
+                            : widget.user,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    ),
+              // Additional widgets can go here (collapse button, etc.)
             ],
           ),
-
           // Comment content
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

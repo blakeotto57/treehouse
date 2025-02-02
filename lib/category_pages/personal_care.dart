@@ -27,7 +27,10 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
 
   Future<void> postMessage() async {
     if (textController.text.isNotEmpty) {
-      await FirebaseFirestore.instance.collection("personal_care_posts").doc(textController.text).set({
+      await FirebaseFirestore.instance
+          .collection("personal_care_posts")
+          .doc(textController.text)
+          .set({
         "email": FirebaseAuth.instance.currentUser?.email,
         "message": textController.text,
         "timestamp": Timestamp.now(),
@@ -44,42 +47,58 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60),
-        child: AppBar(
-          automaticallyImplyLeading: false, // Remove back button
-          backgroundColor: Color.fromRGBO(178, 129, 243, 1),
-          flexibleSpace: Padding(
-            padding: const EdgeInsets.only(top: 40, left: 10, right: 10, bottom: 5),
-            child: TextField(
-              controller: searchController,
-              textAlignVertical: TextAlignVertical.center, // Center text vertically
-              decoration: InputDecoration(
-                hintText: 'Search personal care...',
-                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 20), // Adjust padding
-                hintStyle: TextStyle(color: Colors.white),
-                prefixIcon: Icon(Icons.search, color: Colors.white),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.white),
+      appBar: AppBar(
+        backgroundColor: const Color.fromRGBO(178, 129, 243, 1),
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            // Reduced padding around the back button
+            Padding(
+              padding: const EdgeInsets.only(left: 0),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            // Expanded search bar with reduced horizontal content padding
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25),
+                    color: Colors.white.withOpacity(0.2),
+                  ),
+                  child: TextField(
+                    controller: searchController,
+                    textAlignVertical: TextAlignVertical.center,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.white,
+                      ),
+                      hintText: 'Search...',
+                      hintStyle: const TextStyle(color: Colors.white),
+                      border: InputBorder.none,
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
+                  ),
                 ),
               ),
-              style: TextStyle(color: Colors.white),
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value.toLowerCase();
-                });
-              },
             ),
-          ),
+          ],
         ),
       ),
       body: Center(
@@ -91,43 +110,47 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
             children: [
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection("personal_care_posts")
-                      .orderBy("timestamp", descending: true)
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
-                      // Filter posts based on search query
-                      var filteredPosts = snapshot.data!.docs.where((doc) {
-                        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-                        return searchQuery.isEmpty || 
-                               data["message"].toString().toLowerCase().contains(searchQuery);
-                      }).toList();
+                    stream: FirebaseFirestore.instance
+                        .collection("personal_care_posts")
+                        .orderBy("timestamp", descending: true)
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        // Filter posts based on search query
+                        var filteredPosts = snapshot.data!.docs.where((doc) {
+                          Map<String, dynamic> data =
+                              doc.data() as Map<String, dynamic>;
+                          return searchQuery.isEmpty ||
+                              data["message"]
+                                  .toString()
+                                  .toLowerCase()
+                                  .contains(searchQuery);
+                        }).toList();
 
-                      return ListView.builder(
-                        itemCount: filteredPosts.length,
-                        itemBuilder: (context, index) {
-                          final post = filteredPosts[index].data() as Map<String, dynamic>;
+                        return ListView.builder(
+                          itemCount: filteredPosts.length,
+                          itemBuilder: (context, index) {
+                            final post = filteredPosts[index].data()
+                                as Map<String, dynamic>;
 
-                          return UserPost(
-                            message: post["message"],
-                            user: post["email"],
-                            postId: post["message"],
-                            likes: List<String>.from(post["likes"] ?? []),
-                            timestamp: post["timestamp"],
-                          );
-                        },
+                            return UserPost(
+                              message: post["message"],
+                              user: post["email"],
+                              postId: post["message"],
+                              likes: List<String>.from(post["likes"] ?? []),
+                              timestamp: post["timestamp"],
+                            );
+                          },
+                        );
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Text("Error:${snapshot.error}"),
+                        );
+                      }
+                      return const Center(
+                        child: CircularProgressIndicator(),
                       );
-                    } else if (snapshot.hasError) {
-                      return Center(
-                        child: Text("Error:${snapshot.error}"),
-                      );
-                    }
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                ),
+                    }),
               ),
 
               // Message Input
@@ -138,9 +161,13 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
                     Expanded(
                       child: TextField(
                         controller: textController,
-                        style: TextStyle(color: Colors.white),
+                        cursorColor: Colors
+                            .black, // Set the blinking cursor color to black
+                        style: const TextStyle(
+                          color: Colors.black,
+                        ),
                         decoration: InputDecoration(
-                          hintText: "What do you need?",
+                          hintText: "Type your message...",
                           hintStyle: TextStyle(color: Colors.grey),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(25),
@@ -154,7 +181,8 @@ class _PersonalCarePageState extends State<PersonalCarePage> {
                             borderRadius: BorderRadius.circular(25),
                             borderSide: BorderSide(color: Colors.black),
                           ),
-                          contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 20),
                         ),
                       ),
                     ),

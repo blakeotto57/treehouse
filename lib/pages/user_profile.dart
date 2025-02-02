@@ -15,7 +15,7 @@ import 'package:treehouse/pages/user_settings.dart';
 
 class UserProfilePage extends StatefulWidget {
   final List<CategoryModel> categories = CategoryModel.getCategories();
-  
+
   UserProfilePage({Key? key}) : super(key: key);
 
   @override
@@ -47,7 +47,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
         String downloadUrl = await storageRef.getDownloadURL();
 
         // Update Firestore with the new profile image URL
-        await usersCollection.doc(currentUser.uid).update({'profileImageUrl': downloadUrl});
+        await usersCollection
+            .doc(currentUser.uid)
+            .update({'profileImageUrl': downloadUrl});
 
         // Update the state to reflect the new profile picture
         setState(() {
@@ -63,7 +65,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? Colors.white : Colors.black;
-    
+
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[100],
       appBar: AppBar(
@@ -96,7 +98,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
         ),
         actions: [
           StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance.collection('sellers')
+            stream: FirebaseFirestore.instance
+                .collection('sellers')
                 .where('email', isEqualTo: currentUser.email)
                 .snapshots(),
             builder: (context, snapshot) {
@@ -107,13 +110,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => ReviewsPage(sellerId: currentUser.email!),
+                        builder: (context) =>
+                            ReviewsPage(sellerId: currentUser.email!),
                       ),
                     );
                   },
                 );
               }
-              return const SizedBox.shrink(); // Returns empty widget if user is not a seller
+              return const SizedBox
+                  .shrink(); // Returns empty widget if user is not a seller
             },
           ),
         ],
@@ -144,33 +149,39 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 ),
               ),
               const Divider(height: 1, color: Colors.grey),
-              ...widget.categories.map((category) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    dense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    leading: Icon(
-                      category.icon,
-                      size: 30,
-                      color: category.boxColor, // Match icon color to category color
-                    ),
-                    title: Text(
-                      (category.name as Text).data ?? '', // Extract string from Text widget
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: category.boxColor, // Use category's boxColor for text
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      category.onTap(context);
-                    },
-                  ),
-                  Divider(height: 1, color: Colors.grey[200]),
-                ],
-              )).toList(),
+              ...widget.categories
+                  .map((category) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            dense: true,
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            leading: Icon(
+                              category.icon,
+                              size: 30,
+                              color: category
+                                  .boxColor, // Match icon color to category color
+                            ),
+                            title: Text(
+                              (category.name as Text).data ??
+                                  '', // Extract string from Text widget
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: category
+                                    .boxColor, // Use category's boxColor for text
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              category.onTap(context);
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                        ],
+                      ))
+                  .toList(),
               ListTile(
                 dense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -191,7 +202,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                    MaterialPageRoute(
+                        builder: (context) => const UserSettingsPage()),
                   );
                 },
               ),
@@ -212,12 +224,25 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
           if (userSnapshot.hasData && userSnapshot.data != null) {
             final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
-            if (userData == null) {
-              return const Center(child: Text("User data is null"));
-            }
+            // Assign null if the field is blank or missing
+            profileImageUrl =
+                (userData?['profileImageUrl']?.toString().trim().isEmpty ?? true)
+                    ? null
+                    : userData?['profileImageUrl'];
 
-            // Fetch profile image URL
-            profileImageUrl = userData['profileImageUrl'] ?? "";
+            final username =
+                (userData?['username']?.toString().trim().isEmpty ?? true)
+                    ? null
+                    : userData?['username'];
+
+            final bio = (userData?['bio']?.toString().trim().isEmpty ?? true)
+                ? null
+                : userData?['bio'];
+
+            final currentUserAuth = FirebaseAuth.instance.currentUser;
+            final computedUsername = (userData?['username'] == null || userData!['username'].toString().trim().isEmpty)
+                ? (currentUserAuth?.email != null ? currentUserAuth!.email!.split('@')[0] : '')
+                : userData?['username'];
 
             return SingleChildScrollView(
               child: Column(
@@ -257,9 +282,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 child: CircleAvatar(
                                   radius: 60,
                                   backgroundColor: Colors.green[800],
-                                  
-                                  backgroundImage: profileImageUrl != null ? NetworkImage(profileImageUrl!) : null,
-                                  child: profileImageUrl == null ? Icon(Icons.person, size: 60, color: Colors.white) : null,
+                                  backgroundImage: profileImageUrl != null
+                                      ? NetworkImage(profileImageUrl!)
+                                      : null,
+                                  child: profileImageUrl == null
+                                      ? Icon(Icons.person,
+                                          size: 60, color: Colors.white)
+                                      : null,
                                 ),
                               ),
                             ),
@@ -269,7 +298,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(
-                                  color: Colors.grey, // Changed from Colors.green[300] to Colors.grey
+                                  color: Colors
+                                      .grey, // Changed from Colors.green[300] to Colors.grey
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -313,16 +343,25 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       children: [
                         ListTile(
                           leading: Icon(Icons.person, color: Colors.green[800]),
-                          title: const Text("Username"),
-                          subtitle: Text(userData['username'] ?? ''),
+                          title:  Text("Username",
+                            style: TextStyle(
+                                  color: Colors.green[800],
+                                  fontWeight: FontWeight.bold,
+                                  )),
+                                
+                          subtitle: Text(computedUsername),
                           trailing: Icon(Icons.edit, color: Colors.green[800]),
                           onTap: () => editField("username"),
                         ),
                         const Divider(),
                         ListTile(
                           leading: Icon(Icons.info, color: Colors.green[800]),
-                          title: const Text("Bio"),
-                          subtitle: Text(userData['bio'] ?? ''),
+                          title: Text("Bio",
+                              style: TextStyle(
+                                color: Colors.green[800],
+                                fontWeight: FontWeight.bold,
+                                )),
+                          subtitle: Text(userData?['bio'] ?? ''),
                           trailing: Icon(Icons.edit, color: Colors.green[800]),
                           onTap: () => editField("bio"),
                         ),
@@ -341,7 +380,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       if (snapshot.hasData && snapshot.data!.exists) {
                         return const SizedBox.shrink();
                       }
-                      
+
                       // Show button if user is not a seller
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -351,13 +390,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => SellerSetupPage(onTap: () {}), // Update this line
+                                  builder: (context) => SellerSetupPage(
+                                      onTap: () {}), // Update this line
                                 ),
                               );
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.green[800],
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
                             ),
                             child: const Text(
                               'Become a Seller',
@@ -392,12 +433,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
       currentValue = userData[field] ?? '';
     }
 
-    final TextEditingController controller = TextEditingController(text: currentValue);
-    
+    final TextEditingController controller =
+        TextEditingController(text: currentValue);
+
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Edit ${field.substring(0, 1).toUpperCase() + field.substring(1)}'),
+        title: Text(
+            'Edit ${field.substring(0, 1).toUpperCase() + field.substring(1)}'),
         content: TextField(
           controller: controller,
           decoration: InputDecoration(
@@ -445,7 +488,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               } catch (e) {
                 // Close loading indicator
                 if (mounted) Navigator.pop(context);
-                
+
                 // Show error message
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(

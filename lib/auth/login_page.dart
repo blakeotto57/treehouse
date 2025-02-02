@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/text_field.dart';
+import 'package:treehouse/pages/explore_page.dart';
+import 'package:treehouse/pages/home.dart';
 
 
 
@@ -24,31 +26,47 @@ class _LoginPageState extends State<LoginPage> {
 
   //sign user in
   void signIn() async {
-    //show loading circle
+    // Show loading indicator
     showDialog(
-      context: context, 
+      context: context,
       builder: (context) => const Center(
         child: CircularProgressIndicator(),
-        ),
+      ),
+    );
+
+    try {
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailTextController.text,
+        password: passwordTextController.text,
       );
 
-      //try sign in
-    try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailTextController.text, 
-        password: passwordTextController.text,
-        );
+      // Reload the user to update verification status
+      await userCredential.user?.reload();
+      User? user = FirebaseAuth.instance.currentUser;
 
-        //pop loading circle
-        if (mounted) {
-          Navigator.pop(context);
-        }
-      } on FirebaseAuthException catch (e) {
-        Navigator.pop(context);
-        
-        displayMessage(e.code);
+      // Pop the loading dialog
+      Navigator.pop(context);
+
+      if (user != null && user.emailVerified) {
+        // Navigate to explore page after successful sign in
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {
+        // Sign out and display a message prompting email verification
+        await FirebaseAuth.instance.signOut();
+        displayMessage("Email is not verified yet. Please verify your email and try again.");
       }
+    } on FirebaseAuthException catch (e) {
+      Navigator.pop(context);
+      displayMessage(e.code);
+    } catch (e) {
+      Navigator.pop(context);
+      displayMessage("An error occurred. Please try again.");
     }
+  }
 
   //display a dialog message
   void displayMessage(String message) {

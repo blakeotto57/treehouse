@@ -50,42 +50,58 @@ class _TechnicalServicesSellersPageState extends State<TechnicalServicesSellersP
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60),
-        child: AppBar(
-          automaticallyImplyLeading: false,
-          backgroundColor: Color.fromRGBO(244, 67, 54, 1),
-          flexibleSpace: Padding(
-            padding: const EdgeInsets.only(top: 40, left: 10, right: 10, bottom: 5),
-            child: TextField(
-              controller: searchController,
-              textAlignVertical: TextAlignVertical.center,
-              decoration: InputDecoration(
-                hintText: 'Search technical services...',
-                contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-                hintStyle: TextStyle(color: Colors.white),
-                prefixIcon: Icon(Icons.search, color: Colors.white),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: Colors.white),
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(255, 64, 129, 1),
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Row(
+          children: [
+            // Reduced padding around the back button
+            Padding(
+              padding: const EdgeInsets.only(left: 0),
+              child: IconButton(
+                padding: EdgeInsets.zero,
+                icon: const Icon(Icons.arrow_back, color: Colors.white),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            // Expanded search bar with reduced horizontal content padding
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(25),
+                    color: Colors.white.withOpacity(0.2),
+                  ),
+                  child: TextField(
+                    controller: searchController,
+                    textAlignVertical: TextAlignVertical.center,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: Colors.white,
+                      ),
+                      hintText: 'Search...',
+                      hintStyle: const TextStyle(color: Colors.white),
+                      border: InputBorder.none,
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
+                  ),
                 ),
               ),
-              style: TextStyle(color: Colors.white),
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value.toLowerCase();
-                });
-              },
             ),
-          ),
+          ],
         ),
       ),
       body: Center(

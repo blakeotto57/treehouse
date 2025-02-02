@@ -435,8 +435,11 @@ class _UserPostState extends State<UserPost> {
               // Username
               widget.user == currentUser.email
                   ? Text(
-                      widget.user,
-                      style: TextStyle(
+                      widget.user.contains('@')
+                          ? widget.user.split('@')[0]
+                          : widget.user,
+                      style: const TextStyle(
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
@@ -456,10 +459,14 @@ class _UserPostState extends State<UserPost> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       child: Text(
-                        widget.user,
+                        widget.user.contains('@')
+                          ? widget.user.split('@')[0]
+                          : widget.user,
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.bold,                          
                           color: Colors.blue,
+                          fontSize: 16,
+                          
                         ),
                       ),
                     ),
@@ -480,9 +487,10 @@ class _UserPostState extends State<UserPost> {
               Expanded(
                 child: Text(
                   widget.message,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
-                    color: Colors.black,
+                    fontWeight: FontWeight.normal,
+                    color: Colors.grey[800],
                   ),
                 ),
               ),
