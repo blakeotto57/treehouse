@@ -26,14 +26,7 @@ class _LoginPageState extends State<LoginPage> {
 
   //sign user in
   void signIn() async {
-    // Show loading indicator
-    showDialog(
-      context: context,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
-
+    
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -44,10 +37,12 @@ class _LoginPageState extends State<LoginPage> {
       // Reload the user to update verification status
       await userCredential.user?.reload();
       User? user = FirebaseAuth.instance.currentUser;
-
-      // Pop the loading dialog
-      Navigator.pop(context);
-
+      
+      if (!mounted) return;
+    
+      // Remove the loading indicator from the root navigator
+      Navigator.of(context, rootNavigator: true).pop();
+      
       if (user != null && user.emailVerified) {
         // Navigate to explore page after successful sign in
         Navigator.pushReplacement(
@@ -57,14 +52,20 @@ class _LoginPageState extends State<LoginPage> {
       } else {
         // Sign out and display a message prompting email verification
         await FirebaseAuth.instance.signOut();
-        displayMessage("Email is not verified yet. Please verify your email and try again.");
+        if (mounted) {
+          displayMessage("Email is not verified yet. Please verify your email and try again.");
+        }
       }
     } on FirebaseAuthException catch (e) {
-      Navigator.pop(context);
-      displayMessage(e.code);
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        displayMessage(e.code);
+      }
     } catch (e) {
-      Navigator.pop(context);
-      displayMessage("An error occurred. Please try again.");
+      if (mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
+        displayMessage("An error occurred. Please try again.");
+      }
     }
   }
 
