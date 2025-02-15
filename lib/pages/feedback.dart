@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 String? globalUserName;
 
 class FeedbackPage extends StatefulWidget {
+  const FeedbackPage({super.key});
+
   @override
   _FeedbackPageState createState() => _FeedbackPageState();
 }

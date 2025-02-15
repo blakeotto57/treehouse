@@ -9,7 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:treehouse/pages/user_profile.dart';
 
 class CleaningSellersPage extends StatefulWidget {
-  const CleaningSellersPage({Key? key}) : super(key: key);
+  const CleaningSellersPage({super.key});
 
   @override
   State<CleaningSellersPage> createState() => _CleaningSellersPageState();
@@ -211,12 +211,12 @@ class SellerCard extends StatelessWidget {
   final String? profilePicture;
 
   const SellerCard({
-    Key? key,
+    super.key,
     required this.userId,
     required this.username,
     required this.description,
     this.profilePicture,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

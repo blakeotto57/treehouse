@@ -79,7 +79,7 @@ class _HomePageState extends State<HomePage> {
 class HomeContent extends StatelessWidget {
   final List<CategoryModel> categories;
 
-  const HomeContent({required this.categories, Key? key}) : super(key: key);
+  const HomeContent({required this.categories, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -129,7 +129,7 @@ class HomeContent extends StatelessWidget {
                 Navigator.pop(context);
                 category.onTap(context);
               },
-            )).toList(),
+            )),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.settings),

@@ -384,6 +384,8 @@ class _UserPostState extends State<UserPost> {
         children: [
           // Top Row: Avatar, user, date, delete button
           Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Profile picture
               StreamBuilder<DocumentSnapshot>(
@@ -476,8 +478,6 @@ class _UserPostState extends State<UserPost> {
                   onTap: deletePost,
                 ),
             ],
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
           ),
 
           // Message

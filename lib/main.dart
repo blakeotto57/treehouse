@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:treehouse/auth/login_page.dart';
-import 'package:treehouse/pages/home.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:treehouse/auth/auth.dart';
-import 'package:treehouse/pages/login_page.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'firebase_options.dart'; // Firebase options (you need to configure this from Firebase console)
 import 'package:firebase_app_check/firebase_app_check.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensures widget binding is initialized
+  MobileAds.instance.initialize(); // Initialze AdMob
+  
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform, // Initialize Firebase with options
   );
@@ -21,7 +21,6 @@ void main() async {
     androidProvider: AndroidProvider.debug, // Use .playIntegrity for production
   );
 
-  Stripe.publishableKey = 'pk_live_51QHBkvBXZFp1JN2DdxxjGMSu0araZivIpZSiOV8ZlWfUtTDjIXzWjR0mrrzhdnlIxf9A9Rjz8UJSoovzYgw1QfkP001opcNLtQ';
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),

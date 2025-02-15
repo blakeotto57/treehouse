@@ -20,7 +20,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       TextEditingController();
   final TextEditingController _currentPasswordController =
       TextEditingController();
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   // Sign user out
   void signOut() async {

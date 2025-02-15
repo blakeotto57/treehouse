@@ -34,7 +34,7 @@ class _SellerSetupPageState extends State<SellerSetupPage> {
   ];
   String? selectedCategory;
 
-  List<File> _images = [];
+  final List<File> _images = [];
   final ImagePicker _picker = ImagePicker();
 
   // Declare isSeller as a state variable

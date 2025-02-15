@@ -121,7 +121,7 @@ class ChatService {
     final timestamp = Timestamp.now();
 
     // First ensure users are in each other's accepted chats
-    await FirebaseFirestore.instance.batch()
+    FirebaseFirestore.instance.batch()
       ..set(
         _fireStore
           .collection('accepted_chats')

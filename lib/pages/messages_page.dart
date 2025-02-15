@@ -18,7 +18,7 @@ class MessagesPage extends StatefulWidget {
 class _MessagesPageState extends State<MessagesPage> {
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
-  bool _isDeleting = false;
+  final bool _isDeleting = false;
 
   // Add counter for new message requests
   Stream<int> get _newRequestsCount {
@@ -333,7 +333,7 @@ class _MessagesPageState extends State<MessagesPage> {
                                   .boxColor, // Match icon color to category color
                             ),
                             title: Text(
-                              (category.name as Text).data ??
+                              (category.name).data ??
                                   '', // Extract string from Text widget
                               style: TextStyle(
                                 fontSize: 18,
@@ -350,7 +350,7 @@ class _MessagesPageState extends State<MessagesPage> {
                           Divider(height: 1, color: Colors.grey[200]),
                         ],
                       ))
-                  .toList(),
+                  ,
               ListTile(
                 dense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -685,7 +685,7 @@ class _MessagesPageState extends State<MessagesPage> {
                                           };
 
                                           // Add message to both users' collections and add to accepted chats
-                                          await FirebaseFirestore.instance
+                                          FirebaseFirestore.instance
                                               .batch()
                                             // Set chat for current user
                                             ..set(
@@ -899,8 +899,7 @@ class _MessagesPageState extends State<MessagesPage> {
 class SoloSellerProfilePage extends StatelessWidget {
   final String userId;
 
-  const SoloSellerProfilePage({Key? key, required this.userId})
-      : super(key: key);
+  const SoloSellerProfilePage({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context) {

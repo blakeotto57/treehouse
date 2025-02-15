@@ -16,7 +16,7 @@ import 'package:treehouse/pages/user_settings.dart';
 class UserProfilePage extends StatefulWidget {
   final List<CategoryModel> categories = CategoryModel.getCategories();
 
-  UserProfilePage({Key? key}) : super(key: key);
+  UserProfilePage({super.key});
 
   @override
   State<UserProfilePage> createState() => _UserProfilePageState();
@@ -29,10 +29,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
   String? profileImageUrl;
 
   Future<void> pickAndUploadImage() async {
-    final ImagePicker _picker = ImagePicker();
+    final ImagePicker picker = ImagePicker();
 
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
       if (image != null) {
         File imageFile = File(image.path);
@@ -164,7 +164,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                   .boxColor, // Match icon color to category color
                             ),
                             title: Text(
-                              (category.name as Text).data ??
+                              (category.name).data ??
                                   '', // Extract string from Text widget
                               style: TextStyle(
                                 fontSize: 18,
@@ -181,7 +181,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           Divider(height: 1, color: Colors.grey[200]),
                         ],
                       ))
-                  .toList(),
+                  ,
               ListTile(
                 dense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -242,7 +242,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             final currentUserAuth = FirebaseAuth.instance.currentUser;
             final computedUsername = (userData?['username'] == null || userData!['username'].toString().trim().isEmpty)
                 ? (currentUserAuth?.email != null ? currentUserAuth!.email!.split('@')[0] : '')
-                : userData?['username'];
+                : userData['username'];
 
             return SingleChildScrollView(
               child: Column(

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/text_field.dart';
-import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/home.dart';
 
 
