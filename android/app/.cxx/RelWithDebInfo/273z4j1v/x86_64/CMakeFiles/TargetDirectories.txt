@@ -1,0 +1,2 @@
+C:/Users/blake/treehouse-6/android/app/.cxx/RelWithDebInfo/273z4j1v/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/blake/treehouse-6/android/app/.cxx/RelWithDebInfo/273z4j1v/x86_64/CMakeFiles/rebuild_cache.dir
