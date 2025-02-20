@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:treehouse/ads/ad_mob_service.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'dart:io';
@@ -12,7 +14,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 class ExplorePage extends StatefulWidget {
   final List<CategoryModel> categories = CategoryModel.getCategories();
 
-  ExplorePage({Key? key}) : super(key: key);
+  ExplorePage({super.key});
 
   @override
   _ExplorePageState createState() => _ExplorePageState();
@@ -20,6 +22,8 @@ class ExplorePage extends StatefulWidget {
 
 class _ExplorePageState extends State<ExplorePage> {
   final ImagePicker _picker = ImagePicker();
+
+  BannerAd? _banner;
 
   Future<void> _uploadVideo() async {
     final XFile? video = await _picker.pickVideo(
@@ -29,16 +33,16 @@ class _ExplorePageState extends State<ExplorePage> {
 
     if (video != null) {
       File videoFile = File(video.path);
-      
+
       // Upload to Firebase Storage
       final storageRef = FirebaseStorage.instance
           .ref()
           .child('videos/${DateTime.now().toString()}.mp4');
-      
+
       try {
         await storageRef.putFile(videoFile);
         final videoUrl = await storageRef.getDownloadURL();
-        
+
         // Store video metadata in Firestore
         await FirebaseFirestore.instance.collection('videos').add({
           'url': videoUrl,
@@ -49,6 +53,22 @@ class _ExplorePageState extends State<ExplorePage> {
         print('Error uploading video: $e');
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    _createBannerAd();
+  }
+
+  void _createBannerAd() {
+    _banner = BannerAd(
+      size: AdSize.fullBanner, 
+      adUnitId: AdMobService.bannerAdUnitId!, 
+      listener: AdMobService.bannerListener, 
+      request: const AdRequest(),
+      )..load();
   }
 
   @override
@@ -109,33 +129,39 @@ class _ExplorePageState extends State<ExplorePage> {
                 ),
               ),
               const Divider(height: 1, color: Colors.grey),
-              ...widget.categories.map((category) => Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ListTile(
-                    dense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                    leading: Icon(
-                      category.icon,
-                      size: 30,
-                      color: category.boxColor, // Match icon color to category color
-                    ),
-                    title: Text(
-                      (category.name as Text).data ?? '', // Extract string from Text widget
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: category.boxColor, // Use category's boxColor for text
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      category.onTap(context);
-                    },
-                  ),
-                  Divider(height: 1, color: Colors.grey[200]),
-                ],
-              )).toList(),
+              ...widget.categories
+                  .map((category) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            dense: true,
+                            contentPadding:
+                                const EdgeInsets.symmetric(horizontal: 16),
+                            leading: Icon(
+                              category.icon,
+                              size: 30,
+                              color: category
+                                  .boxColor, // Match icon color to category color
+                            ),
+                            title: Text(
+                              (category.name).data ??
+                                  '', // Extract string from Text widget
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: category
+                                    .boxColor, // Use category's boxColor for text
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            onTap: () {
+                              Navigator.pop(context);
+                              category.onTap(context);
+                            },
+                          ),
+                          Divider(height: 1, color: Colors.grey[200]),
+                        ],
+                      ))
+                  ,
               ListTile(
                 dense: true,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
@@ -156,7 +182,8 @@ class _ExplorePageState extends State<ExplorePage> {
                   Navigator.pop(context);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                    MaterialPageRoute(
+                        builder: (context) => const UserSettingsPage()),
                   );
                 },
               ),
@@ -164,29 +191,43 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
         ),
       ),
-      body: StreamBuilder<QuerySnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('videos')
-            .orderBy('timestamp', descending: true)
-            .snapshots(),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.only(top: 8),
+            height: 52,
+            child: _banner != null
+                ? AdWidget(ad: _banner!)
+                : const SizedBox.shrink(),
+          ),
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('videos')
+                  .orderBy('timestamp', descending: true)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          return GridView.builder(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 2,
-              mainAxisSpacing: 2,
+                return GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 2,
+                    mainAxisSpacing: 2,
+                  ),
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, index) {
+                    final videoData = snapshot.data!.docs[index].data()
+                        as Map<String, dynamic>;
+                    return VideoThumbnail(videoUrl: videoData['url']);
+                  },
+                );
+              },
             ),
-            itemCount: snapshot.data!.docs.length,
-            itemBuilder: (context, index) {
-              final videoData = snapshot.data!.docs[index].data() as Map<String, dynamic>;
-              return VideoThumbnail(videoUrl: videoData['url']);
-            },
-          );
-        },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _uploadVideo,
@@ -199,9 +240,9 @@ class _ExplorePageState extends State<ExplorePage> {
 
 class VideoThumbnail extends StatefulWidget {
   final String videoUrl;
-  
-  const VideoThumbnail({Key? key, required this.videoUrl}) : super(key: key);
-  
+
+  const VideoThumbnail({super.key, required this.videoUrl});
+
   @override
   State<VideoThumbnail> createState() => _VideoThumbnailState();
 }

@@ -80,7 +80,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          "${widget.userId}",
+          widget.userId,
           style: TextStyle(
             color: Colors.white,
             fontSize: 26,
@@ -251,7 +251,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                                               ),
                                             ],
                                           ),
-                                          content: Container(
+                                          content: SizedBox(
                                             height: 200,
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
@@ -301,7 +301,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
 
                                                 const SizedBox(height: 10),
 
-                                                Container(
+                                                SizedBox(
                                                   width: double.infinity,
                                                   height: 50,
                                                   child: GooglePayButton(

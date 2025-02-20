@@ -14,7 +14,7 @@ class Comment extends StatefulWidget {
   final String postId;
   final String commentId;
 
-  Comment({
+  const Comment({
     super.key,
     required this.comment, // Changed from message
     required this.user,

@@ -206,8 +206,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
                   },
                 );
               },
-              child: const Icon(Icons.add),
               backgroundColor: const Color(0xFF305d42),
+              child: const Icon(Icons.add),
             ),
     );
   }

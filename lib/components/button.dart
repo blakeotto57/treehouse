@@ -6,11 +6,11 @@ class MyButton extends StatelessWidget {
   final Color color;
 
   const MyButton({
-    Key? key,
+    super.key,
     required this.onTap,
     required this.text,
     this.color = Colors.blue, // Default color if not provided
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

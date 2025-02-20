@@ -11,7 +11,7 @@ import 'package:treehouse/pages/user_profile.dart';
 String? globaluserid;
 
 class AcademicsSellersPage extends StatefulWidget {
-  const AcademicsSellersPage({Key? key}) : super(key: key);
+  const AcademicsSellersPage({super.key});
 
   @override
   State<AcademicsSellersPage> createState() => _AcademicsSellersPageState();
@@ -217,12 +217,12 @@ class SellerCard extends StatelessWidget {
   final String? profilePicture;
 
   const SellerCard({
-    Key? key,
+    super.key,
     required this.userId,
     required this.username,
     required this.description,
     this.profilePicture,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

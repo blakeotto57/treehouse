@@ -8,7 +8,7 @@ import 'package:treehouse/models/other_users_profile.dart';
 import 'package:intl/intl.dart';
 
 class PersonalCarePage extends StatefulWidget {
-  const PersonalCarePage({Key? key}) : super(key: key);
+  const PersonalCarePage({super.key});
 
   @override
   State<PersonalCarePage> createState() => _PersonalCarePageState();
@@ -208,12 +208,12 @@ class SellerCard extends StatelessWidget {
   final String? profilePicture;
 
   const SellerCard({
-    Key? key,
+    super.key,
     required this.userId,
     required this.username,
     required this.description,
     this.profilePicture,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

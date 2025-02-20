@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/text_field.dart';
 
 import '../components/button.dart';
-import '../pages/home.dart';
 import '../pages/explore_page.dart';
 
 class RegisterPage extends StatefulWidget {
