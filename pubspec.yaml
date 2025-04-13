@@ -28,10 +28,6 @@ dependencies:
   google_fonts: ^6.2.1
   purchases_flutter: ^8.4.0
   custom_navigation_bar: ^0.8.2
-
-  
-
-  # Cupertino Icons for iOS
   cupertino_icons: ^1.0.8
   flutter_svg: ^2.0.10+1
   video_player: ^2.9.2

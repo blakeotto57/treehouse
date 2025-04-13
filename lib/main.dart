@@ -21,7 +21,6 @@ void main() async {
     androidProvider: AndroidProvider.debug, // Use .playIntegrity for production
   );
 
-  Stripe.publishableKey = 'pk_live_51QHBkvBXZFp1JN2DdxxjGMSu0araZivIpZSiOV8ZlWfUtTDjIXzWjR0mrrzhdnlIxf9A9Rjz8UJSoovzYgw1QfkP001opcNLtQ';
   runApp(
     ChangeNotifierProvider(
       create: (context) => ThemeProvider(),
