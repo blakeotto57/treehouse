@@ -7,8 +7,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/models/reviews_page.dart';
-import 'package:treehouse/pages/seller_setup.dart'; // Import the seller setup page
 import 'package:flutter/services.dart';
+import 'package:treehouse/pages/seller_setup.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/pages/user_settings.dart';
