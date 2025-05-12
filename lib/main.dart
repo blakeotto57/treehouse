@@ -10,6 +10,7 @@ import 'package:treehouse/pages/login_page.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'firebase_options.dart'; // Firebase options (you need to configure this from Firebase console)
 import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized(); // Ensures widget binding is initialized
@@ -17,9 +18,12 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform, // Initialize Firebase with options
   );
   
-  await FirebaseAppCheck.instance.activate(
-    androidProvider: AndroidProvider.debug, // Use .playIntegrity for production
-  );
+  // Only activate App Check on non-web platforms
+  if (!kIsWeb) {
+    await FirebaseAppCheck.instance.activate(
+      androidProvider: AndroidProvider.debug, // Use .playIntegrity for production
+    );
+  }
 
   runApp(
     ChangeNotifierProvider(
