@@ -126,128 +126,175 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFF4D8061),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
+      backgroundColor: const Color(0xFF4D8061),
+      body: Center(
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(
+              maxWidth: 400,
+            ),
+            child: Card(
+              elevation: 8,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              color: Colors.white,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0), // Reduced from 32.0
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Logo or Icon (optional)
+                    Icon(Icons.park, size: 48, color: Color(0xFF4D8061)), // Smaller icon
+                    const SizedBox(height: 12), // Reduced from 24
 
-                  // Logo
-                  const Text(
-                    'Welcome to treehouse',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 1,
-                      fontSize: 25,
-                    ),
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Email textfield with info icon
-                  Stack(
-                    children: [
-                      MyTextField(
-                        controller: emailTextController,
-                        hintText: "College Email (.edu)",
-                        obscureText: false,
+                    // Welcome text
+                    const Text(
+                      'Welcome to treehouse',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF4D8061),
+                        letterSpacing: 1,
+                        fontSize: 22, // Reduced from 28
                       ),
-                      Positioned(
-                        right: 10,
-                        // Adjust top position to center vertically (assuming TextField height is ~48)
-                        top: 5,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.info_outline,
-                            color: Colors.grey,
-                          ),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('College Email Required'),
-                                content: const Text(
-                                  'We require a college email to ensure our community consists of verified college students, creating a safe and trusted environment for campus connections.',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('Got it',
-                                      style: TextStyle(
-                                        color: Colors.blue,
+                    ),
+                    const SizedBox(height: 18), // Reduced from 32
+
+                    // Email textfield with info icon
+                    Stack(
+                      children: [
+                        MyTextField(
+                          controller: emailTextController,
+                          hintText: "College Email (.edu)",
+                          obscureText: false,
+                        ),
+                        Positioned(
+                          right: 6,
+                          top: 2,
+                          child: IconButton(
+                            icon: const Icon(
+                              Icons.info_outline,
+                              color: Colors.grey,
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => Dialog(
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: SizedBox(
+                                    width: 300,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.info_outline, color: Color(0xFF4D8061), size: 32),
+                                          const SizedBox(height: 10),
+                                          const Text(
+                                            'College Email Required',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                              color: Color(0xFF4D8061),
+                                            ),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                          const SizedBox(height: 10),
+                                          const Text(
+                                            'We require a college email to ensure our community consists of verified college students, creating a safe and trusted environment for campus connections.',
+                                            style: TextStyle(fontSize: 14),
+                                            textAlign: TextAlign.center,
+                                            
+                                          ),
+                                          const SizedBox(height: 16),
+                                          SizedBox(
+                                            child: ElevatedButton(
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: Color(0xFF4D8061),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                              ),
+                                              onPressed: () => Navigator.pop(context),
+                                              child: const Text(
+                                                'Got it',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Password textfield
-                  MyTextField(
-                    controller: passwordTextController,
-                    hintText: "Password",
-                    obscureText: true,
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Confirm password textfield
-                  MyTextField(
-                    controller: confirmPasswordTextController,
-                    hintText: "Confirm Password",
-                    obscureText: true,
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  // Sign up button
-                  MyButton(
-                    onTap: signUp,
-                    text: "Sign Up",
-                  ),
-
-                  const SizedBox(height: 25),
-
-                  // Login now
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Already have an account?",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                                ),
+                              );
+                            },
                           ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10), // Reduced from 16
+
+                    // Password textfield
+                    MyTextField(
+                      controller: passwordTextController,
+                      hintText: "Password",
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Confirm password textfield
+                    MyTextField(
+                      controller: confirmPasswordTextController,
+                      hintText: "Confirm Password",
+                      obscureText: true,
+                    ),
+                    const SizedBox(height: 16), // Reduced from 24
+
+                    // Sign up button
+                    SizedBox(
+                      width: double.infinity,
+                      child: MyButton(
+                        onTap: signUp,
+                        text: "Sign Up",
                       ),
-                      const SizedBox(width: 4),
-                      GestureDetector(
-                        onTap: widget.onTap,
-                        child: const Text(
-                          "Login now",
+                    ),
+                    const SizedBox(height: 16), // Reduced from 24
+
+                    // Login now
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          "Already have an account?",
                           style: TextStyle(
+                            color: Color(0xFF4D8061),
                             fontWeight: FontWeight.bold,
-                            color: Colors.blue,
-                            fontSize: 16,
+                            fontSize: 14, // Reduced from 16
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 4),
+                        GestureDetector(
+                          onTap: widget.onTap,
+                          child: const Text(
+                            "Login now",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                              fontSize: 14, // Reduced from 16
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

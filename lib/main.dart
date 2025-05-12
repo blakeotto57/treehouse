@@ -17,8 +17,7 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform, // Initialize Firebase with options
   );
-  
-  // Only activate App Check on non-web platforms
+
   if (!kIsWeb) {
     await FirebaseAppCheck.instance.activate(
       androidProvider: AndroidProvider.debug, // Use .playIntegrity for production
@@ -42,7 +41,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: Provider.of<ThemeProvider>(context).themeData, // Use the theme from ThemeProvider
       home: const AuthPage(),
-      title: 'Your App Name',
+      title: 'Treehouse',
       // Define your routes here
       routes: {
         '/login': (context) => LoginPage(onTap: () {},),
