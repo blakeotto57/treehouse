@@ -43,7 +43,7 @@ class _LoginPageState extends State<LoginPage> {
         // Navigate to explore page after successful sign in
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()),
+          MaterialPageRoute(builder: (context) => ExplorePage()),
         );
       } else {
         // Sign out and display a message prompting email verification

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/auth/login_or_register.dart';
+import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/home.dart';
 
 class AuthPage extends StatelessWidget {
@@ -37,7 +38,7 @@ class AuthPage extends StatelessWidget {
 
                 if (firestoreSnapshot.hasData && firestoreSnapshot.data == true) {
                   // Email exists in Firestore -> Navigate to Home Page
-                  return HomePage();
+                  return ExplorePage();
                 } else {
                   // Email not found -> Show error or redirect to Login/Register
                   return const LoginOrRegister();

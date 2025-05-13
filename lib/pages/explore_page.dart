@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:treehouse/pages/chat_page.dart';
-import 'package:treehouse/pages/home.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/pages/messages_page.dart';
+import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/user_settings.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -13,70 +15,121 @@ class ExplorePage extends StatefulWidget {
 
 class _ExplorePageState extends State<ExplorePage> {
   final TextEditingController _searchController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
+  bool _isPosting = false;
+  bool _canPost = true;
 
-  // Example static data for demonstration
-  final List<Map<String, String>> users = [
-    {
-      'name': 'Ashley Kim',
-      'desc': 'Photography services for campus events',
-      'category': 'Photography',
-    },
-    {
-      'name': 'Marcus Nguyen',
-      'desc': 'Custom PC builds & tech help',
-      'category': 'Tech Support',
-    },
-    {
-      'name': 'Sofia Rivera',
-      'desc': 'Handmade jewelry & campus delivery',
-      'category': 'Art & Design',
-    },
-  ];
-
-  void _goToExplore() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const ExplorePage()),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _deleteOldPosts();
+    _checkCanPost();
   }
 
-  void _goToMessages() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => MessagesPage()),
-    );
+  Future<void> _deleteOldPosts() async {
+    final cutoff = Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 24)));
+    final query = await FirebaseFirestore.instance
+        .collection('bulletin_posts')
+        .where('timestamp', isLessThan: cutoff)
+        .get();
+
+    for (final doc in query.docs) {
+      try {
+        await doc.reference.delete();
+      } catch (e) {
+        // Optionally handle errors (e.g., permissions)
+      }
+    }
   }
 
-  void _goToUpload() {
-    // Replace with your upload page navigation
-    // Example:
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => const UploadPage()));
+  Future<void> _checkCanPost() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final query = await FirebaseFirestore.instance
+        .collection('bulletin_posts')
+        .where('userEmail', isEqualTo: user.email)
+        .get();
+    if (query.docs.isNotEmpty) {
+      final lastPost = query.docs.first.data();
+      final lastTimestamp = (lastPost['timestamp'] as Timestamp).toDate();
+      final now = DateTime.now();
+      setState(() {
+        _canPost = now.difference(lastTimestamp).inHours >= 24;
+      });
+    } else {
+      setState(() {
+        _canPost = true;
+      });
+    }
   }
 
-  void _goToSettings() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+  Future<void> _showPostDialog() async {
+    _messageController.clear();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("New Bulletin Post"),
+        content: TextField(
+          controller: _messageController,
+          maxLines: 4,
+          decoration: const InputDecoration(
+            hintText: "What's on your mind?",
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: _isPosting
+                ? null
+                : () async {
+                    setState(() => _isPosting = true);
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null) return;
+                    await FirebaseFirestore.instance.collection('bulletin_posts').add({
+                      'message': _messageController.text,
+                      'timestamp': Timestamp.now(),
+                      'userEmail': user.email,
+                      // Add 'imageUrl': ... if you implement image upload
+                    });
+                    setState(() => _isPosting = false);
+                    Navigator.pop(context);
+                    _checkCanPost();
+                  },
+            child: _isPosting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text("Post"),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final pastelGreen = const Color(0xFFF5FBF7);
+    final now = DateTime.now();
+    final cutoff = Timestamp.fromDate(now.subtract(const Duration(hours: 24)));
 
     return Scaffold(
       backgroundColor: pastelGreen,
       body: Column(
         children: [
-          // Top Navigation Bar
+          // Top Navigation Bar (restored)
           Container(
             color: const Color(0xFF386A53),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 0),
-            height: 50,
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            height: 56,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Logo or App Name
                 const Text(
                   "Treehouse Connect",
                   style: TextStyle(
@@ -89,22 +142,39 @@ class _ExplorePageState extends State<ExplorePage> {
                 Row(
                   children: [
                     TextButton.icon(
-                      onPressed: _goToExplore,
+                      onPressed: () {
+                        // Already on Explore, maybe scroll to top or do nothing
+                      },
                       icon: const Icon(Icons.explore, color: Colors.white),
                       label: const Text("Explore", style: TextStyle(color: Colors.white)),
                     ),
                     TextButton.icon(
-                      onPressed: _goToMessages,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => MessagesPage()),
+                        );
+                      },
                       icon: const Icon(Icons.message, color: Colors.white),
                       label: const Text("Messages", style: TextStyle(color: Colors.white)),
                     ),
                     TextButton.icon(
-                      onPressed: _goToUpload,
-                      icon: const Icon(Icons.video_call, color: Colors.white),
-                      label: const Text("Upload", style: TextStyle(color: Colors.white)),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => UserProfilePage()),
+                        );
+                      },
+                      icon: const Icon(Icons.person, color: Colors.white),
+                      label: const Text("Profile", style: TextStyle(color: Colors.white)),
                     ),
                     TextButton.icon(
-                      onPressed: _goToSettings,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => UserSettingsPage()),
+                        );
+                      },
                       icon: const Icon(Icons.settings, color: Colors.white),
                       label: const Text("Settings", style: TextStyle(color: Colors.white)),
                     ),
@@ -113,7 +183,6 @@ class _ExplorePageState extends State<ExplorePage> {
               ],
             ),
           ),
-          // Header
           // Search bar
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
@@ -123,7 +192,7 @@ class _ExplorePageState extends State<ExplorePage> {
                   child: TextField(
                     controller: _searchController,
                     decoration: InputDecoration(
-                      hintText: "Search by service, name, or major...",
+                      hintText: "Search the bulletin board...",
                       filled: true,
                       fillColor: Colors.white,
                       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
@@ -159,123 +228,216 @@ class _ExplorePageState extends State<ExplorePage> {
               ],
             ),
           ),
-          // User grid
+          // Bulletin board posts
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
-              child: GridView.builder(
-                itemCount: users.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 5, // More columns for a feed feel
-                  mainAxisSpacing: 24,
-                  crossAxisSpacing: 24,
-                ),
-                itemBuilder: (context, index) {
-                  final user = users[index];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black12,
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('bulletin_posts')
+                    .where('timestamp', isGreaterThan: cutoff)
+                    .orderBy('timestamp', descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return const Center(child: Text("No posts on the bulletin board."));
+                  }
+                  final posts = snapshot.data!.docs;
+                  return GridView.builder(
+                    itemCount: posts.length,
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 24,
+                      crossAxisSpacing: 24,
+                      childAspectRatio: 0.8,
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Media/image placeholder (replace with real image if available)
-                        ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-                          child: Container(
-                            height: 120,
-                            color: Colors.grey[300],
-                            child: Icon(Icons.image, size: 60, color: Colors.grey[400]),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(14.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Name
-                              Text(
-                                user['name'] ?? '',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  color: Color(0xFF386A53),
+                    itemBuilder: (context, index) {
+                      final postDoc = posts[index];
+                      final post = posts[index].data() as Map<String, dynamic>;
+                      final timestamp = (post['timestamp'] as Timestamp).toDate();
+                      final formattedTime = DateFormat('MMM d, h:mm a').format(timestamp);
+                      final currentUser = FirebaseAuth.instance.currentUser;
+                      final isCurrentUser = currentUser != null && post['userEmail'] == currentUser.email;
+
+                      return Stack(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(18),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
                                 ),
-                              ),
-                              const SizedBox(height: 6),
-                              // Description
-                              Text(
-                                user['desc'] ?? '',
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  color: Colors.black87,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 10),
-                              // Category/Tag
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFD6EADF),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  user['category'] ?? '',
-                                  style: const TextStyle(
-                                    color: Color(0xFF386A53),
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              // Actions row
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // Message button
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      // Implement message action
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF386A53),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Image if available
+                                if (post['imageUrl'] != null && post['imageUrl'].toString().isNotEmpty)
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                                    child: Image.network(
+                                      post['imageUrl'],
+                                      height: 120,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) => Container(
+                                        height: 120,
+                                        color: Colors.grey[300],
+                                        child: Icon(Icons.broken_image, size: 60, color: Colors.grey[400]),
                                       ),
                                     ),
-                                    child: const Text("Message"),
+                                  )
+                                else
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                                    child: Container(
+                                      height: 120,
+                                      color: Colors.grey[300],
+                                      child: Icon(Icons.message, size: 60, color: Colors.grey[400]),
+                                    ),
                                   ),
-                                  // View Profile button
-                                  TextButton(
-                                    onPressed: () {
-                                      // Implement view profile action
-                                    },
-                                    child: const Text("View Profile"),
+                                Padding(
+                                  padding: const EdgeInsets.all(14.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Message
+                                      Text(
+                                        post['message'] ?? '',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black87,
+                                        ),
+                                        maxLines: 3,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      // User/email (optional)
+                                      if (post['userEmail'] != null)
+                                        Text(
+                                          post['userEmail'],
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                            color: Color(0xFF386A53),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      const SizedBox(height: 8),
+                                      // Timestamp
+                                      Text(
+                                        formattedTime,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                          // Edit/Delete icon for current user's post
+                          if (isCurrentUser)
+                            Positioned(
+                              top: 8,
+                              right: 8,
+                              child: IconButton(
+                                icon: const Icon(Icons.edit, color: Color(0xFF386A53)),
+                                tooltip: "Delete this post",
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text("Delete Post"),
+                                      content: const Text("Are you sure you want to delete this post?"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, false),
+                                          child: const Text("Cancel"),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context, true),
+                                          child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    postDoc.reference.delete();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Post deleted.")),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                        ],
+                      );
+                    },
                   );
                 },
               ),
             ),
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: const Color(0xFF386A53),
+        onPressed: () async {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user == null) return;
+
+          final query = await FirebaseFirestore.instance
+              .collection('bulletin_posts')
+              .where('userEmail', isEqualTo: user.email)
+            
+              .get();
+
+          print('Query docs: ${query.docs.length}');
+          if (query.docs.isNotEmpty) {
+            final lastPost = query.docs.first.data() as Map<String, dynamic>;
+            final lastTimestamp = (lastPost['timestamp'] as Timestamp).toDate();
+            final now = DateTime.now();
+            final difference = now.difference(lastTimestamp);
+            print('Last post was ${difference.inHours} hours ago');
+            if (difference.inHours < 24) {
+              final remaining = Duration(hours: 24) - difference;
+              final hours = remaining.inHours;
+              final minutes = remaining.inMinutes.remainder(60);
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text("Already Posted"),
+                  content: Text(
+                    "You already posted today.\nYou have ${hours}h ${minutes}m remaining before you can post again.",
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("OK"),
+                    ),
+                  ],
+                ),
+              );
+              return;
+            }
+          }
+
+          print('Opening post dialog');
+          _showPostDialog();
+        },
+        icon: const Icon(Icons.add),
+        label: const Text("New Post"),
       ),
     );
   }
