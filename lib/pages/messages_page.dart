@@ -30,16 +30,77 @@ class _MessagesPageState extends State<MessagesPage> {
 
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.green[800],
+              ),
+              child: const Text(
+                'Categories',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ...widget.categories.map((category) => ListTile(
+              leading: Icon(category.icon, color: category.boxColor),
+              title: category.name,
+              onTap: () {
+                Navigator.pop(context);
+                category.onTap(context);
+              },
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              hoverColor: category.boxColor.withOpacity(0.15),
+            )),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.settings, color: Colors.green),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                );
+              },
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              hoverColor: Colors.green[100],
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
-          // Upper nav bar (matches ExplorePage)
+          // Top Navigation Bar (updated)
           Container(
             color: const Color(0xFF386A53),
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(vertical: 0), // No horizontal padding
             height: 56,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Hamburger menu button with padding
+                Builder(
+                  builder: (context) => Padding(
+                    padding: const EdgeInsets.all(6.0), // Padding around the icon
+                    child: IconButton(
+                      icon: const Icon(Icons.menu, color: Colors.white),
+                      onPressed: () {
+                        Scaffold.of(context).openDrawer();
+                      },
+                      tooltip: "Open navigation menu",
+                    ),
+                  ),
+                ),
+                // No space between drawer and title
                 const Text(
                   "Treehouse Connect",
                   style: TextStyle(
@@ -49,67 +110,76 @@ class _MessagesPageState extends State<MessagesPage> {
                     letterSpacing: 1,
                   ),
                 ),
-                Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => ExplorePage()),
-                        );
-                      },
-                      icon: const Icon(Icons.explore, color: Colors.white),
-                      label: const Text("Explore", style: TextStyle(color: Colors.white)),
+                // Add space between title and right-side navigation
+                const SizedBox(width: 32),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ExplorePage()),
+                            );
+                          },
+                          icon: const Icon(Icons.explore, color: Colors.white),
+                          label: const Text("Explore", style: TextStyle(color: Colors.white)),
+                        ),
+                        // Vertical divider
+                        Container(
+                          height: 28,
+                          width: 1.2,
+                          color: Colors.white24,
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => MessagesPage()),
+                            );
+                          },
+                          icon: const Icon(Icons.message, color: Colors.white),
+                          label: const Text("Messages", style: TextStyle(color: Colors.white)),
+                        ),
+                        Container(
+                          height: 28,
+                          width: 1.2,
+                          color: Colors.white24,
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => UserProfilePage()),
+                            );
+                          },
+                          icon: const Icon(Icons.person, color: Colors.white),
+                          label: const Text("Profile", style: TextStyle(color: Colors.white)),
+                        ),
+                        Container(
+                          height: 28,
+                          width: 1.2,
+                          color: Colors.white24,
+                          margin: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => UserSettingsPage()),
+                            );
+                          },
+                          icon: const Icon(Icons.settings, color: Colors.white),
+                          label: const Text("Settings", style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
                     ),
-                    Container(
-                      height: 28,
-                      width: 1.2,
-                      color: Colors.white24,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => MessagesPage()),
-                        );
-                      },
-                      icon: const Icon(Icons.message, color: Colors.white),
-                      label: const Text("Messages", style: TextStyle(color: Colors.white)),
-                    ),
-                    Container(
-                      height: 28,
-                      width: 1.2,
-                      color: Colors.white24,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => UserProfilePage()),
-                        );
-                      },
-                      icon: const Icon(Icons.person, color: Colors.white),
-                      label: const Text("Profile", style: TextStyle(color: Colors.white)),
-                    ),
-                    Container(
-                      height: 28,
-                      width: 1.2,
-                      color: Colors.white24,
-                      margin: const EdgeInsets.symmetric(horizontal: 8),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => UserSettingsPage()),
-                        );
-                      },
-                      icon: const Icon(Icons.settings, color: Colors.white),
-                      label: const Text("Settings", style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),

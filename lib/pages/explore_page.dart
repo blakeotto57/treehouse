@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/user_settings.dart';
@@ -191,62 +192,87 @@ class _ExplorePageState extends State<ExplorePage> {
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
       drawer: Drawer(
+        backgroundColor: Colors.green[50],
         child: ListView(
-          padding: EdgeInsets.zero,
           children: [
-            DrawerHeader(
+            Container(
+              height: 48, // Set to your preferred compact height
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFF386A53),
               ),
-              child: const Text(
-                'Treehouse Connect',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.transparent,
+                    radius: 16,
+                    child: Icon(Icons.category, color: Colors.white, size: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Categories',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.explore, color: Color(0xFF386A53)),
-              title: const Text('Explore'),
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => ExplorePage()),
-                );
-              },
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              child: Divider(height: 18, thickness: 1),
             ),
-            ListTile(
-              leading: const Icon(Icons.message, color: Color(0xFF386A53)),
-              title: const Text('Messages'),
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => MessagesPage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person, color: Color(0xFF386A53)),
-              title: const Text('Profile'),
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserProfilePage()),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings, color: Color(0xFF386A53)),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserSettingsPage()),
-                );
-              },
-            ),
+            ...CategoryModel.getCategories().asMap().entries.map((entry) {
+              final i = entry.key;
+              final category = entry.value;
+              final iconList = [
+                Icons.spa, // Personal Care
+                Icons.restaurant, // Food
+                Icons.camera_alt, // Photography
+                Icons.menu_book, // Academics
+                Icons.build, // Technical
+                Icons.local_shipping, // Errands & Moving
+                Icons.pets, // Pet Care
+                Icons.cleaning_services, // Cleaning
+              ];
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                elevation: 1,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: ListTile(
+                  dense: true,
+                  minLeadingWidth: 0,
+                  leading: CircleAvatar(
+                    backgroundColor: category.boxColor.withOpacity(0.15),
+                    radius: 16,
+                    child: Icon(
+                      iconList.length > i ? iconList[i] : category.icon,
+                      color: category.boxColor,
+                      size: 18,
+                    ),
+                  ),
+                  title: DefaultTextStyle.merge(
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                    child: category.name,
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    category.onTap(context);
+                  },
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  hoverColor: category.boxColor.withOpacity(0.10),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                ),
+              );
+            }),
           ],
         ),
       ),
@@ -394,10 +420,10 @@ class _ExplorePageState extends State<ExplorePage> {
                       // Implement search logic
                     },
                     child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24),
+                      padding: EdgeInsets.symmetric(horizontal: 2),
                       child: Text(
                         "Search",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                     ),
                   ),
@@ -599,7 +625,9 @@ class _ExplorePageState extends State<ExplorePage> {
           _showPostDialog();
         },
         icon: const Icon(Icons.add),
-        label: const Text("New Post"),
+        label: const Text("New Post", 
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+        ),
       ),
     );
   }
