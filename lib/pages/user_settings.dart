@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/login_page.dart';
+import 'package:treehouse/pages/explore_page.dart';
+import 'package:treehouse/pages/messages_page.dart';
+import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:treehouse/pages/feedback.dart';
@@ -52,184 +55,294 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     final textColor = isDarkMode ? Colors.white : Colors.black;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          "User Settings",
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.green[800],
-        elevation: 2,
-        iconTheme: IconThemeData(
-          color: isDarkMode
-              ? Colors.white
-              : Colors.black, // Change icon color based on theme
-        ),
-        actions: [
-          IconButton(
-            onPressed: signOut,
-            icon: const Icon(Icons.logout),
-            tooltip: 'Sign Out',
-          ),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16.0),
+      backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[100],
+      body: Column(
         children: [
-          // Section 1: Security
-          buildSectionHeader(
-            'Security',
-          ),
-
-          buildListTile(
-            title: "Change Password",
-            icon: Icons.lock,
-            onTap: () {
-              showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (context) => SingleChildScrollView(
-                  child: AlertDialog(
-                    title: Row(
-                      children: [
-                        Text(
-                          "Change Password",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
-                      ],
+          // Top nav bar (no extra padding)
+          Container(
+            color: const Color(0xFF386A53),
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            height: 56,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Treehouse Connect",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    letterSpacing: 1,
+                  ),
+                ),
+                Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => ExplorePage()),
+                        );
+                      },
+                      icon: const Icon(Icons.explore, color: Colors.white),
+                      label: const Text("Explore", style: TextStyle(color: Colors.white)),
                     ),
-                    content: SingleChildScrollView(
-                      child: Container(
-                        height: 200,
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: Colors.grey[300]!,
-                            width: 1.0,
+                    // Vertical divider
+                    Container(
+                      height: 28,
+                      width: 1.2,
+                      color: Colors.white24,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => MessagesPage()),
+                        );
+                      },
+                      icon: const Icon(Icons.message, color: Colors.white),
+                      label: const Text("Messages", style: TextStyle(color: Colors.white)),
+                    ),
+                    Container(
+                      height: 28,
+                      width: 1.2,
+                      color: Colors.white24,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => UserProfilePage()),
+                        );
+                      },
+                      icon: const Icon(Icons.person, color: Colors.white),
+                      label: const Text("Profile", style: TextStyle(color: Colors.white)),
+                    ),
+                    Container(
+                      height: 28,
+                      width: 1.2,
+                      color: Colors.white24,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => UserSettingsPage()),
+                        );
+                      },
+                      icon: const Icon(Icons.settings, color: Colors.white),
+                      label: const Text("Settings", style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Section header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              children: [
+                const Icon(Icons.settings, color: Color(0xFF386A53)),
+                const SizedBox(width: 10),
+                const Text(
+                  "User Settings",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Color(0xFF386A53),
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Divider(
+                    color: Color(0xFF386A53).withOpacity(0.3),
+                    thickness: 1,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Settings content with left/right padding only (not top nav)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40.0),
+              child: ListView(
+                padding: const EdgeInsets.all(16.0),
+                children: [
+                  // Section 1: Security
+                  buildSectionHeader('Security'),
+                  buildListTile(
+                    title: "Change Password",
+                    icon: Icons.lock,
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        builder: (context) => SingleChildScrollView(
+                          child: AlertDialog(
+                            backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+                            title: Row(
+                              children: [
+                                Text(
+                                  "Change Password",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDarkMode ? Colors.white : textColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  child: const Text(
+                                    "Cancel",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            content: SingleChildScrollView(
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+                                    width: 1.0,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: isDarkMode ? Colors.grey[850] : Colors.white,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextField(
+                                      controller: _currentPasswordController,
+                                      decoration: InputDecoration(
+                                        labelText: "Current Password",
+                                        border: const OutlineInputBorder(),
+                                        labelStyle: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black),
+                                        filled: true,
+                                        fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                                      ),
+                                      obscureText: true,
+                                      style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextField(
+                                      controller: _newPasswordController,
+                                      decoration: InputDecoration(
+                                        labelText: "New Password",
+                                        border: const OutlineInputBorder(),
+                                        labelStyle: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black),
+                                        filled: true,
+                                        fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                                      ),
+                                      obscureText: true,
+                                      style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    TextField(
+                                      controller: _confirmPasswordController,
+                                      decoration: InputDecoration(
+                                        labelText: "Confirm New Password",
+                                        border: const OutlineInputBorder(),
+                                        labelStyle: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black),
+                                        filled: true,
+                                        fillColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                                      ),
+                                      obscureText: true,
+                                      style: TextStyle(color: isDarkMode ? Colors.white : Colors.black),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            actions: [
+                              _isLoading
+                                  ? const Center(child: CircularProgressIndicator())
+                                  : Center(
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          _changePassword();
+                                          Navigator.of(context).pop();
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.green[300],
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
+                                        child: Text(
+                                          "Change Password",
+                                          style: TextStyle(
+                                            color: isDarkMode ? Colors.black : textColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.white,
                         ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TextField(
-                              controller: _currentPasswordController,
-                              decoration: const InputDecoration(
-                                labelText: "Current Password",
-                                border: OutlineInputBorder(),
-                              ),
-                              obscureText: true,
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              controller: _newPasswordController,
-                              decoration: const InputDecoration(
-                                labelText: "New Password",
-                                border: OutlineInputBorder(),
-                              ),
-                              obscureText: true,
-                            ),
-                            const SizedBox(height: 16),
-                            TextField(
-                              controller: _confirmPasswordController,
-                              decoration: const InputDecoration(
-                                labelText: "Confirm New Password",
-                                border: OutlineInputBorder(),
-                              ),
-                              obscureText: true,
-                            ),
-                          ],
+                      );
+                    },
+                  ),
+                  const Divider(color: Colors.grey),
+                  // Section 2: Theme Customization
+                  buildSectionHeader('Theme Customization'),
+                  SwitchListTile(
+                    title: Text(
+                      'Dark Mode',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.normal,
+                        color: textColor,
+                      ),
+                    ),
+                    value: Provider.of<ThemeProvider>(context).isDarkMode,
+                    onChanged: (bool value) {
+                      Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                    },
+                  ),
+                  const Divider(color: Colors.grey),
+                  buildSectionHeader('App Feedback'),
+                  buildListTile(
+                    title: 'Send Feedback',
+                    icon: Icons.feedback,
+                    onTap: navigateToFeedback,
+                  ),
+                  const Divider(color: Colors.grey),
+                  // Sign out button at the bottom
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    child: Center(
+                      child: ElevatedButton.icon(
+                        onPressed: signOut,
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        label: const Text("Sign Out", style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[700],
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                       ),
                     ),
-                    actions: [
-                      _isLoading
-                          ? const Center(child: CircularProgressIndicator())
-                          : Center(
-                              child: ElevatedButton(
-                                onPressed: () {
-                                  _changePassword();
-                                  Navigator.of(context).pop();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.green[300],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                child: Text(
-                                  "Change Password",
-                                  style: TextStyle(
-                                    color: textColor,
-                                  ),
-                                ),
-                              ),
-                            ),
-                    ],
                   ),
-                ),
-              );
-            },
-          ),
-          const Divider(
-            color: Colors.grey,
-          ),
-
-          // Section 2: Theme Customization
-          buildSectionHeader('Theme Customization'),
-          SwitchListTile(
-            title: Text(
-              'Dark Mode',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.normal,
-                color: textColor,
+                ],
               ),
             ),
-            value: Provider.of<ThemeProvider>(context).isDarkMode,
-            onChanged: (bool value) {
-              Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
-            },
-          ),
-
-          const Divider(
-            color: Colors.grey,
-          ),
-
-          buildSectionHeader(
-            'App Feedback',
-          ),
-
-          buildListTile(
-            title: 'Send Feedback',
-            icon: Icons.feedback,
-            onTap: navigateToFeedback,
-          ),
-          const Divider(
-            color: Colors.grey,
           ),
         ],
       ),

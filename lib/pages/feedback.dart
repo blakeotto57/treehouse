@@ -97,58 +97,184 @@ class _FeedbackPageState extends State<FeedbackPage> {
     feedbackController.clear();
   }
 
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final background = isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
+    final cardColor = isDark ? const Color(0xFF232323) : Colors.white;
+    final accent = isDark ? Colors.orange[200]! : const Color(0xFF386A53);
+
     return Scaffold(
+      backgroundColor: background,
       appBar: AppBar(
         title: const Text(
           "Your Feedback",
           style: TextStyle(
-            fontSize: 30,
+            fontSize: 26,
             fontWeight: FontWeight.bold,
             color: Colors.white,
           ),
         ),
-        backgroundColor: Colors.green[300],
+        backgroundColor: accent,
+        centerTitle: true,
+        elevation: 2,
       ),
-      body: SingleChildScrollView( // Wrap with SingleChildScrollView to prevent overflow
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Feedback Text Box
-            TextField(
-              controller: feedbackController,
-                decoration: const InputDecoration(hintText: 'Your Feedback'),
-                maxLines: null, // Allows multi-line input
-                maxLength: 100, // Limits to 100 characters
-                maxLengthEnforcement: MaxLengthEnforcement.enforced,
-
-                
-              onChanged: (value) {
-                setState(() {});
-              },
-            ),
-            SizedBox(height: 10),
-
-
-            // Submit Feedback Button
-            isSubmitting
-                ? CircularProgressIndicator()
-                : ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[300],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 420),
+            child: Card(
+              color: cardColor,
+              elevation: 4,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.feedback, color: accent, size: 48),
+                    const SizedBox(height: 12),
+                    Text(
+                      "We value your feedback!",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: accent,
                       ),
-                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                     ),
-                    onPressed: _submitFeedback,
-                    child: Text('Submit Feedback'),
-                  ),
-            SizedBox(height: 20),
-        
-          ],
+                    const SizedBox(height: 8),
+                    Text(
+                      "Let us know what you think about the website or report a bug.",
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: isDark ? Colors.grey[300] : Colors.grey[700],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    // Feedback Text Box
+                    TextField(
+                      controller: feedbackController,
+                      decoration: InputDecoration(
+                        hintText: 'Your feedback (min $minFeedbackLength characters)',
+                        hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600]),
+                        filled: true,
+                        fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: accent, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: accent, width: 2),
+                        ),
+                        counterText: '',
+                      ),
+                      maxLines: 4,
+                      maxLength: 100,
+                      maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                      onChanged: (value) {
+                        setState(() {});
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    // Rating Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(5, (index) {
+                        return IconButton(
+                          icon: Icon(
+                            Icons.star,
+                            color: index < selectedRating ? Colors.amber : Colors.grey[400],
+                            size: 28,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              selectedRating = index + 1;
+                            });
+                          },
+                          tooltip: "Rate ${index + 1} star${index == 0 ? '' : 's'}",
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 8),
+                    // Toggle bug report
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Checkbox(
+                          value: showBugReportBox,
+                          onChanged: (val) {
+                            setState(() {
+                              showBugReportBox = val ?? false;
+                            });
+                          },
+                          activeColor: accent,
+                        ),
+                        Text(
+                          "Report a bug",
+                          style: TextStyle(
+                            color: accent,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    // Bug report box
+                    if (showBugReportBox)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: TextField(
+                          controller: bugReportController,
+                          decoration: InputDecoration(
+                            hintText: 'Describe the bug...',
+                            hintStyle: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600]),
+                            filled: true,
+                            fillColor: isDark ? Colors.grey[900] : Colors.grey[100],
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: accent, width: 1.5),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: accent, width: 2),
+                            ),
+                          ),
+                          maxLines: 3,
+                          style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                        ),
+                      ),
+                    // Submit Feedback Button
+                    isSubmitting
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: CircularProgressIndicator(),
+                          )
+                        : SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: accent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                              ),
+                              onPressed: _submitFeedback,
+                              icon: const Icon(Icons.send, color: Colors.white),
+                              label: const Text(
+                                'Submit Feedback',
+                                style: TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                            ),
+                          ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

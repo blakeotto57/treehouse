@@ -21,8 +21,41 @@ class _LoginPageState extends State<LoginPage> {
   final emailTextController = TextEditingController();
   final passwordTextController = TextEditingController();
 
+  String? errorMessage; // <-- Add this line
+
+  @override
+  void initState() {
+    super.initState();
+    emailTextController.addListener(() {
+      if (errorMessage != null) {
+        setState(() {
+          errorMessage = null;
+        });
+      }
+    });
+    passwordTextController.addListener(() {
+      if (errorMessage != null) {
+        setState(() {
+          errorMessage = null;
+        });
+      }
+    });
+  }
+
   //sign user in
   void signIn() async {
+    setState(() {
+      errorMessage = null; // Clear previous error
+    });
+
+    // Custom .edu email check
+    if (!emailTextController.text.trim().toLowerCase().endsWith('.edu')) {
+      setState(() {
+        errorMessage = "Invalid email. Please use your .edu email address.";
+      });
+      return;
+    }
+
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -30,50 +63,41 @@ class _LoginPageState extends State<LoginPage> {
         password: passwordTextController.text,
       );
 
-      // Reload the user to update verification status
       await userCredential.user?.reload();
       User? user = FirebaseAuth.instance.currentUser;
 
       if (!mounted) return;
 
-      // Remove the loading indicator from the root navigator
-      Navigator.of(context, rootNavigator: true).pop();
-
       if (user != null && user.emailVerified) {
-        // Navigate to explore page after successful sign in
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => ExplorePage()),
         );
       } else {
-        // Sign out and display a message prompting email verification
         await FirebaseAuth.instance.signOut();
         if (mounted) {
-          displayMessage(
-              "Email is not verified yet. Please verify your email and try again.");
+          setState(() {
+            errorMessage = "Email is not verified yet. Please verify your email and try again.";
+          });
         }
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-        displayMessage(e.code);
+        setState(() {
+          if (e.code == 'user-not-found' || e.code == 'wrong-password') {
+            errorMessage = "Either the email or password is incorrect.";
+          } else {
+            errorMessage = "An error occurred. Please try again.";
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
-        Navigator.of(context, rootNavigator: true).pop();
-        displayMessage("An error occurred. Please try again.");
+        setState(() {
+          errorMessage = "An error occurred. Please try again.";
+        });
       }
     }
-  }
-
-  //display a dialog message
-  void displayMessage(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(message),
-      ),
-    );
   }
 
   @override
@@ -111,6 +135,17 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     const SizedBox(height: 18), // Match register page
 
+                    if (errorMessage != null) // <-- Show error message
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     MyTextField(
                       controller: emailTextController,
                       hintText: "College Email",

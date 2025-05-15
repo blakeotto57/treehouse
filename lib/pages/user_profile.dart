@@ -68,359 +68,316 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.grey[900] : Colors.grey[100],
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: Icon(
-              Icons.menu,
-              color: Colors.green[800],
-            ),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        title: Text(
-          "Profile",
-          style: TextStyle(
-            fontSize: 36,
-            fontWeight: FontWeight.bold,
-            color: Colors.green[800],
-          ),
-        ),
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0),
-          child: Container(
-            color: Colors.green[800],
-            height: 1.0,
-          ),
-        ),
-        actions: [
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('sellers')
-                .where('email', isEqualTo: currentUser.email)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                return IconButton(
-                  icon: const Icon(Icons.star, color: Colors.amber),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            ReviewsPage(sellerId: currentUser.email!),
-                      ),
-                    );
-                  },
-                );
-              }
-              return const SizedBox
-                  .shrink(); // Returns empty widget if user is not a seller
-            },
-          ),
-        ],
-      ),
-      drawer: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.65, // Reduced width
-        child: Drawer(
-          backgroundColor: Colors.white,
-          elevation: 1,
-          child: ListView(
-            children: [
-              Container(
-                height: 60,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                ),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Categories',
-                    style: TextStyle(
-                      color: Colors.green[800],
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-              const Divider(height: 1, color: Colors.grey),
-              ...widget.categories
-                  .map((category) => Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ListTile(
-                            dense: true,
-                            contentPadding:
-                                const EdgeInsets.symmetric(horizontal: 16),
-                            leading: Icon(
-                              category.icon,
-                              size: 30,
-                              color: category
-                                  .boxColor, // Match icon color to category color
-                            ),
-                            title: Text(
-                              (category.name as Text).data ??
-                                  '', // Extract string from Text widget
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: category
-                                    .boxColor, // Use category's boxColor for text
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            onTap: () {
-                              Navigator.pop(context);
-                              category.onTap(context);
-                            },
-                          ),
-                          Divider(height: 1, color: Colors.grey[200]),
-                        ],
-                      ))
-                  .toList(),
-              ListTile(
-                dense: true,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                leading: Icon(
-                  Icons.settings,
-                  size: 30,
-                  color: Colors.grey[700],
-                ),
-                title: Text(
-                  'Settings',
+      body: Column(
+        children: [
+          // Top nav bar (matches Explore/Messages)
+          Container(
+            color: const Color(0xFF386A53),
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            height: 56,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Treehouse Connect",
                   style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.grey[800],
-                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    letterSpacing: 1,
                   ),
                 ),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const UserSettingsPage()),
-                  );
-                },
-              ),
-            ],
+                Row(
+                  children: [
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/explore');
+                      },
+                      icon: const Icon(Icons.explore, color: Colors.white),
+                      label: const Text("Explore", style: TextStyle(color: Colors.white)),
+                    ),
+                    Container(
+                      height: 28,
+                      width: 1.2,
+                      color: Colors.white24,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pushReplacementNamed(context, '/messages');
+                      },
+                      icon: const Icon(Icons.message, color: Colors.white),
+                      label: const Text("Messages", style: TextStyle(color: Colors.white)),
+                    ),
+                    Container(
+                      height: 28,
+                      width: 1.2,
+                      color: Colors.white24,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {},
+                      icon: const Icon(Icons.person, color: Colors.white),
+                      label: const Text("Profile", style: TextStyle(color: Colors.white)),
+                    ),
+                    Container(
+                      height: 28,
+                      width: 1.2,
+                      color: Colors.white24,
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const UserSettingsPage()),
+                        );
+                      },
+                      icon: const Icon(Icons.settings, color: Colors.white),
+                      label: const Text("Settings", style: TextStyle(color: Colors.white)),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
-      body: StreamBuilder<DocumentSnapshot>(
-        stream: usersCollection.doc(currentUser.email).snapshots(),
-        builder: (context, userSnapshot) {
-          if (userSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (userSnapshot.hasError) {
-            return const Center(child: Text("Error loading user data"));
-          }
-
-          if (userSnapshot.hasData && userSnapshot.data != null) {
-            final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
-            // Assign null if the field is blank or missing
-            profileImageUrl =
-                (userData?['profileImageUrl']?.toString().trim().isEmpty ?? true)
-                    ? null
-                    : userData?['profileImageUrl'];
-
-            final username =
-                (userData?['username']?.toString().trim().isEmpty ?? true)
-                    ? null
-                    : userData?['username'];
-
-            final bio = (userData?['bio']?.toString().trim().isEmpty ?? true)
-                ? null
-                : userData?['bio'];
-
-            final currentUserAuth = FirebaseAuth.instance.currentUser;
-            final computedUsername = (userData?['username'] == null || userData!['username'].toString().trim().isEmpty)
-                ? (currentUserAuth?.email != null ? currentUserAuth!.email!.split('@')[0] : '')
-                : userData?['username'];
-
-            return SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile Header Section
-                  Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[850] : Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        Stack(
-                          children: [
-                            GestureDetector(
-                              onTap: pickAndUploadImage,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.2),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: CircleAvatar(
-                                  radius: 60,
-                                  backgroundColor: Colors.green[800],
-                                  backgroundImage: profileImageUrl != null
-                                      ? NetworkImage(profileImageUrl!)
-                                      : null,
-                                  child: profileImageUrl == null
-                                      ? Icon(Icons.person,
-                                          size: 60, color: Colors.white)
-                                      : null,
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors
-                                      .grey, // Changed from Colors.green[300] to Colors.grey
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.edit,
-                                  size: 20,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          currentUser.email!,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
+          // Section header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              children: [
+                Icon(Icons.person, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                const SizedBox(width: 10),
+                Text(
+                  "Your Profile",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                    letterSpacing: 0.5,
                   ),
-
-                  // User Info Section
-                  Container(
-                    margin: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: isDarkMode ? Colors.grey[850] : Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: Icon(Icons.person, color: Colors.green[800]),
-                          title:  Text("Username",
-                            style: TextStyle(
-                                  color: Colors.green[800],
-                                  fontWeight: FontWeight.bold,
-                                  )),
-                                
-                          subtitle: Text(computedUsername),
-                          trailing: Icon(Icons.edit, color: Colors.green[800]),
-                          onTap: () => editField("username"),
-                        ),
-                        const Divider(),
-                        ListTile(
-                          leading: Icon(Icons.info, color: Colors.green[800]),
-                          title: Text("Bio",
-                              style: TextStyle(
-                                color: Colors.green[800],
-                                fontWeight: FontWeight.bold,
-                                )),
-                          subtitle: Text(userData?['bio'] ?? ''),
-                          trailing: Icon(Icons.edit, color: Colors.green[800]),
-                          onTap: () => editField("bio"),
-                        ),
-                      ],
-                    ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Divider(
+                    color: (isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)).withOpacity(0.3),
+                    thickness: 1,
                   ),
+                ),
+              ],
+            ),
+          ),
+          // Profile content
+          Expanded(
+            child: StreamBuilder<DocumentSnapshot>(
+              stream: usersCollection.doc(currentUser.email).snapshots(),
+              builder: (context, userSnapshot) {
+                if (userSnapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                  // Seller Button Section
-                  StreamBuilder<DocumentSnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('sellers')
-                        .doc(currentUser.email)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      // Hide button if seller document exists
-                      if (snapshot.hasData && snapshot.data!.exists) {
-                        return const SizedBox.shrink();
-                      }
+                if (userSnapshot.hasError) {
+                  return const Center(child: Text("Error loading user data"));
+                }
 
-                      // Show button if user is not a seller
-                      return Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                if (userSnapshot.hasData && userSnapshot.data != null) {
+                  final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+                  profileImageUrl =
+                      (userData?['profileImageUrl']?.toString().trim().isEmpty ?? true)
+                          ? null
+                          : userData?['profileImageUrl'];
+
+                  final username =
+                      (userData?['username']?.toString().trim().isEmpty ?? true)
+                          ? null
+                          : userData?['username'];
+
+                  final bio = (userData?['bio']?.toString().trim().isEmpty ?? true)
+                      ? null
+                      : userData?['bio'];
+
+                  final currentUserAuth = FirebaseAuth.instance.currentUser;
+                  final computedUsername = (userData?['username'] == null || userData!['username'].toString().trim().isEmpty)
+                      ? (currentUserAuth?.email != null ? currentUserAuth!.email!.split('@')[0] : '')
+                      : userData?['username'];
+
+                  return SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => SellerSetupPage(
-                                      onTap: () {}), // Update this line
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 400),
+                                child: Card(
+                                  color: isDarkMode ? Colors.grey[850] : Colors.white,
+                                  elevation: 4,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                                    child: Column(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.bottomRight,
+                                          children: [
+                                            GestureDetector(
+                                              onTap: pickAndUploadImage,
+                                              child: CircleAvatar(
+                                                radius: 54,
+                                                backgroundColor: Colors.green[800],
+                                                backgroundImage: profileImageUrl != null
+                                                    ? NetworkImage(profileImageUrl!)
+                                                    : null,
+                                                child: profileImageUrl == null
+                                                    ? const Icon(Icons.person, size: 54, color: Colors.white)
+                                                    : null,
+                                              ),
+                                            ),
+                                            Positioned(
+                                              bottom: 4,
+                                              right: 4,
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  color: isDarkMode ? Colors.grey[700] : Colors.white,
+                                                  shape: BoxShape.circle,
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.black.withOpacity(0.1),
+                                                      blurRadius: 4,
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: Icon(Icons.edit, size: 20, color: Colors.green[800]),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          computedUsername ?? '',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 22,
+                                            color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          currentUser.email!,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        if (bio != null && bio.isNotEmpty)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                            decoration: BoxDecoration(
+                                              color: isDarkMode ? Colors.grey[900] : Colors.green[50],
+                                              borderRadius: BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              bio,
+                                              style: TextStyle(
+                                                fontSize: 15,
+                                                color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ),
+                                        if (bio == null || bio.isEmpty)
+                                          Text(
+                                            "No bio yet. Add one!",
+                                            style: TextStyle(
+                                              color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        const SizedBox(height: 18),
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              OutlinedButton.icon(
+                                                onPressed: () => editField("username"),
+                                                icon: Icon(Icons.edit, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                                                label: Text("Edit Username", style: TextStyle(color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
+                                                style: OutlinedButton.styleFrom(
+                                                  side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              OutlinedButton.icon(
+                                                onPressed: () => editField("bio"),
+                                                icon: Icon(Icons.info_outline, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                                                label: Text("Edit Bio", style: TextStyle(color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
+                                                style: OutlinedButton.styleFrom(
+                                                  side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Seller Button Section
+                          StreamBuilder<DocumentSnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection('sellers')
+                                .doc(currentUser.email)
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              if (snapshot.hasData && snapshot.data!.exists) {
+                                return const SizedBox.shrink();
+                              }
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                child: ElevatedButton.icon(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => SellerSetupPage(onTap: () {}),
+                                      ),
+                                    );
+                                  },
+                                  icon: const Icon(Icons.storefront, color: Colors.white),
+                                  label: const Text('Become a Seller', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.green[800],
+                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                  ),
                                 ),
                               );
                             },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green[800],
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 12),
-                            ),
-                            child: const Text(
-                              'Become a Seller',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                              ),
-                            ),
                           ),
+                          const SizedBox(height: 24),
                         ],
-                      );
-                    },
-                  ),
-                ],
-              ),
-            );
-          }
+                      ),
+                    ),
+                  );
+                }
 
-          return const Center(
-            child: Text("User data not available"),
-          );
-        },
+                return const Center(
+                  child: Text("User data not available"),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
