@@ -120,16 +120,90 @@ class _ExplorePageState extends State<ExplorePage> {
 
     return Scaffold(
       backgroundColor: pastelGreen,
+      // Add the Drawer
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: Color(0xFF386A53),
+              ),
+              child: const Text(
+                'Treehouse Connect',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.explore, color: Color(0xFF386A53)),
+              title: const Text('Explore'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ExplorePage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.message, color: Color(0xFF386A53)),
+              title: const Text('Messages'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => MessagesPage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person, color: Color(0xFF386A53)),
+              title: const Text('Profile'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserProfilePage()),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings, color: Color(0xFF386A53)),
+              title: const Text('Settings'),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserSettingsPage()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
-          // Top Navigation Bar (restored)
+          // Top Navigation Bar with Drawer Icon
           Container(
             color: const Color(0xFF386A53),
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(vertical: 0), // No horizontal padding
             height: 56,
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Drawer icon with a bit of padding
+                Builder(
+                  builder: (context) => Padding(
+                    padding: const EdgeInsets.all(6.0),
+                    child: IconButton(
+                      icon: const Icon(Icons.menu, color: Colors.white),
+                      onPressed: () {
+                        Scaffold.of(context).openDrawer();
+                      },
+                      tooltip: "Open navigation menu",
+                    ),
+                  ),
+                ),
+                // No space between drawer and title
                 const Text(
                   "Treehouse Connect",
                   style: TextStyle(
@@ -139,46 +213,54 @@ class _ExplorePageState extends State<ExplorePage> {
                     letterSpacing: 1,
                   ),
                 ),
-                Row(
-                  children: [
-                    TextButton.icon(
-                      onPressed: () {
-                        // Already on Explore, maybe scroll to top or do nothing
-                      },
-                      icon: const Icon(Icons.explore, color: Colors.white),
-                      label: const Text("Explore", style: TextStyle(color: Colors.white)),
+                // Space between title and right-side navigation
+                const SizedBox(width: 32),
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextButton.icon(
+                          onPressed: () {
+                            // Already on Explore, maybe scroll to top or do nothing
+                          },
+                          icon: const Icon(Icons.explore, color: Colors.white),
+                          label: const Text("Explore", style: TextStyle(color: Colors.white)),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => MessagesPage()),
+                            );
+                          },
+                          icon: const Icon(Icons.message, color: Colors.white),
+                          label: const Text("Messages", style: TextStyle(color: Colors.white)),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => UserProfilePage()),
+                            );
+                          },
+                          icon: const Icon(Icons.person, color: Colors.white),
+                          label: const Text("Profile", style: TextStyle(color: Colors.white)),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => UserSettingsPage()),
+                            );
+                          },
+                          icon: const Icon(Icons.settings, color: Colors.white),
+                          label: const Text("Settings", style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
                     ),
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => MessagesPage()),
-                        );
-                      },
-                      icon: const Icon(Icons.message, color: Colors.white),
-                      label: const Text("Messages", style: TextStyle(color: Colors.white)),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => UserProfilePage()),
-                        );
-                      },
-                      icon: const Icon(Icons.person, color: Colors.white),
-                      label: const Text("Profile", style: TextStyle(color: Colors.white)),
-                    ),
-                    TextButton.icon(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => UserSettingsPage()),
-                        );
-                      },
-                      icon: const Icon(Icons.settings, color: Colors.white),
-                      label: const Text("Settings", style: TextStyle(color: Colors.white)),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -400,16 +482,13 @@ class _ExplorePageState extends State<ExplorePage> {
           final query = await FirebaseFirestore.instance
               .collection('bulletin_posts')
               .where('userEmail', isEqualTo: user.email)
-            
               .get();
 
-          print('Query docs: ${query.docs.length}');
           if (query.docs.isNotEmpty) {
             final lastPost = query.docs.first.data() as Map<String, dynamic>;
             final lastTimestamp = (lastPost['timestamp'] as Timestamp).toDate();
             final now = DateTime.now();
             final difference = now.difference(lastTimestamp);
-            print('Last post was ${difference.inHours} hours ago');
             if (difference.inHours < 24) {
               final remaining = Duration(hours: 24) - difference;
               final hours = remaining.inHours;
@@ -433,7 +512,6 @@ class _ExplorePageState extends State<ExplorePage> {
             }
           }
 
-          print('Opening post dialog');
           _showPostDialog();
         },
         icon: const Icon(Icons.add),
