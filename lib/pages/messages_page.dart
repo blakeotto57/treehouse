@@ -305,7 +305,7 @@ class _MessagesPageState extends State<MessagesPage> {
               ),
             ),
             trailing: IconButton(
-              icon: const Icon(Icons.person_remove, color: Colors.red),
+              icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: () => _showRemoveDialog(email),
             ),
             onTap: () {

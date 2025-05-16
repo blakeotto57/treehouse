@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:treehouse/auth/register_page.dart';
 import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/text_field.dart';
 import 'package:treehouse/pages/explore_page.dart';
@@ -7,10 +8,7 @@ import 'package:treehouse/pages/home.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
-  const LoginPage({
-    super.key,
-    required this.onTap,
-  });
+  const LoginPage({super.key, this.onTap}); // Make onTap optional
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -26,6 +24,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    // Clear login fields when page is shown
+    emailTextController.clear();
+    passwordTextController.clear();
     emailTextController.addListener(() {
       if (errorMessage != null) {
         setState(() {
@@ -40,6 +41,13 @@ class _LoginPageState extends State<LoginPage> {
         });
       }
     });
+  }
+
+  @override
+  void dispose() {
+    emailTextController.dispose();
+    passwordTextController.dispose();
+    super.dispose();
   }
 
   //sign user in
@@ -63,12 +71,16 @@ class _LoginPageState extends State<LoginPage> {
         password: passwordTextController.text,
       );
 
+      
+      // Force a reload and get the latest user object
       await userCredential.user?.reload();
-      User? user = FirebaseAuth.instance.currentUser;
+      final freshUser = FirebaseAuth.instance.currentUser;
 
       if (!mounted) return;
 
-      if (user != null && user.emailVerified) {
+      if (freshUser != null && freshUser.emailVerified) {
+        emailTextController.clear();
+        passwordTextController.clear();
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => ExplorePage()),
@@ -95,6 +107,32 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         setState(() {
           errorMessage = "An error occurred. Please try again.";
+        });
+      }
+    }
+  }
+
+  //register user
+  void registerUser() async {
+    try {
+      // After creating the user
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailTextController.text,
+        password: passwordTextController.text,
+      );
+
+      // Send verification email
+      await userCredential.user?.sendEmailVerification();
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        setState(() {
+          errorMessage = "An error occurred during registration. Please try again.";
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          errorMessage = "An error occurred during registration. Please try again.";
         });
       }
     }
@@ -182,15 +220,20 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(width: 4),
                         GestureDetector(
-                          onTap: widget.onTap,
-                          child: const Text(
-                            "Register now",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                              fontSize: 14, // Match register page
-                            ),
-                          ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => RegisterPage(onTap: () {  },)),
+          );
+        },
+        child: const Text(
+          "Register now",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.blue,
+            fontSize: 14, // Match register page
+          ),
+        ),
                         ),
                       ],
                     ),

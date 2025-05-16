@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:treehouse/auth/login_page.dart';
 import 'package:treehouse/components/text_field.dart';
 
 import '../components/button.dart';
@@ -281,7 +282,12 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                         const SizedBox(width: 4),
                         GestureDetector(
-                          onTap: widget.onTap,
+                          onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage(onTap: () {  },)),
+          );
+        },
                           child: const Text(
                             "Login now",
                             style: TextStyle(

@@ -449,7 +449,7 @@ class _UserPostState extends State<UserPost> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => OtherUsersProfilePage(userId: widget.user),
+                            builder: (context) => OtherUsersProfilePage(username: widget.user),
                           ),
                         );
                       },

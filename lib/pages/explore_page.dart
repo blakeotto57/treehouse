@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/models/category_model.dart';
+import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/user_settings.dart';
@@ -192,40 +193,96 @@ class _ExplorePageState extends State<ExplorePage> {
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
       drawer: Drawer(
-        backgroundColor: Colors.green[50],
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(24),
+            bottomRight: Radius.circular(24),
+          ),
+        ),
         child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            Container(
-              height: 48, // Set to your preferred compact height
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              decoration: BoxDecoration(
-                color: const Color(0xFF386A53),
+            // User Account Header
+            UserAccountsDrawerHeader(
+              decoration: const BoxDecoration(
+                color: Color(0xFF386A53),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(24),
+                ),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    backgroundColor: Colors.transparent,
-                    radius: 16,
-                    child: Icon(Icons.category, color: Colors.white, size: 18),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Categories',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.1,
-                    ),
-                  ),
-                ],
+              accountName: FutureBuilder<DocumentSnapshot>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(FirebaseAuth.instance.currentUser?.email)
+                    .get(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Text(
+                      "",
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    );
+                  }
+                  if (snapshot.hasData && snapshot.data!.exists) {
+                    final data = snapshot.data!.data() as Map<String, dynamic>?;
+                    final userDocRef = FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(FirebaseAuth.instance.currentUser?.email);
+
+                    // If username is missing, create it and show the email prefix for now
+                    if (data == null || data['username'] == null || data['username'].toString().trim().isEmpty) {
+                      final emailPrefix = FirebaseAuth.instance.currentUser?.email?.split('@')[0] ?? "User";
+                      // Use set with merge to ensure the username field is created if missing
+                      userDocRef.set({'username': emailPrefix}, SetOptions(merge: true));
+                      return Text(
+                        emailPrefix,
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                      );
+                    }
+
+                    final username = data['username'];
+                    return Text(
+                      username,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    );
+                  }
+                  // fallback
+                  final emailPrefix = FirebaseAuth.instance.currentUser?.email?.split('@')[0] ?? "User";
+                  // If the doc doesn't exist, create it with a username field
+                  final userDocRef = FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(FirebaseAuth.instance.currentUser?.email);
+                  userDocRef.set({'username': emailPrefix}, SetOptions(merge: true));
+                  return Text(
+                    emailPrefix,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  );
+                },
+              ),
+              accountEmail: Text(
+                FirebaseAuth.instance.currentUser?.email ?? "",
+                style: const TextStyle(fontSize: 14),
+              ),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, color: Color(0xFF386A53), size: 32),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10),
-              child: Divider(height: 18, thickness: 1),
+           
+            // Categories Section Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Text(
+                "Categories",
+                style: TextStyle(
+                  color: Colors.grey[800],
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  letterSpacing: 1.1,
+                ),
+              ),
             ),
+            // Categories List
             ...CategoryModel.getCategories().asMap().entries.map((entry) {
               final i = entry.key;
               final category = entry.value;
@@ -239,40 +296,44 @@ class _ExplorePageState extends State<ExplorePage> {
                 Icons.pets, // Pet Care
                 Icons.cleaning_services, // Cleaning
               ];
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                elevation: 1,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: ListTile(
-                  dense: true,
-                  minLeadingWidth: 0,
-                  leading: CircleAvatar(
-                    backgroundColor: category.boxColor.withOpacity(0.15),
-                    radius: 16,
-                    child: Icon(
-                      iconList.length > i ? iconList[i] : category.icon,
-                      color: category.boxColor,
-                      size: 18,
-                    ),
-                  ),
-                  title: DefaultTextStyle.merge(
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                    child: category.name,
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    category.onTap(context);
-                  },
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                child: Card(
+                  elevation: 0,
+                  color: category.boxColor.withOpacity(0.08),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  hoverColor: category.boxColor.withOpacity(0.10),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  child: ListTile(
+                    dense: true,
+                    minLeadingWidth: 0,
+                    leading: CircleAvatar(
+                      backgroundColor: category.boxColor.withOpacity(0.18),
+                      radius: 16,
+                      child: Icon(
+                        iconList.length > i ? iconList[i] : category.icon,
+                        color: category.boxColor,
+                        size: 18,
+                      ),
+                    ),
+                    title: DefaultTextStyle.merge(
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+                      child: category.name,
+                    ),
+                    onTap: () {
+                      Navigator.pop(context);
+                      category.onTap(context);
+                    },
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    hoverColor: category.boxColor.withOpacity(0.10),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                  ),
                 ),
               );
             }),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -510,17 +571,30 @@ class _ExplorePageState extends State<ExplorePage> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  // User/email (optional)
-                                  if (post['userEmail'] != null)
-                                    Text(
-                                      post['userEmail'],
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 12,
-                                        color: isDark ? Colors.orange[200] : const Color(0xFF386A53),
+                                  // Username (instead of email)
+                                  if (post['username'] != null)
+                                    GestureDetector(
+                                      onTap: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => OtherUsersProfilePage(
+                                              username: post['username'],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        post['username'],
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                          color: isDark ? Colors.orange[200] : const Color(0xFF386A53),
+                                          decoration: TextDecoration.underline,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   const SizedBox(height: 4),
                                   // Timestamp and delete button row

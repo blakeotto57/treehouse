@@ -235,7 +235,7 @@ class SellerCard extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => OtherUsersProfilePage(userId: userId),
+              builder: (context) => OtherUsersProfilePage(username: username),
             ),
           );
         },

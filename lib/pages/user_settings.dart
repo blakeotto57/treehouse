@@ -27,15 +27,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
   // Sign user out
   void signOut() async {
-    await _auth.signOut();
+    await FirebaseAuth.instance.signOut();
     if (!mounted) return;
-    // Navigate to LoginPage using MaterialPageRoute
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => LoginPage(
-          onTap: () {}, // Add any necessary callback
-        ),
+        builder: (context) => LoginPage(), // or remove onTap if not needed
       ),
     );
   }
@@ -188,6 +185,25 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     thickness: 1,
                   ),
                 ),
+                const SizedBox(width: 10),
+                // Sign out button at the bottom
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Center(
+                      child: ElevatedButton.icon(
+                        onPressed: signOut,
+                        icon: const Icon(Icons.logout, color: Colors.white),
+                        label: const Text("Sign Out", style: TextStyle(color: Colors.white)),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red[700],
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -346,24 +362,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     onTap: navigateToFeedback,
                   ),
                   const Divider(color: Colors.grey),
-                  // Sign out button at the bottom
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    child: Center(
-                      child: ElevatedButton.icon(
-                        onPressed: signOut,
-                        icon: const Icon(Icons.logout, color: Colors.white),
-                        label: const Text("Sign Out", style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red[700],
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  
                 ],
               ),
             ),

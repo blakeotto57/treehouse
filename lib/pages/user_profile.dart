@@ -30,6 +30,30 @@ class _UserProfilePageState extends State<UserProfilePage> {
   final sellersCollection = FirebaseFirestore.instance.collection("sellers");
   String? profileImageUrl;
 
+  @override
+  void initState() {
+    super.initState();
+    _ensureDefaultUsername();
+  }
+
+  Future<void> _ensureDefaultUsername() async {
+    final userDoc = await usersCollection.doc(currentUser.email).get();
+    final defaultUsername = currentUser.email!.split('@')[0];
+    if (!userDoc.exists) {
+      // If user doc doesn't exist, create it with username
+      await usersCollection.doc(currentUser.email).set({
+        'username': defaultUsername,
+        'email': currentUser.email,
+        // Add any other default fields you want here
+      });
+    } else {
+      final data = userDoc.data() as Map<String, dynamic>;
+      if (data['username'] == null || data['username'].toString().trim().isEmpty) {
+        await usersCollection.doc(currentUser.email).update({'username': defaultUsername});
+      }
+    }
+  }
+
   Future<void> pickAndUploadImage() async {
     final ImagePicker _picker = ImagePicker();
 
@@ -425,7 +449,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final userDoc = await usersCollection.doc(currentUser.email).get();
     if (userDoc.exists) {
       final userData = userDoc.data() as Map<String, dynamic>;
-      currentValue = userData[field] ?? '';
+      if (field == 'username') {
+        // Use stored username or fallback to email prefix
+        currentValue = (userData['username'] == null || userData['username'].toString().trim().isEmpty)
+            ? currentUser.email!.split('@')[0]
+            : userData['username'];
+      } else {
+        currentValue = userData[field] ?? '';
+      }
     }
 
     final TextEditingController controller =
@@ -438,6 +469,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             'Edit ${field.substring(0, 1).toUpperCase() + field.substring(1)}'),
         content: TextField(
           controller: controller,
+          cursorColor: Colors.black, // <-- Add this line
           decoration: InputDecoration(
             hintText: 'Enter your ${field.toLowerCase()}',
           ),
@@ -446,7 +478,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: const Text('Cancel', style: TextStyle(color: Colors.red)),
           ),
           TextButton(
             onPressed: () async {
@@ -460,9 +492,34 @@ class _UserProfilePageState extends State<UserProfilePage> {
               );
 
               try {
+                final newValue = controller.text.trim();
+
+                // If editing username, check for uniqueness
+                if (field == 'username') {
+                  final query = await usersCollection
+                      .where('username', isEqualTo: newValue)
+                      .get();
+
+                  // If another user already has this username (excluding current user)
+                  final isTaken = query.docs.any((doc) => doc.id != currentUser.email);
+
+                  if (isTaken) {
+                    if (mounted) {
+                      Navigator.pop(context); // Close loading indicator
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text('That username is already taken.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                    return;
+                  }
+                }
+
                 // Update Firestore
                 await usersCollection.doc(currentUser.email).update({
-                  field: controller.text.trim(),
+                  field: newValue,
                 });
 
                 // Close loading indicator and edit dialog
@@ -495,7 +552,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 }
               }
             },
-            child: const Text('Save'),
+            child: const Text('Save', style: TextStyle(color: Colors.blue)),
           ),
         ],
       ),
