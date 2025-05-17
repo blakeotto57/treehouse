@@ -8,6 +8,7 @@ import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:treehouse/pages/feedback.dart';
+import 'package:treehouse/components/nav_bar.dart';
 
 class UserSettingsPage extends StatefulWidget {
   const UserSettingsPage({super.key});
@@ -56,112 +57,11 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
 
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
+      appBar: const Navbar(
+        title: "Treehouse Connect",
+      ),
       body: Column(
         children: [
-          // Top Navigation Bar (updated)
-          Container(
-            color: const Color(0xFF386A53),
-            padding: const EdgeInsets.symmetric(vertical: 0), // No horizontal padding
-            height: 56,
-            child: Row(
-              children: [
-                // Hamburger menu button with padding
-                Builder(
-                  builder: (context) => Padding(
-                    padding: const EdgeInsets.all(6.0), // Padding around the icon
-                    child: IconButton(
-                      icon: const Icon(Icons.menu, color: Colors.white),
-                      onPressed: () {
-                        Scaffold.of(context).openDrawer();
-                      },
-                      tooltip: "Open navigation menu",
-                    ),
-                  ),
-                ),
-                // No space between drawer and title
-                const Text(
-                  "Treehouse Connect",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    letterSpacing: 1,
-                  ),
-                ),
-                // Add space between title and right-side navigation
-                const SizedBox(width: 32),
-                Expanded(
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => ExplorePage()),
-                            );
-                          },
-                          icon: const Icon(Icons.explore, color: Colors.white),
-                          label: const Text("Explore", style: TextStyle(color: Colors.white)),
-                        ),
-                        // Vertical divider
-                        Container(
-                          height: 28,
-                          width: 1.2,
-                          color: Colors.white24,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        TextButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => MessagesPage()),
-                            );
-                          },
-                          icon: const Icon(Icons.message, color: Colors.white),
-                          label: const Text("Messages", style: TextStyle(color: Colors.white)),
-                        ),
-                        Container(
-                          height: 28,
-                          width: 1.2,
-                          color: Colors.white24,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        TextButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => UserProfilePage()),
-                            );
-                          },
-                          icon: const Icon(Icons.person, color: Colors.white),
-                          label: const Text("Profile", style: TextStyle(color: Colors.white)),
-                        ),
-                        Container(
-                          height: 28,
-                          width: 1.2,
-                          color: Colors.white24,
-                          margin: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        TextButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (context) => UserSettingsPage()),
-                            );
-                          },
-                          icon: const Icon(Icons.settings, color: Colors.white),
-                          label: const Text("Settings", style: TextStyle(color: Colors.white)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           // Section header
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -186,24 +86,24 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // Sign out button at the bottom
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Center(
-                      child: ElevatedButton.icon(
-                        onPressed: signOut,
-                        icon: const Icon(Icons.logout, color: Colors.white),
-                        label: const Text("Sign Out", style: TextStyle(color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.red[700],
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                // Sign out button at the end of the header row
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                  child: Center(
+                    child: ElevatedButton.icon(
+                      onPressed: signOut,
+                      icon: const Icon(Icons.logout, color: Colors.white),
+                      label: const Text("Sign Out", style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[700],
+                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
                     ),
                   ),
+                ),
               ],
             ),
           ),
