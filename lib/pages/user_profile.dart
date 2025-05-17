@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:treehouse/components/button.dart';
+import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/models/reviews_page.dart';
 import 'package:treehouse/pages/explore_page.dart';
@@ -97,9 +98,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
-      appBar: const Navbar(
-        title: "Treehouse Connect",
-      ),
+      drawer: customDrawer(context),
+      appBar: const Navbar(),
       body: Column(
         children: [
           // Section header

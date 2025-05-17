@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
+import 'package:treehouse/components/drawer.dart';
+import 'package:treehouse/components/nav_bar.dart';
 import 'package:treehouse/pages/chat_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
 import 'package:treehouse/pages/user_profile.dart';
@@ -8,7 +10,6 @@ import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/pages/explore_page.dart';
-import 'package:treehouse/components/nav_bar.dart';
 
 class MessagesPage extends StatefulWidget {
   final List<CategoryModel> categories = CategoryModel.getCategories();
@@ -31,57 +32,8 @@ class _MessagesPageState extends State<MessagesPage> {
 
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Colors.green[800],
-              ),
-              child: const Text(
-                'Categories',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            ...widget.categories.map((category) => ListTile(
-              leading: Icon(category.icon, color: category.boxColor),
-              title: category.name,
-              onTap: () {
-                Navigator.pop(context);
-                category.onTap(context);
-              },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              hoverColor: category.boxColor.withOpacity(0.15),
-            )),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.settings, color: Colors.green),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const UserSettingsPage()),
-                );
-              },
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              hoverColor: Colors.green[100],
-            ),
-          ],
-        ),
-      ),
-      appBar: const Navbar(
-        title: "Treehouse Connect",
-      ),
+      drawer: customDrawer(context),
+      appBar: const Navbar(),
       body: Column(
         children: [
           // Section header

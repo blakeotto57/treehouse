@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/login_page.dart';
+import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/pages/user_profile.dart';
@@ -56,10 +57,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     final darkBackground = const Color(0xFF181818);
 
     return Scaffold(
-      backgroundColor: isDark ? darkBackground : pastelGreen,
-      appBar: const Navbar(
-        title: "Treehouse Connect",
-      ),
+      drawer: customDrawer(context),
+      appBar: const Navbar(),
       body: Column(
         children: [
           // Section header

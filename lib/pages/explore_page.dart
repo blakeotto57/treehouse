@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/pages/messages_page.dart';
@@ -193,154 +194,8 @@ class _ExplorePageState extends State<ExplorePage> {
 
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
-      drawer: Drawer(
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.only(
-            topRight: Radius.circular(24),
-            bottomRight: Radius.circular(24),
-          ),
-        ),
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            // User Account Header
-            UserAccountsDrawerHeader(
-              decoration: const BoxDecoration(
-                color: Color(0xFF386A53),
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(24),
-                ),
-              ),
-              accountName: FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .doc(FirebaseAuth.instance.currentUser?.email)
-                    .get(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Text(
-                      "",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                    );
-                  }
-                  if (snapshot.hasData && snapshot.data!.exists) {
-                    final data = snapshot.data!.data() as Map<String, dynamic>?;
-                    final userDocRef = FirebaseFirestore.instance
-                        .collection('users')
-                        .doc(FirebaseAuth.instance.currentUser?.email);
-
-                    // If username is missing, create it and show the email prefix for now
-                    if (data == null || data['username'] == null || data['username'].toString().trim().isEmpty) {
-                      final emailPrefix = FirebaseAuth.instance.currentUser?.email?.split('@')[0] ?? "User";
-                      // Use set with merge to ensure the username field is created if missing
-                      userDocRef.set({'username': emailPrefix}, SetOptions(merge: true));
-                      return Text(
-                        emailPrefix,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                      );
-                    }
-
-                    final username = data['username'];
-                    return Text(
-                      username,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                    );
-                  }
-                  // fallback
-                  final emailPrefix = FirebaseAuth.instance.currentUser?.email?.split('@')[0] ?? "User";
-                  // If the doc doesn't exist, create it with a username field
-                  final userDocRef = FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(FirebaseAuth.instance.currentUser?.email);
-                  userDocRef.set({'username': emailPrefix}, SetOptions(merge: true));
-                  return Text(
-                    emailPrefix,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  );
-                },
-              ),
-              accountEmail: Text(
-                FirebaseAuth.instance.currentUser?.email ?? "",
-                style: const TextStyle(fontSize: 14),
-              ),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, color: Color(0xFF386A53), size: 32),
-              ),
-            ),
-           
-            // Categories Section Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Text(
-                "Categories",
-                style: TextStyle(
-                  color: Colors.grey[800],
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ),
-            // Categories List
-            ...CategoryModel.getCategories().asMap().entries.map((entry) {
-              final i = entry.key;
-              final category = entry.value;
-              final iconList = [
-                Icons.spa, // Personal Care
-                Icons.restaurant, // Food
-                Icons.camera_alt, // Photography
-                Icons.menu_book, // Academics
-                Icons.build, // Technical
-                Icons.local_shipping, // Errands & Moving
-                Icons.pets, // Pet Care
-                Icons.cleaning_services, // Cleaning
-              ];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                child: Card(
-                  elevation: 0,
-                  color: category.boxColor.withOpacity(0.08),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: ListTile(
-                    dense: true,
-                    minLeadingWidth: 0,
-                    leading: CircleAvatar(
-                      backgroundColor: category.boxColor.withOpacity(0.18),
-                      radius: 16,
-                      child: Icon(
-                        iconList.length > i ? iconList[i] : category.icon,
-                        color: category.boxColor,
-                        size: 18,
-                      ),
-                    ),
-                    title: DefaultTextStyle.merge(
-                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-                      child: category.name,
-                    ),
-                    onTap: () {
-                      Navigator.pop(context);
-                      category.onTap(context);
-                    },
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    hoverColor: category.boxColor.withOpacity(0.10),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                  ),
-                ),
-              );
-            }),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-      appBar: const Navbar(
-        title: "Treehouse Connect",
-      ),
+      drawer: customDrawer(context),
+      appBar: const Navbar(),
       body: Column(
         children: [
           // Search bar
