@@ -29,7 +29,7 @@ class _NavbarState extends State<Navbar> {
       title: Row(
         children: [
           const Text(
-            "Treehouse Connect",
+            "Treehouse",
             style: TextStyle(
               color: Colors.white,
               fontSize: 22,

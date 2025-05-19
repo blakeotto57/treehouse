@@ -10,12 +10,14 @@ import 'package:treehouse/components/text_box.dart';
 import 'package:treehouse/models/reviews_page.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/messages_page.dart';
-import 'package:treehouse/pages/seller_setup.dart'; // Import the seller setup page
 import 'package:flutter/services.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/components/nav_bar.dart';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
 
 class UserProfilePage extends StatefulWidget {
   final List<CategoryModel> categories = CategoryModel.getCategories();
@@ -72,7 +74,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         await storageRef.putFile(imageFile);
 
         // Get the image URL
-        String downloadUrl = await storageRef.getDownloadURL();
+        final downloadUrl = await storageRef.getDownloadURL();
 
         // Update Firestore with the new profile image URL
         await usersCollection
@@ -286,6 +288,101 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                             ],
                                           ),
                                         ),
+                                        const SizedBox(height: 24),
+                                        ElevatedButton.icon(
+                                          icon: const Icon(Icons.add_business),
+                                          label: const Text("Add Product/Service"),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                                            foregroundColor: isDarkMode ? Colors.black : Colors.white,
+                                          ),
+                                          onPressed: () => _showAddProductDialog(context),
+                                        ),
+                                        const SizedBox(height: 24),
+                                        StreamBuilder<QuerySnapshot>(
+                                          stream: usersCollection
+                                              .doc(currentUser.email)
+                                              .collection('products')
+                                              .snapshots(),
+                                          builder: (context, snapshot) {
+                                            if (snapshot.connectionState == ConnectionState.waiting) {
+                                              return const CircularProgressIndicator();
+                                            }
+                                            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                                              return const Text("No products/services yet.");
+                                            }
+                                            return Column(
+                                              children: snapshot.data!.docs.map((doc) {
+                                                final data = doc.data() as Map<String, dynamic>;
+                                                final imageUrl = data['imageUrl'] as String?;
+                                                return Card(
+                                                  margin: const EdgeInsets.symmetric(vertical: 12),
+                                                  elevation: 4,
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(16.0),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        if (imageUrl != null && imageUrl.isNotEmpty)
+                                                          ClipRRect(
+                                                            borderRadius: BorderRadius.circular(12),
+                                                            child: Image.network(
+                                                              imageUrl,
+                                                              height: 180,
+                                                              width: double.infinity,
+                                                              fit: BoxFit.cover,
+                                                            ),
+                                                          ),
+                                                        const SizedBox(height: 12),
+                                                        Text(
+                                                          data['name'] ?? '',
+                                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                                                        ),
+                                                        const SizedBox(height: 6),
+                                                        Text(
+                                                          data['description'] ?? '',
+                                                          style: const TextStyle(fontSize: 16, color: Colors.black87),
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            Text(
+                                                              "\$${data['price']?.toStringAsFixed(2) ?? '0.00'}",
+                                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                                                            ),
+                                                            Row(
+                                                              children: [
+                                                                IconButton(
+                                                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                                                  onPressed: () => _showEditProductDialog(context, doc),
+                                                                  tooltip: 'Edit',
+                                                                ),
+                                                                IconButton(
+                                                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                                                  onPressed: () async {
+                                                                    if ((data['imageUrl'] as String?)?.isNotEmpty ?? false) {
+                                                                      try {
+                                                                        await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
+                                                                      } catch (_) {}
+                                                                    }
+                                                                    await doc.reference.delete();
+                                                                  },
+                                                                  tooltip: 'Delete',
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                            );
+                                          },
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -293,40 +390,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               ),
                             ],
                           ),
-                          // Seller Button Section
-                          StreamBuilder<DocumentSnapshot>(
-                            stream: FirebaseFirestore.instance
-                                .collection('sellers')
-                                .doc(currentUser.email)
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasData && snapshot.data!.exists) {
-                                return const SizedBox.shrink();
-                              }
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8),
-                                child: ElevatedButton.icon(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => SellerSetupPage(onTap: () {}),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.storefront, color: Colors.white),
-                                  label: const Text('Become a Seller', style: TextStyle(fontSize: 16, color: Colors.white)),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.green[800],
-                                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 24),
-                        ],
+                        ],     
                       ),
                     ),
                   );
@@ -455,6 +519,365 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _showAddProductDialog(BuildContext context) async {
+    final TextEditingController nameController = TextEditingController();
+    final TextEditingController descController = TextEditingController();
+    final TextEditingController priceController = TextEditingController();
+    XFile? pickedImage;
+    final ImagePicker _picker = ImagePicker();
+    bool isUploading = false;
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Center(
+              child: Text(
+                'Add Product/Service',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+                      if (image != null) {
+                        setState(() {
+                          pickedImage = image;
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey[400]!),
+                      ),
+                      child: pickedImage != null
+                          ? (kIsWeb
+                              ? FutureBuilder<Uint8List>(
+                                  future: pickedImage!.readAsBytes(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                                      return ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.memory(snapshot.data!, fit: BoxFit.cover, width: 140, height: 140),
+                                      );
+                                    }
+                                    return const Center(child: CircularProgressIndicator());
+                                  },
+                                )
+                              : ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.file(File(pickedImage!.path), fit: BoxFit.cover, width: 140, height: 140),
+                                ))
+                          : const Icon(Icons.add_a_photo, size: 48, color: Colors.grey),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      prefixIcon: const Icon(Icons.label),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descController,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      prefixIcon: const Icon(Icons.description),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: priceController,
+                    decoration: InputDecoration(
+                      labelText: 'Price (USD)',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      prefixIcon: const Icon(Icons.attach_money),
+                    ),
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  ),
+                ],
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              ),
+              ElevatedButton(
+                onPressed: isUploading
+                    ? null
+                    : () async {
+                        final name = nameController.text.trim();
+                        final desc = descController.text.trim();
+                        final price = double.tryParse(priceController.text.trim()) ?? 0.0;
+
+                        if (name.isEmpty || price <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter valid name and price')),
+                          );
+                          return;
+                        }
+
+                        setState(() {
+                          isUploading = true;
+                        });
+
+                        String? imageUrl;
+                        if (pickedImage != null) {
+                          final storageRef = FirebaseStorage.instance
+                              .ref()
+                              .child('productImages/${currentUser.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
+                          if (kIsWeb) {
+                            final bytes = await pickedImage!.readAsBytes();
+                            await storageRef.putData(bytes);
+                          } else {
+                            await storageRef.putFile(File(pickedImage!.path));
+                          }
+                          imageUrl = await storageRef.getDownloadURL();
+                        }
+                        // Save imageUrl to Firestore
+                        await usersCollection
+                            .doc(currentUser.email)
+                            .collection('products')
+                            .add({
+                          'name': name,
+                          'description': desc,
+                          'price': price,
+                          'imageUrl': imageUrl,
+                          'createdAt': FieldValue.serverTimestamp(),
+                        });
+
+                        Navigator.pop(context);
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[700],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                ),
+                child: isUploading
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditProductDialog(BuildContext context, QueryDocumentSnapshot doc) async {
+    final data = doc.data() as Map<String, dynamic>;
+    final TextEditingController nameController = TextEditingController(text: data['name'] ?? '');
+    final TextEditingController descController = TextEditingController(text: data['description'] ?? '');
+    final TextEditingController priceController = TextEditingController(text: data['price']?.toString() ?? '');
+    XFile? pickedImage;
+    final ImagePicker _picker = ImagePicker();
+    bool isUploading = false;
+    String? imageUrl = data['imageUrl'];
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: Center(
+              child: Text(
+                'Edit Product/Service',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+                      if (image != null) {
+                        setState(() {
+                          pickedImage = image;
+                        });
+                      }
+                    },
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[200],
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Colors.grey[400]!),
+                      ),
+                      child: pickedImage != null
+                          ? (kIsWeb
+                              ? FutureBuilder<Uint8List>(
+                                  future: pickedImage!.readAsBytes(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                                      return ClipRRect(
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Image.memory(snapshot.data!, fit: BoxFit.cover, width: 140, height: 140),
+                                      );
+                                    }
+                                    return const Center(child: CircularProgressIndicator());
+                                  },
+                                )
+                              : ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.file(File(pickedImage!.path), fit: BoxFit.cover, width: 140, height: 140),
+                                ))
+                          : (imageUrl != null && imageUrl!.isNotEmpty
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(imageUrl!, fit: BoxFit.cover, width: 140, height: 140),
+                                )
+                              : const Icon(Icons.add_a_photo, size: 48, color: Colors.grey)),
+                    ),
+                  ),
+                  if (imageUrl != null && imageUrl!.isNotEmpty && pickedImage == null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        label: const Text('Remove Image', style: TextStyle(color: Colors.red)),
+                        onPressed: () {
+                          setState(() {
+                            imageUrl = null;
+                          });
+                        },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 18),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      prefixIcon: const Icon(Icons.label),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descController,
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      prefixIcon: const Icon(Icons.description),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: priceController,
+                    decoration: InputDecoration(
+                      labelText: 'Price (USD)',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      prefixIcon: const Icon(Icons.attach_money),
+                    ),
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  ),
+                ],
+              ),
+            ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+              ),
+              ElevatedButton(
+                onPressed: isUploading
+                    ? null
+                    : () async {
+                        final name = nameController.text.trim();
+                        final desc = descController.text.trim();
+                        final price = double.tryParse(priceController.text.trim()) ?? 0.0;
+
+                        if (name.isEmpty || price <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter valid name and price')),
+                          );
+                          return;
+                        }
+
+                        setState(() {
+                          isUploading = true;
+                        });
+
+                        String? newImageUrl = imageUrl;
+
+                        // If user picked a new image, upload it
+                        if (pickedImage != null) {
+                          final storageRef = FirebaseStorage.instance
+                              .ref()
+                              .child('productImages/${currentUser.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
+                          if (kIsWeb) {
+                            final bytes = await pickedImage!.readAsBytes();
+                            await storageRef.putData(bytes);
+                          } else {
+                            await storageRef.putFile(File(pickedImage!.path));
+                          }
+                          newImageUrl = await storageRef.getDownloadURL();
+                          // Optionally delete old image from storage
+                          if (data['imageUrl'] != null && (data['imageUrl'] as String).isNotEmpty) {
+                            try {
+                              await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
+                            } catch (_) {}
+                          }
+                        } else if (imageUrl == null && data['imageUrl'] != null && (data['imageUrl'] as String).isNotEmpty) {
+                          // If image was removed, delete from storage and set Firestore field to null
+                          try {
+                            await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
+                          } catch (_) {}
+                          newImageUrl = null;
+                        }
+
+                        await doc.reference.update({
+                          'name': name,
+                          'description': desc,
+                          'price': price,
+                          'imageUrl': newImageUrl,
+                          'updatedAt': FieldValue.serverTimestamp(),
+                        });
+
+                        Navigator.pop(context);
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green[700],
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                ),
+                child: isUploading
+                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
