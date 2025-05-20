@@ -86,12 +86,21 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (context) => ExplorePage()),
         );
       } else {
+
+
+        /*
+
+        uncomment after testing is done
+
+        
         await FirebaseAuth.instance.signOut();
         if (mounted) {
           setState(() {
             errorMessage = "Email is not verified yet. Please verify your email and try again.";
           });
         }
+        */
+        return;
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
