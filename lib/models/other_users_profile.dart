@@ -147,58 +147,62 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                                   return const Text("No listings found.");
                                 }
                                 final products = snapshot.data!.docs;
-                                return GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
-                                    childAspectRatio: 2.5,
-                                  ),
-                                  itemCount: products.length,
-                                  itemBuilder: (context, idx) {
-                                    final product = products[idx].data() as Map<String, dynamic>;
-                                    return Card(
-                                      elevation: 1,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              product['name'],
-                                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                            ),
-                                            Text(
-                                              product['price'].toString(),
-                                              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              product['description'],
-                                              style: const TextStyle(color: Colors.grey, fontSize: 13),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                            if (product['price'] != null)
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 4),
-                                                child: Text(
-                                                  "\$${product['price']}",
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF386A53),
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 14,
+                                return SizedBox(
+                                  height: (products.length / 2).ceil() * 130.0 + 8, // Add 8 pixels buffer to prevent overflow
+                                  child: GridView.builder(
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.symmetric(vertical: 4),
+                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                      crossAxisCount: 2,
+                                      crossAxisSpacing: 16,
+                                      mainAxisSpacing: 16,
+                                      childAspectRatio: 2.5,
+                                    ),
+                                    itemCount: products.length,
+                                    itemBuilder: (context, idx) {
+                                      final product = products[idx].data() as Map<String, dynamic>;
+                                      return Card(
+                                        elevation: 1,
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                product['name'],
+                                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                              ),
+                                              Text(
+                                                product['price'].toString(),
+                                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                product['description'],
+                                                style: const TextStyle(color: Colors.grey, fontSize: 13),
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              if (product['price'] != null)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(top: 4),
+                                                  child: Text(
+                                                    "\$${product['price']}",
+                                                    style: const TextStyle(
+                                                      color: Color(0xFF386A53),
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 14,
+                                                    ),
                                                   ),
                                                 ),
-                                              ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    );
-                                  },
+                                      );
+                                    },
+                                  ),
                                 );
                               },
                             ),

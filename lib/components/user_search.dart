@@ -131,8 +131,7 @@ class _UserSearchState extends State<UserSearch> {
                             },
                           ),
                           onTap: () {
-                            _controller.text = search;
-                            _searchUsers(search);
+                            _onUserSelected(search);
                           },
                         );
                       },
