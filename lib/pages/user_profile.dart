@@ -170,18 +170,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              ConstrainedBox(
-                                constraints: const BoxConstraints(maxWidth: 400),
+                              // Profile Card at the top, centered
+                              Center(
                                 child: Card(
                                   color: isDarkMode ? Colors.grey[850] : Colors.white,
                                   elevation: 4,
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                  margin: const EdgeInsets.only(top: 16, bottom: 20), // Reduced margin
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18), // Reduced padding
                                     child: Column(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
                                         Stack(
                                           alignment: Alignment.bottomRight,
@@ -189,19 +191,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                             GestureDetector(
                                               onTap: pickAndUploadImage,
                                               child: CircleAvatar(
-                                                radius: 54,
+                                                radius: 48, // Slightly smaller avatar
                                                 backgroundColor: Colors.green[800],
                                                 backgroundImage: profileImageUrl != null
                                                     ? NetworkImage(profileImageUrl!)
                                                     : null,
                                                 child: profileImageUrl == null
-                                                    ? const Icon(Icons.person, size: 54, color: Colors.white)
+                                                    ? const Icon(Icons.person, size: 48, color: Colors.white)
                                                     : null,
                                               ),
                                             ),
                                             Positioned(
-                                              bottom: 4,
-                                              right: 4,
+                                              bottom: 2,
+                                              right: 2,
                                               child: Container(
                                                 decoration: BoxDecoration(
                                                   color: isDarkMode ? Colors.grey[700] : Colors.white,
@@ -209,44 +211,44 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                   boxShadow: [
                                                     BoxShadow(
                                                       color: Colors.black.withOpacity(0.1),
-                                                      blurRadius: 4,
+                                                      blurRadius: 2,
                                                     ),
                                                   ],
                                                 ),
-                                                child: Icon(Icons.edit, size: 20, color: Colors.green[800]),
+                                                child: Icon(Icons.edit, size: 16, color: Colors.green[800]),
                                               ),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 16),
+                                        const SizedBox(height: 10), // Reduced spacing
                                         Text(
                                           computedUsername ?? '',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 22,
+                                            fontSize: 18, // Slightly smaller font
                                             color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
+                                        const SizedBox(height: 2),
                                         Text(
                                           currentUser.email!,
                                           style: TextStyle(
-                                            fontSize: 15,
+                                            fontSize: 13,
                                             color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
                                           ),
                                         ),
-                                        const SizedBox(height: 16),
+                                        const SizedBox(height: 10),
                                         if (bio != null && bio.isNotEmpty)
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                             decoration: BoxDecoration(
                                               color: isDarkMode ? Colors.grey[900] : Colors.green[50],
-                                              borderRadius: BorderRadius.circular(10),
+                                              borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
                                               bio,
                                               style: TextStyle(
-                                                fontSize: 15,
+                                                fontSize: 13,
                                                 color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
                                               ),
                                               textAlign: TextAlign.center,
@@ -257,140 +259,215 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                             "No bio yet. Add one!",
                                             style: TextStyle(
                                               color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
-                                              fontSize: 14,
+                                              fontSize: 12,
                                             ),
                                           ),
-                                        const SizedBox(height: 18),
-                                        Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              OutlinedButton.icon(
-                                                onPressed: () => editField("username"),
-                                                icon: Icon(Icons.edit, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
-                                                label: Text("Edit Username", style: TextStyle(color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
-                                                style: OutlinedButton.styleFrom(
-                                                  side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                ),
+                                        const SizedBox(height: 10),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            OutlinedButton.icon(
+                                              onPressed: () => editField("username"),
+                                              icon: Icon(Icons.edit, size: 16, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                                              label: Text("Edit Username", style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
+                                              style: OutlinedButton.styleFrom(
+                                                side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                               ),
-                                              const SizedBox(width: 12),
-                                              OutlinedButton.icon(
-                                                onPressed: () => editField("bio"),
-                                                icon: Icon(Icons.info_outline, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
-                                                label: Text("Edit Bio", style: TextStyle(color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
-                                                style: OutlinedButton.styleFrom(
-                                                  side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            OutlinedButton.icon(
+                                              onPressed: () => editField("bio"),
+                                              icon: Icon(Icons.info_outline, size: 16, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                                              label: Text("Edit Bio", style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
+                                              style: OutlinedButton.styleFrom(
+                                                side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
+                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(height: 24),
+                                        const SizedBox(height: 14),
                                         ElevatedButton.icon(
-                                          icon: const Icon(Icons.add_business),
-                                          label: const Text("Add Product/Service"),
+                                          icon: const Icon(Icons.add_business, size: 18),
+                                          label: const Text("Add Product/Service", style: TextStyle(fontSize: 14)),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
                                             foregroundColor: isDarkMode ? Colors.black : Colors.white,
+                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                           ),
                                           onPressed: () => _showAddProductDialog(context),
-                                        ),
-                                        const SizedBox(height: 24),
-                                        StreamBuilder<QuerySnapshot>(
-                                          stream: usersCollection
-                                              .doc(currentUser.email)
-                                              .collection('products')
-                                              .snapshots(),
-                                          builder: (context, snapshot) {
-                                            if (snapshot.connectionState == ConnectionState.waiting) {
-                                              return const CircularProgressIndicator();
-                                            }
-                                            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                                              return const Text("No products/services yet.");
-                                            }
-                                            return Column(
-                                              children: snapshot.data!.docs.map((doc) {
-                                                final data = doc.data() as Map<String, dynamic>;
-                                                final imageUrl = data['imageUrl'] as String?;
-                                                return Card(
-                                                  margin: const EdgeInsets.symmetric(vertical: 12),
-                                                  elevation: 4,
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.all(16.0),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        if (imageUrl != null && imageUrl.isNotEmpty)
-                                                          ClipRRect(
-                                                            borderRadius: BorderRadius.circular(12),
-                                                            child: Image.network(
-                                                              imageUrl,
-                                                              height: 180,
-                                                              width: double.infinity,
-                                                              fit: BoxFit.cover,
-                                                            ),
-                                                          ),
-                                                        const SizedBox(height: 12),
-                                                        Text(
-                                                          data['name'] ?? '',
-                                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                                                        ),
-                                                        const SizedBox(height: 6),
-                                                        Text(
-                                                          data['description'] ?? '',
-                                                          style: const TextStyle(fontSize: 16, color: Colors.black87),
-                                                        ),
-                                                        const SizedBox(height: 8),
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            Text(
-                                                              "\$${data['price']?.toStringAsFixed(2) ?? '0.00'}",
-                                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                                                            ),
-                                                            Row(
-                                                              children: [
-                                                                IconButton(
-                                                                  icon: const Icon(Icons.edit, color: Colors.blue),
-                                                                  onPressed: () => _showEditProductDialog(context, doc),
-                                                                  tooltip: 'Edit',
-                                                                ),
-                                                                IconButton(
-                                                                  icon: const Icon(Icons.delete, color: Colors.red),
-                                                                  onPressed: () async {
-                                                                    if ((data['imageUrl'] as String?)?.isNotEmpty ?? false) {
-                                                                      try {
-                                                                        await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
-                                                                      } catch (_) {}
-                                                                    }
-                                                                    await doc.reference.delete();
-                                                                  },
-                                                                  tooltip: 'Delete',
-                                                                ),
-                                                              ],
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                );
-                                              }).toList(),
-                                            );
-                                          },
                                         ),
                                       ],
                                     ),
                                   ),
                                 ),
                               ),
+                              const SizedBox(height: 32),
+                              // Listings and Reviews side by side
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Listings Section
+                                  Expanded(
+                                    flex: 2,
+                                    child: Card(
+                                      elevation: 3,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text("My Listings", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                            StreamBuilder<QuerySnapshot>(
+                                              stream: usersCollection.doc(currentUser.email).collection('products').snapshots(),
+                                              builder: (context, snapshot) {
+                                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                                  return const Center(child: CircularProgressIndicator());
+                                                }
+                                                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                                                  return const Text("No listings found.");
+                                                }
+                                                return Wrap(
+                                                  spacing: 16,
+                                                  runSpacing: 16,
+                                                  alignment: WrapAlignment.start, // <-- Ensures items align left and fill to the edge
+                                                  children: snapshot.data!.docs.map((doc) {
+                                                    final data = doc.data() as Map<String, dynamic>;
+                                                    final imageUrl = data['imageUrl'] as String?;
+                                                    return ConstrainedBox(
+                                                      constraints: const BoxConstraints(
+                                                        minWidth: 140,
+                                                        maxWidth: 180, // Adjust as needed for your layout
+                                                      ),
+                                                      child: Card(
+                                                        margin: EdgeInsets.zero,
+                                                        elevation: 3,
+                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.all(10),
+                                                          child: Column(
+                                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                                            children: [
+                                                              if (imageUrl != null && imageUrl.isNotEmpty)
+                                                                Container(
+                                                                  height: 90,
+                                                                  width: 140,
+                                                                  decoration: BoxDecoration(
+                                                                    color: Colors.grey[100],
+                                                                    borderRadius: BorderRadius.circular(10),
+                                                                  ),
+                                                                  child: ClipRRect(
+                                                                    borderRadius: BorderRadius.circular(10),
+                                                                    child: Image.network(
+                                                                      imageUrl,
+                                                                      fit: BoxFit.contain,
+                                                                      alignment: Alignment.center,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              const SizedBox(height: 6),
+                                                              Text(
+                                                                data['name'] ?? '',
+                                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                                                maxLines: 1,
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                              Text(
+                                                                data['description'] ?? '',
+                                                                style: const TextStyle(fontSize: 12, color: Colors.black87),
+                                                                maxLines: 2,
+                                                                overflow: TextOverflow.ellipsis,
+                                                              ),
+                                                              const SizedBox(height: 4),
+                                                              Row(
+                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                children: [
+                                                                  Text(
+                                                                    "\$${(data['price'] is num) ? (data['price'] as num).toStringAsFixed(2) : data['price'] ?? '0.00'}",
+                                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                                                  ),
+                                                                  Row(
+                                                                    children: [
+                                                                      IconButton(
+                                                                        icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
+                                                                        onPressed: () => _showEditProductDialog(context, doc),
+                                                                        tooltip: 'Edit',
+                                                                        padding: EdgeInsets.zero,
+                                                                        constraints: const BoxConstraints(),
+                                                                      ),
+                                                                      IconButton(
+                                                                        icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                                                                        onPressed: () async {
+                                                                          if ((data['imageUrl'] as String?)?.isNotEmpty ?? false) {
+                                                                            try {
+                                                                              await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
+                                                                            } catch (_) {}
+                                                                          }
+                                                                          await doc.reference.delete();
+                                                                        },
+                                                                        tooltip: 'Delete',
+                                                                        padding: EdgeInsets.zero,
+                                                                        constraints: const BoxConstraints(),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ],
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }).toList(),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  // Reviews Section
+                                  Expanded(
+                                    flex: 2,
+                                    child: Card(
+                                      elevation: 4,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(24),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text("Ratings & Reviews", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                            const SizedBox(height: 16),
+                                            // TODO: Replace with actual reviews
+                                            Column(
+                                              children: const [
+                                                ListTile(
+                                                  title: Text("Maria L.", style: TextStyle(fontWeight: FontWeight.bold)),
+                                                  subtitle: Text("Great tutoring session, super helpful! ⭐⭐⭐⭐⭐"),
+                                                ),
+                                                ListTile(
+                                                  title: Text("Josh K.", style: TextStyle(fontWeight: FontWeight.bold)),
+                                                  subtitle: Text("Quick turnaround and great UI suggestions. ⭐⭐⭐⭐☆"),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 32),
                             ],
                           ),
-                        ],     
+                        ],
                       ),
                     ),
                   );
