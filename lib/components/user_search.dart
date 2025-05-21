@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/models/other_users_profile.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserSearch extends StatefulWidget {
   const UserSearch({super.key});
@@ -18,6 +19,29 @@ class _UserSearchState extends State<UserSearch> {
   List<String> _pastSearches = [];
   List<String> _previousSearches = [];
   bool _loading = false;
+
+  Future<void> _loadPastSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _pastSearches = prefs.getStringList('pastSearches') ?? [];
+    });
+  }
+
+  Future<void> _savePastSearches() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('pastSearches', _pastSearches);
+  }
+
+  void _addToPastSearches(String search) {
+    setState(() {
+      _pastSearches.remove(search); // Remove if already exists
+      _pastSearches.insert(0, search); // Add to the top
+      if (_pastSearches.length > 10) {
+        _pastSearches.removeLast(); // Remove oldest
+      }
+      _savePastSearches();
+    });
+  }
 
   void _searchUsers(String query) async {
     if (query.isEmpty) {
@@ -39,21 +63,31 @@ class _UserSearchState extends State<UserSearch> {
       _results =
           result.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
       _loading = false;
-
-      // Save search if it's not a duplicate
-      if (!_pastSearches.contains(query)) {
-        _pastSearches.insert(0, query);
-        if (_pastSearches.length > 10) _pastSearches.removeLast();
-      }
     });
 
     _showOverlay();
   }
 
+  void _onUserSelected(String username) {
+    _addToPastSearches(username);
+    setState(() {
+      _controller.text = username;
+    });
+    _removeOverlay();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => OtherUsersProfilePage(username: username),
+      ),
+    );
+  }
+
   void _onSearchSubmitted(String query) {
-    if (query.isNotEmpty && !_previousSearches.contains(query)) {
+    if (query.isNotEmpty) {
+      _addToPastSearches(query);
       setState(() {
-        _previousSearches.add(query);
+        if (!_previousSearches.contains(query)) {
+          _previousSearches.add(query);
+        }
       });
     }
     _searchUsers(query);
@@ -78,49 +112,32 @@ class _UserSearchState extends State<UserSearch> {
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(8),
-              child: _controller.text.isEmpty && _previousSearches.isNotEmpty
+              child: _controller.text.isEmpty && _pastSearches.isNotEmpty
                   ? ListView.builder(
                       shrinkWrap: true,
-                      itemCount: _previousSearches.length,
+                      itemCount: _pastSearches.length,
                       itemBuilder: (context, index) {
-                        final query = _previousSearches[index];
+                        final search = _pastSearches[index];
                         return ListTile(
-                          title: Text(query),
+                          title: Text(search),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              setState(() {
+                                _pastSearches.removeAt(index);
+                              });
+                              _savePastSearches();
+                              _showPastSearches();
+                            },
+                          ),
                           onTap: () {
-                            _controller.text = query;
-                            _onSearchSubmitted(query);
+                            _controller.text = search;
+                            _searchUsers(search);
                           },
                         );
                       },
                     )
-                  : _pastSearches.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.all(8.0),
-                          child: Text('No recent searches.'),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: _pastSearches.length,
-                          itemBuilder: (context, index) {
-                            final search = _pastSearches[index];
-                            return ListTile(
-                              title: Text(search),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.close),
-                                onPressed: () {
-                                  setState(() {
-                                    _pastSearches.removeAt(index);
-                                  });
-                                  _showPastSearches();
-                                },
-                              ),
-                              onTap: () {
-                                _controller.text = search;
-                                _searchUsers(search);
-                              },
-                            );
-                          },
-                        ),
+                  : const SizedBox.shrink(),
             ),
           ),
         ),
@@ -167,15 +184,7 @@ class _UserSearchState extends State<UserSearch> {
                             return ListTile(
                               title: Text(user['username'] ?? ''),
                               onTap: () {
-                                _controller.text = user['username'];
-                                _removeOverlay();
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) => OtherUsersProfilePage(
-                                      username: user['username'],
-                                    ),
-                                  ),
-                                );
+                                _onUserSelected(user['username']);
                               },
                             );
                           },
@@ -197,6 +206,7 @@ class _UserSearchState extends State<UserSearch> {
   @override
   void initState() {
     super.initState();
+    _loadPastSearches();
     _focusNode.addListener(() {
       if (_focusNode.hasFocus && _controller.text.isEmpty) {
         _showPastSearches();
@@ -262,7 +272,11 @@ class _UserSearchState extends State<UserSearch> {
               setState(() {
                 _previousSearches.clear();
               });
-              _searchUsers(val.trim());
+              if (val.trim().isEmpty) {
+                _showPastSearches();
+              } else {
+                _searchUsers(val.trim());
+              }
             },
             onSubmitted: _onSearchSubmitted,
             style: const TextStyle(color: Colors.black),
