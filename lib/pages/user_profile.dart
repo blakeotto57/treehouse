@@ -28,6 +28,109 @@ class UserProfilePage extends StatefulWidget {
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
+// Add this ListingTile widget below your _UserProfilePageState class or in a separate file and import it.
+class ListingTile extends StatelessWidget {
+  final Map<String, dynamic> listing;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const ListingTile({
+    Key? key,
+    required this.listing,
+    required this.onEdit,
+    required this.onDelete,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = listing['imageUrl'] as String?;
+    final name = listing['name'] ?? 'No Name';
+    final description = listing['description'] ?? '';
+    final price = listing['price'] != null ? '\$${listing['price']}' : '';
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: imageUrl != null && imageUrl.isNotEmpty
+                  ? Image.network(
+                      imageUrl,
+                      width: 120,   // Increased width
+                      height: 120,  // Increased height
+                      fit: BoxFit.cover,
+                    )
+                  : Container(
+                      width: 120,
+                      height: 120,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image, size: 56, color: Colors.grey),
+                    ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              name,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+            if (price.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  price,
+                  style: const TextStyle(fontSize: 13, color: Colors.green),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            if (description.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  description,
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            const Spacer(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
+                  onPressed: onEdit,
+                  tooltip: 'Edit',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red, size: 18),
+                  onPressed: onDelete,
+                  tooltip: 'Delete',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _UserProfilePageState extends State<UserProfilePage> {
   final currentUser = FirebaseAuth.instance.currentUser!;
   final usersCollection = FirebaseFirestore.instance.collection("users");
@@ -175,137 +278,138 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             children: [
                               // Profile Card at the top, centered
                               Center(
-                                child: Card(
-                                  color: isDarkMode ? Colors.grey[850] : Colors.white,
-                                  elevation: 4,
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                  margin: const EdgeInsets.only(top: 16, bottom: 20), // Reduced margin
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18), // Reduced padding
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Stack(
-                                          alignment: Alignment.bottomRight,
-                                          children: [
-                                            GestureDetector(
-                                              onTap: pickAndUploadImage,
-                                              child: CircleAvatar(
-                                                radius: 48, // Slightly smaller avatar
-                                                backgroundColor: Colors.green[800],
-                                                backgroundImage: profileImageUrl != null
-                                                    ? NetworkImage(profileImageUrl!)
-                                                    : null,
-                                                child: profileImageUrl == null
-                                                    ? const Icon(Icons.person, size: 48, color: Colors.white)
-                                                    : null,
-                                              ),
-                                            ),
-                                            Positioned(
-                                              bottom: 2,
-                                              right: 2,
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  color: isDarkMode ? Colors.grey[700] : Colors.white,
-                                                  shape: BoxShape.circle,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.black.withOpacity(0.1),
-                                                      blurRadius: 2,
-                                                    ),
-                                                  ],
+                                child: IntrinsicWidth(
+                                  child: Card(
+                                    color: isDarkMode ? Colors.grey[850] : Colors.white,
+                                    elevation: 4,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                                    margin: const EdgeInsets.only(top: 16, bottom: 20), // Reduced margin
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8), // Reduced horizontal padding
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Stack(
+                                            alignment: Alignment.bottomRight,
+                                            children: [
+                                              GestureDetector(
+                                                onTap: pickAndUploadImage,
+                                                child: CircleAvatar(
+                                                  radius: 48, // Slightly smaller avatar
+                                                  backgroundColor: Colors.green[800],
+                                                  backgroundImage: profileImageUrl != null
+                                                      ? NetworkImage(profileImageUrl!)
+                                                      : null,
+                                                  child: profileImageUrl == null
+                                                      ? const Icon(Icons.person, size: 48, color: Colors.white)
+                                                      : null,
                                                 ),
-                                                child: Icon(Icons.edit, size: 16, color: Colors.green[800]),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 10), // Reduced spacing
-                                        Text(
-                                          computedUsername ?? '',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18, // Slightly smaller font
-                                            color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          currentUser.email!,
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        if (bio != null && bio.isNotEmpty)
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                            decoration: BoxDecoration(
-                                              color: isDarkMode ? Colors.grey[900] : Colors.green[50],
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: Text(
-                                              bio,
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                                              Positioned(
+                                                bottom: 2,
+                                                right: 2,
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    color: isDarkMode ? Colors.grey[700] : Colors.white,
+                                                    shape: BoxShape.circle,
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: Colors.black.withOpacity(0.1),
+                                                        blurRadius: 2,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: Icon(Icons.edit, size: 16, color: Colors.green[800]),
+                                                ),
                                               ),
-                                              textAlign: TextAlign.center,
-                                            ),
+                                            ],
                                           ),
-                                        if (bio == null || bio.isEmpty)
+                                          const SizedBox(height: 10), // Reduced spacing
                                           Text(
-                                            "No bio yet. Add one!",
+                                            computedUsername ?? '',
                                             style: TextStyle(
-                                              color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
-                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18, // Slightly smaller font
+                                              color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
                                             ),
                                           ),
-                                        const SizedBox(height: 10),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            OutlinedButton.icon(
-                                              onPressed: () => editField("username"),
-                                              icon: Icon(Icons.edit, size: 16, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
-                                              label: Text("Edit Username", style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
-                                              style: OutlinedButton.styleFrom(
-                                                side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                              ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            currentUser.email!,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
                                             ),
-                                            const SizedBox(width: 8),
-                                            OutlinedButton.icon(
-                                              onPressed: () => editField("bio"),
-                                              icon: Icon(Icons.info_outline, size: 16, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
-                                              label: Text("Edit Bio", style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
-                                              style: OutlinedButton.styleFrom(
-                                                side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
-                                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 14),
-                                        ElevatedButton.icon(
-                                          icon: const Icon(Icons.add_business, size: 18),
-                                          label: const Text("Add Product/Service", style: TextStyle(fontSize: 14)),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
-                                            foregroundColor: isDarkMode ? Colors.black : Colors.white,
-                                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                                           ),
-                                          onPressed: () => _showAddProductDialog(context),
-                                        ),
-                                      ],
+                                          const SizedBox(height: 10),
+                                          if (bio != null && bio.isNotEmpty)
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: isDarkMode ? Colors.grey[900] : Colors.green[50],
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                bio,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+                                          if (bio == null || bio.isEmpty)
+                                            Text(
+                                              "No bio yet. Add one!",
+                                              style: TextStyle(
+                                                color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          const SizedBox(height: 10),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              OutlinedButton.icon(
+                                                onPressed: () => editField("username"),
+                                                icon: Icon(Icons.edit, size: 16, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                                                label: Text("Edit Username", style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
+                                                style: OutlinedButton.styleFrom(
+                                                  side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
+                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              OutlinedButton.icon(
+                                                onPressed: () => editField("bio"),
+                                                icon: Icon(Icons.info_outline, size: 16, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                                                label: Text("Edit Bio", style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
+                                                style: OutlinedButton.styleFrom(
+                                                  side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
+                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 14),
+                                          ElevatedButton.icon(
+                                            icon: const Icon(Icons.add_business, size: 18),
+                                            label: const Text("Add Product/Service", style: TextStyle(fontSize: 14)),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                                              foregroundColor: isDarkMode ? Colors.black : Colors.white,
+                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                            ),
+                                            onPressed: () => _showAddProductDialog(context),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 16),
                               // Listings and Reviews side by side
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -331,98 +435,51 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                                                   return const Text("No listings found.");
                                                 }
-                                                return Wrap(
-                                                  spacing: 16,
-                                                  runSpacing: 16,
-                                                  alignment: WrapAlignment.start, // <-- Ensures items align left and fill to the edge
-                                                  children: snapshot.data!.docs.map((doc) {
-                                                    final data = doc.data() as Map<String, dynamic>;
-                                                    final imageUrl = data['imageUrl'] as String?;
-                                                    return ConstrainedBox(
-                                                      constraints: const BoxConstraints(
-                                                        minWidth: 140,
-                                                        maxWidth: 180, // Adjust as needed for your layout
-                                                      ),
-                                                      child: Card(
-                                                        margin: EdgeInsets.zero,
-                                                        elevation: 3,
-                                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                                        child: Padding(
-                                                          padding: const EdgeInsets.all(10),
-                                                          child: Column(
-                                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                                            children: [
-                                                              if (imageUrl != null && imageUrl.isNotEmpty)
-                                                                Container(
-                                                                  height: 90,
-                                                                  width: 140,
-                                                                  decoration: BoxDecoration(
-                                                                    color: Colors.grey[100],
-                                                                    borderRadius: BorderRadius.circular(10),
-                                                                  ),
-                                                                  child: ClipRRect(
-                                                                    borderRadius: BorderRadius.circular(10),
-                                                                    child: Image.network(
-                                                                      imageUrl,
-                                                                      fit: BoxFit.contain,
-                                                                      alignment: Alignment.center,
-                                                                    ),
-                                                                  ),
-                                                                ),
-                                                              const SizedBox(height: 6),
-                                                              Text(
-                                                                data['name'] ?? '',
-                                                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                                                maxLines: 1,
-                                                                overflow: TextOverflow.ellipsis,
-                                                              ),
-                                                              Text(
-                                                                data['description'] ?? '',
-                                                                style: const TextStyle(fontSize: 12, color: Colors.black87),
-                                                                maxLines: 2,
-                                                                overflow: TextOverflow.ellipsis,
-                                                              ),
-                                                              const SizedBox(height: 4),
-                                                              Row(
-                                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                                children: [
-                                                                  Text(
-                                                                    "\$${(data['price'] is num) ? (data['price'] as num).toStringAsFixed(2) : data['price'] ?? '0.00'}",
-                                                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                                                  ),
-                                                                  Row(
-                                                                    children: [
-                                                                      IconButton(
-                                                                        icon: const Icon(Icons.edit, color: Colors.blue, size: 18),
-                                                                        onPressed: () => _showEditProductDialog(context, doc),
-                                                                        tooltip: 'Edit',
-                                                                        padding: EdgeInsets.zero,
-                                                                        constraints: const BoxConstraints(),
-                                                                      ),
-                                                                      IconButton(
-                                                                        icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                                                                        onPressed: () async {
-                                                                          if ((data['imageUrl'] as String?)?.isNotEmpty ?? false) {
-                                                                            try {
-                                                                              await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
-                                                                            } catch (_) {}
-                                                                          }
-                                                                          await doc.reference.delete();
-                                                                        },
-                                                                        tooltip: 'Delete',
-                                                                        padding: EdgeInsets.zero,
-                                                                        constraints: const BoxConstraints(),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
+                                                final listings = snapshot.data!.docs.map((doc) {
+                                                  final data = doc.data() as Map<String, dynamic>;
+                                                  return ListingTile(
+                                                    listing: data,
+                                                    onEdit: () => _showEditProductDialog(context, doc),
+                                                    onDelete: () async {
+                                                      final confirm = await showDialog<bool>(
+                                                        context: context,
+                                                        builder: (context) => AlertDialog(
+                                                          title: const Text('Delete Listing'),
+                                                          content: const Text('Are you sure you want to delete this listing?'),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () => Navigator.pop(context, false),
+                                                              child: const Text('Cancel'),
+                                                            ),
+                                                            TextButton(
+                                                              onPressed: () => Navigator.pop(context, true),
+                                                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                                            ),
+                                                          ],
                                                         ),
-                                                      ),
-                                                    );
-                                                  }).toList(),
+                                                      );
+                                                      if (confirm == true) {
+                                                        if (data['imageUrl'] != null && (data['imageUrl'] as String).isNotEmpty) {
+                                                          try {
+                                                            await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
+                                                          } catch (_) {}
+                                                        }
+                                                        await doc.reference.delete();
+                                                      }
+                                                    },
+                                                  );
+                                                }).toList();
+                                                return GridView.builder(
+                                                  shrinkWrap: true,
+                                                  physics: const NeverScrollableScrollPhysics(),
+                                                  itemCount: listings.length,
+                                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                                    crossAxisCount: 3,
+                                                    mainAxisSpacing: 12,
+                                                    crossAxisSpacing: 12,
+                                                    childAspectRatio: 0.85, // Adjust for card shape
+                                                  ),
+                                                  itemBuilder: (context, index) => listings[index],
                                                 );
                                               },
                                             ),
@@ -504,97 +561,141 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
     await showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(
-            'Edit ${field.substring(0, 1).toUpperCase() + field.substring(1)}'),
-        content: TextField(
-          controller: controller,
-          cursorColor: Colors.black, // <-- Add this line
-          decoration: InputDecoration(
-            hintText: 'Enter your ${field.toLowerCase()}',
-          ),
-          maxLines: field == 'bio' ? 3 : 1,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: Colors.red)),
-          ),
-          TextButton(
-            onPressed: () async {
-              // Show loading indicator
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => const Center(
-                  child: CircularProgressIndicator(),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24), // width wrapped
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: IntrinsicWidth(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.edit, size: 40, color: Colors.green[700]),
+                const SizedBox(height: 12),
+                Text(
+                  'Edit ${field.substring(0, 1).toUpperCase() + field.substring(1)}',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                  textAlign: TextAlign.center,
                 ),
-              );
-
-              try {
-                final newValue = controller.text.trim();
-
-                // If editing username, check for uniqueness
-                if (field == 'username') {
-                  final query = await usersCollection
-                      .where('username', isEqualTo: newValue)
-                      .get();
-
-                  // If another user already has this username (excluding current user)
-                  final isTaken = query.docs.any((doc) => doc.id != currentUser.email);
-
-                  if (isTaken) {
-                    if (mounted) {
-                      Navigator.pop(context); // Close loading indicator
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('That username is already taken.'),
-                          backgroundColor: Colors.red,
+                const SizedBox(height: 18),
+                StatefulBuilder(
+                  builder: (context, setState) {
+                    bool isFocused = false;
+                    return Focus(
+                      onFocusChange: (focus) => setState(() => isFocused = focus),
+                      child: TextField(
+                        controller: controller,
+                        cursorColor: Colors.black,
+                        decoration: InputDecoration(
+                          filled: true,
+                          fillColor: Colors.white,
+                          labelText: 'Enter your ${field.toLowerCase()}',
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          prefixIcon: const Icon(Icons.person),
                         ),
-                      );
-                    }
-                    return;
-                  }
-                }
-
-                // Update Firestore
-                await usersCollection.doc(currentUser.email).update({
-                  field: newValue,
-                });
-
-                // Close loading indicator and edit dialog
-                if (mounted) {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                }
-
-                // Show success message
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('$field updated successfully!'),
-                      backgroundColor: Colors.green[800],
+                        style: TextStyle(color:Colors.grey),
+                        maxLines: field == 'bio' ? 3 : 1,
+                        onTap: () => setState(() => isFocused = true),
+                        onEditingComplete: () => setState(() => isFocused = false),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                     ),
-                  );
-                }
-              } catch (e) {
-                // Close loading indicator
-                if (mounted) Navigator.pop(context);
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        // Show loading indicator
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
 
-                // Show error message
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Error updating $field: $e'),
-                      backgroundColor: Colors.red,
+                        try {
+                          final newValue = controller.text.trim();
+
+                          // If editing username, check for uniqueness
+                          if (field == 'username') {
+                            final query = await usersCollection
+                                .where('username', isEqualTo: newValue)
+                                .get();
+
+                            // If another user already has this username (excluding current user)
+                            final isTaken = query.docs.any((doc) => doc.id != currentUser.email);
+
+                            if (isTaken) {
+                              if (mounted) {
+                                Navigator.pop(context); // Close loading indicator
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('That username is already taken.'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                              return;
+                            }
+                          }
+
+                          // Update Firestore
+                          await usersCollection.doc(currentUser.email).update({
+                            field: newValue,
+                          });
+
+                          // Close loading indicator and edit dialog
+                          if (mounted) {
+                            Navigator.pop(context);
+                            Navigator.pop(context);
+                          }
+
+                          // Show success message
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('$field updated successfully!'),
+                                backgroundColor: Colors.green[800],
+                              ),
+                            );
+                          }
+                        } catch (e) {
+                          // Close loading indicator
+                          if (mounted) Navigator.pop(context);
+
+                          // Show error message
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Error updating $field: $e'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green[700],
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                      ),
+                      child: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
-                  );
-                }
-              }
-            },
-            child: const Text('Save', style: TextStyle(color: Colors.blue)),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
