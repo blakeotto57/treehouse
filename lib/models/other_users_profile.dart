@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/nav_bar.dart';
 import 'package:treehouse/models/reviews_page.dart';
@@ -96,7 +97,21 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                                 Align(
                                   alignment: Alignment.centerRight,
                                   child: ElevatedButton(
-                                    onPressed: () {
+                                    onPressed: () async {
+                                      final currentUser = FirebaseAuth.instance.currentUser;
+                                      final currentUserEmail = currentUser?.email;
+                                      final profileUserEmail = userData['email']; // Adjust if your userDoc uses a different field
+
+                                      if (currentUserEmail == profileUserEmail) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text("You can't message yourself."),
+                                            duration: Duration(seconds: 2),
+                                          ),
+                                        );
+                                        return;
+                                      }
+
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -143,64 +158,49 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                               if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                                 return const Text("No listings found.");
                               }
-                              return Column(
-                                children: snapshot.data!.docs.map((doc) {
-                                  final data = doc.data() as Map<String, dynamic>;
-                                  final imageUrl = data['imageUrl'] as String?;
-                                  return Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      SizedBox(
-                                        width: 220, // Set your desired card width here
-                                        child: Card(
-                                          margin: const EdgeInsets.symmetric(vertical: 12),
-                                          elevation: 4,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16.0),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                if (imageUrl != null && imageUrl.isNotEmpty)
-                                                  Container(
-                                                    height: 140,
-                                                    width: double.infinity,
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.grey[100],
-                                                      borderRadius: BorderRadius.circular(12),
-                                                    ),
-                                                    child: ClipRRect(
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      child: Image.network(
-                                                        imageUrl,
-                                                        fit: BoxFit.contain,
-                                                        alignment: Alignment.center,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                const SizedBox(height: 8),
-                                                Text(
-                                                  data['name'] ?? '',
-                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  data['description'] ?? '',
-                                                  style: const TextStyle(fontSize: 14, color: Colors.black87),
-                                                ),
-                                                const SizedBox(height: 6),
-                                                Text(
-                                                  "\$${(data['price'] is num) ? (data['price'] as num).toStringAsFixed(2) : data['price'] ?? '0.00'}",
-                                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                                ),
-                                              ],
+                              final products = snapshot.data!.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+                              return SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: products.map<Widget>((product) {
+                                    return Container(
+                                      width: 140, // Adjust width as needed
+                                      margin: const EdgeInsets.only(right: 12),
+                                      child: Column(
+                                        children: [
+                                          if (product['imageUrl'] != null)
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(8),
+                                              child: Image.network(
+                                                product['imageUrl'],
+                                                height: 100,
+                                                width: 120,
+                                                fit: BoxFit.cover,
+                                              ),
                                             ),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            product['name'] ?? '',
+                                            style: const TextStyle(fontWeight: FontWeight.bold),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                        ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            product['description'] ?? '',
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            product['price'] != null ? '\$${product['price']}' : '',
+                                            style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  );
-                                }).toList(),
+                                    );
+                                  }).toList(),
+                                ),
                               );
                             },
                           ),
