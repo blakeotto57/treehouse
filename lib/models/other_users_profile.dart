@@ -117,7 +117,6 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                                         MaterialPageRoute(
                                           builder: (context) => ChatPage(
                                             receiverEmail: userData['email'] ?? '',
-                                            receiverID: userDoc.id,
                                           ),
                                         ),
                                       );

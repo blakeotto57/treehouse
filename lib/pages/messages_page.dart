@@ -166,7 +166,6 @@ class _MessagesPageState extends State<MessagesPage> {
                 MaterialPageRoute(
                   builder: (context) => ChatPage(
                     receiverEmail: email,
-                    receiverID: email,
                   ),
                 ),
               );
