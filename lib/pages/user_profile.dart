@@ -344,6 +344,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                           const SizedBox(height: 10),
                                           if (bio != null && bio.isNotEmpty)
                                             Container(
+                                              width: 400, // Set your desired fixed width
                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                               decoration: BoxDecoration(
                                                 color: isDarkMode ? Colors.grey[900] : Colors.green[50],
@@ -355,7 +356,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                   fontSize: 13,
                                                   color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
                                                 ),
-                                                textAlign: TextAlign.center,
+                                                textAlign: TextAlign.left,
+                                                softWrap: true,
+                                                overflow: TextOverflow.visible,
                                               ),
                                             ),
                                           if (bio == null || bio.isEmpty)
@@ -562,6 +565,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     await showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: Colors.white, // Match description background
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         insetPadding: const EdgeInsets.symmetric(horizontal: 24), // width wrapped
         child: Padding(
@@ -570,11 +574,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.edit, size: 40, color: Colors.green[700]),
+                Icon(Icons.edit, size: 40, color: const Color(0xFF386A53)),
                 const SizedBox(height: 12),
                 Text(
                   'Edit ${field.substring(0, 1).toUpperCase() + field.substring(1)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 18),
@@ -583,20 +587,36 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     bool isFocused = false;
                     return Focus(
                       onFocusChange: (focus) => setState(() => isFocused = focus),
-                      child: TextField(
-                        controller: controller,
-                        cursorColor: Colors.black,
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: Colors.white,
-                          labelText: 'Enter your ${field.toLowerCase()}',
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          prefixIcon: const Icon(Icons.person),
-                        ),
-                        style: TextStyle(color:Colors.grey),
-                        maxLines: field == 'bio' ? 3 : 1,
-                        onTap: () => setState(() => isFocused = true),
-                        onEditingComplete: () => setState(() => isFocused = false),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: 400, // Set your desired fixed width
+                            child: TextField(
+                              controller: controller,
+                              maxLength: 200,
+                              maxLines: null,
+                              decoration: InputDecoration(
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: isFocused ? const Color(0xFF386A53) : Colors.grey),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                counterText: '', // Hide default counter
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: controller,
+                            builder: (context, value, child) {
+                              return Text(
+                                '${value.text.length}/200',
+                                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              );
+                            },
+                          ),
+                        ],
                       ),
                     );
                   },
@@ -607,7 +627,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.normal)),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
@@ -683,12 +703,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
+                        backgroundColor: const Color(0xFF386A53),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                       ),
-                      child: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text('Save', style: TextStyle(fontWeight: FontWeight.normal)),
                     ),
                   ],
                 ),
@@ -797,7 +817,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.normal)),
               ),
               ElevatedButton(
                 onPressed: isUploading
@@ -878,6 +898,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         return StatefulBuilder(
           builder: (context, setState) => AlertDialog(
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor: const Color(0xFFF5F5F5), // Match description background
             title: Center(
               child: Text(
                 'Edit Product/Service',
