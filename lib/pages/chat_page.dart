@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:treehouse/components/drawer.dart';
+import 'package:treehouse/components/nav_bar.dart';
 
 class ChatPage extends StatefulWidget {
   final String receiverEmail;
@@ -22,55 +24,29 @@ class _ChatPageState extends State<ChatPage> {
     final themeColor = const Color(0xFF386A53);
 
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 2,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF386A53)),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: FutureBuilder<DocumentSnapshot>(
-          future: FirebaseFirestore.instance
-              .collection('users')
-              .doc(widget.receiverEmail)
-              .get(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const SizedBox(
-                width: 80,
-                height: 20,
-                child: LinearProgressIndicator(),
-              );
-            }
-            if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
-              return Text(
-                widget.receiverEmail,
-                style: const TextStyle(
-                  color: Color(0xFF386A53),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                ),
-              );
-            }
-            final userData = snapshot.data!.data() as Map<String, dynamic>;
-            final username = userData['username'] ?? widget.receiverEmail;
-            return Text(
-              username,
-              style: const TextStyle(
-                color: Color(0xFF386A53),
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            );
-          },
-        ),
-        centerTitle: true,
-      ),
+      drawer: customDrawer(context),
+      appBar: const Navbar(),
       body: Column(
         children: [
+          // Username/email display
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
+            color: Colors.transparent,
+            child: Text(
+              widget.receiverName ?? widget.receiverEmail,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF386A53),
+                letterSpacing: 0.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final msg = messages[index];
@@ -78,16 +54,31 @@ class _ChatPageState extends State<ChatPage> {
                 return Align(
                   alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
                   child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.7,
+                    ),
+                    margin: EdgeInsets.only(
+                      top: 4,
+                      bottom: 4,
+                      left: isMe ? 40 : 0,
+                      right: isMe ? 0 : 40,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                     decoration: BoxDecoration(
                       color: isMe ? themeColor : Colors.green[50],
                       borderRadius: BorderRadius.only(
-                        topLeft: const Radius.circular(16),
-                        topRight: const Radius.circular(16),
-                        bottomLeft: Radius.circular(isMe ? 16 : 0),
-                        bottomRight: Radius.circular(isMe ? 0 : 16),
+                        topLeft: const Radius.circular(22),
+                        topRight: const Radius.circular(22),
+                        bottomLeft: Radius.circular(isMe ? 22 : 6),
+                        bottomRight: Radius.circular(isMe ? 6 : 22),
                       ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.06),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Text(
                       msg['text'],
