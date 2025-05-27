@@ -309,8 +309,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         title,
         style: const TextStyle(
           fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: Colors.green,
+          fontWeight: FontWeight.normal,
+          color: Color(0xFF386A53),
         ),
       ),
     );

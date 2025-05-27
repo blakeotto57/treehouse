@@ -6,6 +6,7 @@ import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/components/user_search.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Navbar extends StatefulWidget implements PreferredSizeWidget {
   final String? title;
@@ -28,18 +29,61 @@ class _NavbarState extends State<Navbar> {
       backgroundColor: const Color(0xFF386A53),
       title: Row(
         children: [
-          const Text(
-            "Treehouse",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-            ),
+          // Treehouse + Divider + School Name
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Treehouse",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Container(
+                height: 24,
+                width: 1,
+                color: Colors.white54,
+              ),
+              const SizedBox(width: 12),
+              Builder(
+                builder: (context) {
+                  final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
+                  final school = (userEmail.contains('@') && userEmail.contains('.edu'))
+                      ? userEmail.split('@')[1].split('.edu')[0]
+                      : '';
+                  return Text(
+                    school,
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-          const SizedBox(width: 16),
-          // Replace the old search bar with UserSearch
-          const Expanded(
-            child: UserSearch(),
+          const SizedBox(width: 24),
+          // Flexible Search Bar
+          Expanded(
+            child: Container(
+              height: 40,
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Search...',
+                  fillColor: Colors.white,
+                  filled: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),

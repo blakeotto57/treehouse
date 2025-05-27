@@ -88,31 +88,44 @@ class ChatService {
   }
 
   // Get accepted chat users
-  Stream<List<Map<String, dynamic>>> getAcceptedChatsStream() {
-    final currentUserEmail = _firebaseAuth.currentUser?.email;
-    if (currentUserEmail == null) return Stream.value([]);
+  Stream<List<Map<String, dynamic>>> getAcceptedChatsStream() async* {
+  final currentUserEmail = FirebaseAuth.instance.currentUser!.email!;
+  final chatsStream = FirebaseFirestore.instance.collection('chats').snapshots();
 
-    return _fireStore
-        .collection('accepted_chats')
-        .doc(currentUserEmail)
-        .collection('users')
-        .snapshots()
-        .asyncMap((snapshot) async {
-      final userEmails = snapshot.docs.map((doc) => doc['email'] as String).toList();
-      if (userEmails.isEmpty) return [];
+  await for (final snapshot in chatsStream) {
+    final List<Map<String, dynamic>> results = [];
 
-      // Get user details for each email
-      final userDetails = await Future.wait(
-        userEmails.map((email) => _fireStore
-            .collection('users')
-            .where('email', isEqualTo: email)
-            .get()
-            .then((snapshot) => snapshot.docs.first.data())),
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final participants = doc.id.split('_');
+      final otherUserEmail = participants.firstWhere(
+        (email) => email != currentUserEmail,
+        orElse: () => 'Unknown',
       );
 
-      return userDetails;
-    });
+      // Skip if this chat doesn't involve current user
+      if (!participants.contains(currentUserEmail)) continue;
+
+      // Fetch the other user's info from Firestore
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(otherUserEmail)
+          .get();
+
+      final userData = userDoc.data() ?? {};
+
+      results.add({
+        'email': otherUserEmail,
+        'username': userData['username'] ?? otherUserEmail,
+        'profileImageUrl': userData['profileImageUrl'],
+        'lastMessage': data['lastMessage'] ?? {},
+      });
+    }
+
+    yield results;
   }
+}
+
 
 
   //send messages

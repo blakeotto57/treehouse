@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/nav_bar.dart';
 import 'package:treehouse/models/reviews_page.dart';
-import '../pages/chat_page.dart';
+import 'package:treehouse/pages/messages_page.dart';
 
 class OtherUsersProfilePage extends StatefulWidget {
   final String username;
@@ -115,8 +115,8 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (context) => ChatPage(
-                                            receiverEmail: userData['email'] ?? '',
+                                          builder: (context) => MessagesPage(
+                                            
                                           ),
                                         ),
                                       );

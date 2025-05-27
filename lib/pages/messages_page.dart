@@ -20,6 +20,25 @@ class _MessagesPageState extends State<MessagesPage> {
   String? selectedUserName;
   String? selectedUserProfileUrl;
 
+  ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onChatSelected(String userEmail) {
+    setState(() {
+      selectedUserEmail = userEmail;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.minScrollExtent);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -38,10 +57,10 @@ class _MessagesPageState extends State<MessagesPage> {
             width: 320,
             color: Colors.white,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const Padding(
-                  padding: EdgeInsets.all(24),
+                  padding: EdgeInsets.all(10),
                   child: Text(
                     "Messages",
                     style: TextStyle(
@@ -50,6 +69,13 @@ class _MessagesPageState extends State<MessagesPage> {
                       color: Color(0xFF222222),
                     ),
                   ),
+                ),
+                Divider(
+                  color: Colors.grey[300],
+                  height: 1,
+                  thickness: 1,
+                  indent: 16,
+                  endIndent: 16,
                 ),
                 Expanded(
                   child: StreamBuilder<List<Map<String, dynamic>>>(
@@ -91,8 +117,8 @@ class _MessagesPageState extends State<MessagesPage> {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(0),
                               onTap: () {
+                                _onChatSelected(email);
                                 setState(() {
-                                  selectedUserEmail = email;
                                   selectedUserName = username;
                                   selectedUserProfileUrl = profileUrl;
                                 });
@@ -119,7 +145,7 @@ class _MessagesPageState extends State<MessagesPage> {
                                             username,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 18,
+                                              fontSize: 16,
                                               color: Colors.black,
                                             ),
                                             maxLines: 1,
@@ -127,10 +153,10 @@ class _MessagesPageState extends State<MessagesPage> {
                                           ),
                                           const SizedBox(height: 2),
                                           Text(
-                                            "$lastSender: $lastMessage",
+                                            "$lastSender: $lastMessageText",
                                             style: TextStyle(
                                               color: Colors.grey[600],
-                                              fontSize: 15,
+                                              fontSize: 12,
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -197,71 +223,31 @@ class _MessagesPageState extends State<MessagesPage> {
                     color: Colors.green[50],
                     child: Column(
                       children: [
-                        // User info header
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: const BorderRadius.only(
-                              topLeft: Radius.circular(16),
-                              topRight: Radius.circular(16),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.03),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                radius: 28,
-                                backgroundImage: selectedUserProfileUrl != null
-                                    ? NetworkImage(selectedUserProfileUrl!)
-                                    : null,
-                                backgroundColor: Colors.green[200],
-                                child: selectedUserProfileUrl == null
-                                    ? const Icon(Icons.person, size: 32, color: Colors.white)
-                                    : null,
-                              ),
-                              const SizedBox(width: 16),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    selectedUserName ?? selectedUserEmail!,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: Color(0xFF386A53),
-                                    ),
-                                  ),
-                                  Text(
-                                    "@${selectedUserEmail!.split('@').first}",
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
+                        
                         // Chat messages
                         Expanded(
-                          child: _ChatMessagesWidget(
-                            receiverEmail: selectedUserEmail!,
-                            themeColor: const Color(0xFF386A53),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: _ChatMessagesWidget(
+                                  receiverEmail: selectedUserEmail!,
+                                  themeColor: const Color(0xFF386A53),
+                                  scrollController: _scrollController,
+                                ),
+                              ),
+                              Divider(
+                                color: Colors.grey[300],
+                                thickness: 1,
+                                height: 1,
+                              ),
+                              // Message input
+                              _ChatInputWidget(
+                                onSend: (text) {},
+                                receiverEmail: selectedUserEmail!,
+                                currentUserEmail: _authService.currentUser?.email ?? '',
+                              ),
+                            ],
                           ),
-                        ),
-                        // Message input
-                        _ChatInputWidget(
-                          onSend: (text) {},
-                          receiverEmail: selectedUserEmail!,
-                          currentUserEmail: _authService.currentUser?.email ?? '',
                         ),
                       ],
                     ),
@@ -273,14 +259,52 @@ class _MessagesPageState extends State<MessagesPage> {
   }
 }
 
+class _DateSeparator extends StatelessWidget {
+  final DateTime date;
+
+  const _DateSeparator({required this.date, Key? key}) : super(key: key);
+
+  String _formatDate(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDay = DateTime(date.year, date.month, date.day);
+
+    if (messageDay == today) return "Today";
+    if (messageDay == today.subtract(const Duration(days: 1))) return "Yesterday";
+
+    return "${date.month}/${date.day}/${date.year}"; // Simple fallback
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          _formatDate(date),
+          style: const TextStyle(color: Colors.black87, fontSize: 13),
+        ),
+      ),
+    );
+  }
+}
+
+
 // Chat messages widget (moved from ChatPage)
 class _ChatMessagesWidget extends StatelessWidget {
   final String receiverEmail;
   final Color themeColor;
+  final ScrollController scrollController;
 
   const _ChatMessagesWidget({
     required this.receiverEmail,
     required this.themeColor,
+    required this.scrollController,
     Key? key,
   }) : super(key: key);
 
@@ -300,90 +324,24 @@ class _ChatMessagesWidget extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         final messages = snapshot.data!.docs;
-        return ListView.builder(
-          padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
-          itemCount: messages.length,
-          itemBuilder: (context, index) {
-            final msg = messages[index].data() as Map<String, dynamic>;
-            final isMe = msg['sender'] == currentUserEmail;
-            final timestamp = (msg['timestamp'] as Timestamp?)?.toDate();
-            String? dateLabel;
-
-            // Show date/time if it's the first message or the date is different from the previous message
-            if (timestamp != null) {
-              final prevTimestamp = index > 0
-                  ? (messages[index - 1].data() as Map<String, dynamic>)['timestamp'] as Timestamp?
-                  : null;
-              final prevDate = prevTimestamp?.toDate();
-              if (index == 0 ||
-                  prevDate == null ||
-                  prevDate.day != timestamp.day ||
-                  prevDate.month != timestamp.month ||
-                  prevDate.year != timestamp.year) {
-                dateLabel = "${timestamp.month}/${timestamp.day}/${timestamp.year}  "
-                    "${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}";
-              }
-            }
-
-            return Column(
-              children: [
-                if (dateLabel != null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Center(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.grey[200],
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          dateLabel,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                Align(
-                  alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.4,
-                    ),
-                    margin: EdgeInsets.only(
-                      top: 6,
-                      bottom: 6,
-                      left: isMe ? 60 : 0,
-                      right: isMe ? 0 : 60,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isMe ? themeColor : Colors.white,
-                      borderRadius: BorderRadius.circular(18),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      msg['text'] ?? '',
-                      style: TextStyle(
-                        color: isMe ? Colors.white : themeColor,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
+        return Expanded(
+          child: ListView.builder(
+            controller: scrollController,
+            reverse: true, // This makes the list start from the bottom
+            itemCount: messages.length,
+            itemBuilder: (context, index) {
+              // If your messages are oldest-to-newest, reverse the index:
+              final message = messages[messages.length - 1 - index];
+              return _MessageBubble(message: message);
+            },
+          ),
         );
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (scrollController.hasClients) {
+            scrollController.jumpTo(scrollController.position.maxScrollExtent);
+          }
+        });
       },
     );
   }
@@ -523,6 +481,56 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
             splashRadius: 22,
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Message bubble widget
+class _MessageBubble extends StatelessWidget {
+  final QueryDocumentSnapshot message;
+
+  const _MessageBubble({required this.message, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUserEmail = AuthService().currentUser?.email;
+    final data = message.data() as Map<String, dynamic>;
+    final isMe = data['sender'] == currentUserEmail;
+    final text = data['text'] ?? '';
+    final timestamp = data['timestamp'] is Timestamp
+        ? (data['timestamp'] as Timestamp).toDate()
+        : null;
+
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isMe ? const Color(0xFF386A53) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment:
+              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            Text(
+              text,
+              style: TextStyle(
+                color: isMe ? Colors.white : Colors.black87,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
