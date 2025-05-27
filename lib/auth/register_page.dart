@@ -146,7 +146,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF4D8061),
+      backgroundColor: const Color(0xFF386A53),
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
@@ -161,18 +161,15 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.park, size: 48, color: Color(0xFF4D8061)),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Welcome to treehouse',
+                     Text(
+                      "Welcome to Treehouse",
                       style: TextStyle(
+                        fontSize: 24, // Match register page
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF4D8061),
-                        letterSpacing: 1,
-                        fontSize: 22,
+                        color: const Color(0xFF386A53),
                       ),
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
 
                     Stack(
                       children: [
@@ -204,7 +201,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 18,
-                                            color: Color(0xFF4D8061)),
+                                            color: const Color(0xFF386A53)),
                                         textAlign: TextAlign.center,
                                       ),
                                       SizedBox(height: 10),
@@ -282,7 +279,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         const Text(
                           "Already have an account?",
                           style: TextStyle(
-                            color: Color(0xFF4D8061),
+                            color: const Color(0xFF386A53),
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),

@@ -44,8 +44,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/icons/
+    - assets/treehouse_logo_final.png
     - assets/fonts/    # Added fonts directory
+    - assets/icons/
 
   fonts:
     - family: Expressway

@@ -71,7 +71,6 @@ class _LoginPageState extends State<LoginPage> {
         password: passwordTextController.text,
       );
 
-      
       // Force a reload and get the latest user object
       await userCredential.user?.reload();
       final freshUser = FirebaseAuth.instance.currentUser;
@@ -86,8 +85,6 @@ class _LoginPageState extends State<LoginPage> {
           MaterialPageRoute(builder: (context) => ExplorePage()),
         );
       } else {
-
-
         /*
 
         uncomment after testing is done
@@ -125,7 +122,8 @@ class _LoginPageState extends State<LoginPage> {
   void registerUser() async {
     try {
       // After creating the user
-      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailTextController.text,
         password: passwordTextController.text,
       );
@@ -135,13 +133,15 @@ class _LoginPageState extends State<LoginPage> {
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         setState(() {
-          errorMessage = "An error occurred during registration. Please try again.";
+          errorMessage =
+              "An error occurred during registration. Please try again.";
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() {
-          errorMessage = "An error occurred during registration. Please try again.";
+          errorMessage =
+              "An error occurred during registration. Please try again.";
         });
       }
     }
@@ -150,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF4D8061),
+      backgroundColor: const Color(0xFF386A53),
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
@@ -168,20 +168,13 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.park, size: 48, color: Color(0xFF4D8061)), // Match register page
-                    const SizedBox(height: 12), // Match register page
-
-                    const Text(
-                      'Welcome to treehouse',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF4D8061),
-                        letterSpacing: 1,
-                        fontSize: 22, // Match register page
-                      ),
+                    Image.asset(
+                      'assets/treehouse_logo_final.png',
+                      width: 200,
+                      height: 200,
                     ),
-                    const SizedBox(height: 18), // Match register page
 
+        
                     if (errorMessage != null) // <-- Show error message
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
@@ -229,20 +222,23 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(width: 4),
                         GestureDetector(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => RegisterPage(onTap: () {  },)),
-          );
-        },
-        child: const Text(
-          "Register now",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Colors.blue,
-            fontSize: 14, // Match register page
-          ),
-        ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => RegisterPage(
+                                        onTap: () {},
+                                      )),
+                            );
+                          },
+                          child: const Text(
+                            "Register now",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue,
+                              fontSize: 14, // Match register page
+                            ),
+                          ),
                         ),
                       ],
                     ),
