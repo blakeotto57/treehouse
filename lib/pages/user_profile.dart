@@ -19,6 +19,18 @@ import 'dart:io' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
 
+const List<String> categoriesList = [
+  'Personal Care',
+  'Food',
+  'Photography',
+  'Academics',
+  'Technical',
+  'Errands & Moving',
+  'Pet Care',
+  'Cleaning',
+  
+];
+
 class UserProfilePage extends StatefulWidget {
   final List<CategoryModel> categories = CategoryModel.getCategories();
 
@@ -28,7 +40,6 @@ class UserProfilePage extends StatefulWidget {
   State<UserProfilePage> createState() => _UserProfilePageState();
 }
 
-// Add this ListingTile widget below your _UserProfilePageState class or in a separate file and import it.
 class ListingTile extends StatelessWidget {
   final Map<String, dynamic> listing;
   final VoidCallback onEdit;
@@ -41,12 +52,71 @@ class ListingTile extends StatelessWidget {
     required this.onDelete,
   }) : super(key: key);
 
+  void _showEnlargedImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.black54,
+        insetPadding: const EdgeInsets.all(20),
+        child: GestureDetector(
+          onTap: () => Navigator.pop(context),
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            color: Colors.transparent,
+            child: Center(
+              child: GestureDetector(
+                onTap: () {}, // Prevent dismissal when tapping on image
+                child: Hero(
+                  tag: 'image_${listing['name']}_${imageUrl.hashCode}',
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.9,
+                      maxHeight: MediaQuery.of(context).size.height * 0.8,
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            width: 200,
+                            height: 200,
+                            color: Colors.grey[300],
+                            child: const Center(
+                              child: CircularProgressIndicator(color: Colors.white),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            width: 200,
+                            height: 200,
+                            color: Colors.grey[300],
+                            child: const Icon(Icons.error, color: Colors.white, size: 48),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final imageUrl = listing['imageUrl'] as String?;
     final name = listing['name'] ?? 'No Name';
     final description = listing['description'] ?? '';
     final price = listing['price'] != null ? '\$${listing['price']}' : '';
+    final category = listing['category'] ?? 'Uncategorized';
 
     return Card(
       elevation: 2,
@@ -55,26 +125,52 @@ class ListingTile extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: imageUrl != null && imageUrl.isNotEmpty
-                  ? Image.network(
-                      imageUrl,
-                      width: 120,   // Increased width
-                      height: 120,  // Increased height
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: 120,
-                      height: 120,
-                      color: Colors.grey[200],
-                      child: const Icon(Icons.image, size: 56, color: Colors.grey),
-                    ),
+            Expanded(
+              child: GestureDetector(
+                onTap: imageUrl != null && imageUrl.isNotEmpty
+                    ? () => _showEnlargedImage(context, imageUrl)
+                    : null,
+                child: Hero(
+                  tag: 'image_${name}_${imageUrl?.hashCode ?? 0}',
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: imageUrl != null && imageUrl.isNotEmpty
+                        ? Image.network(
+                            imageUrl,
+                            width: double.infinity,
+                            height: double.infinity,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                width: double.infinity,
+                                height: double.infinity,
+                                color: Colors.grey[200],
+                                child: const Center(child: CircularProgressIndicator()),
+                              );
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: double.infinity,
+                                height: double.infinity,
+                                color: Colors.grey[200],
+                                child: const Icon(Icons.broken_image, size: 56, color: Colors.grey),
+                              );
+                            },
+                          )
+                        : Container(
+                            width: double.infinity,
+                            height: double.infinity,
+                            color: Colors.grey[200],
+                            child: const Icon(Icons.image, size: 56, color: Colors.grey),
+                          ),
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 4),
             Text(
               name,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
@@ -82,28 +178,42 @@ class ListingTile extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
             ),
-            if (price.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  price,
-                  style: const TextStyle(fontSize: 13, color: Colors.green),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blueGrey[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                category,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 4),
+            if (price.isNotEmpty)
+              Text(
+                price,
+                style: const TextStyle(fontSize: 13, color: Colors.green),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             if (description.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  description,
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                ),
+              Text(
+                description,
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
-            const Spacer(),
+            const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -114,7 +224,6 @@ class ListingTile extends StatelessWidget {
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                 ),
-                const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.delete, color: Colors.red, size: 18),
                   onPressed: onDelete,
@@ -155,8 +264,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
       });
     } else {
       final data = userDoc.data() as Map<String, dynamic>;
-      if (data['username'] == null || data['username'].toString().trim().isEmpty) {
-        await usersCollection.doc(currentUser.email).update({'username': defaultUsername});
+      if (data['username'] == null ||
+          data['username'].toString().trim().isEmpty) {
+        await usersCollection
+            .doc(currentUser.email)
+            .update({'username': defaultUsername});
       }
     }
   }
@@ -212,21 +324,29 @@ class _UserProfilePageState extends State<UserProfilePage> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
               children: [
-                Icon(Icons.person, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                Icon(Icons.person,
+                    color: isDarkMode
+                        ? Colors.orange[200]
+                        : const Color(0xFF386A53)),
                 const SizedBox(width: 10),
                 Text(
                   "Your Profile",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                    color: isDarkMode
+                        ? Colors.orange[200]
+                        : const Color(0xFF386A53),
                     letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Divider(
-                    color: (isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)).withOpacity(0.3),
+                    color: (isDarkMode
+                            ? Colors.orange[200]!
+                            : const Color(0xFF386A53))
+                        .withOpacity(0.3),
                     thickness: 1,
                   ),
                 ),
@@ -247,24 +367,32 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 }
 
                 if (userSnapshot.hasData && userSnapshot.data != null) {
-                  final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
-                  profileImageUrl =
-                      (userData?['profileImageUrl']?.toString().trim().isEmpty ?? true)
-                          ? null
-                          : userData?['profileImageUrl'];
+                  final userData =
+                      userSnapshot.data!.data() as Map<String, dynamic>?;
+                  profileImageUrl = (userData?['profileImageUrl']
+                              ?.toString()
+                              .trim()
+                              .isEmpty ??
+                          true)
+                      ? null
+                      : userData?['profileImageUrl'];
 
                   final username =
                       (userData?['username']?.toString().trim().isEmpty ?? true)
                           ? null
                           : userData?['username'];
 
-                  final bio = (userData?['bio']?.toString().trim().isEmpty ?? true)
-                      ? null
-                      : userData?['bio'];
+                  final bio =
+                      (userData?['bio']?.toString().trim().isEmpty ?? true)
+                          ? null
+                          : userData?['bio'];
 
                   final currentUserAuth = FirebaseAuth.instance.currentUser;
-                  final computedUsername = (userData?['username'] == null || userData!['username'].toString().trim().isEmpty)
-                      ? (currentUserAuth?.email != null ? currentUserAuth!.email!.split('@')[0] : '')
+                  final computedUsername = (userData?['username'] == null ||
+                          userData!['username'].toString().trim().isEmpty)
+                      ? (currentUserAuth?.email != null
+                          ? currentUserAuth!.email!.split('@')[0]
+                          : '')
                       : userData?['username'];
 
                   return SingleChildScrollView(
@@ -280,12 +408,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               Center(
                                 child: IntrinsicWidth(
                                   child: Card(
-                                    color: isDarkMode ? Colors.grey[850] : Colors.white,
+                                    color: isDarkMode
+                                        ? Colors.grey[850]
+                                        : Colors.white,
                                     elevation: 4,
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                                    margin: const EdgeInsets.only(top: 16, bottom: 20), // Reduced margin
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(20)),
+                                    margin: const EdgeInsets.only(
+                                        top: 16, bottom: 20), // Reduced margin
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 8), // Reduced horizontal padding
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 18,
+                                          horizontal:
+                                              8), // Reduced horizontal padding
                                       child: Column(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
@@ -295,13 +431,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                               GestureDetector(
                                                 onTap: pickAndUploadImage,
                                                 child: CircleAvatar(
-                                                  radius: 48, // Slightly smaller avatar
-                                                  backgroundColor: Colors.green[800],
-                                                  backgroundImage: profileImageUrl != null
-                                                      ? NetworkImage(profileImageUrl!)
-                                                      : null,
+                                                  radius:
+                                                      48, // Slightly smaller avatar
+                                                  backgroundColor:
+                                                      Colors.green[800],
+                                                  backgroundImage:
+                                                      profileImageUrl != null
+                                                          ? NetworkImage(
+                                                              profileImageUrl!)
+                                                          : null,
                                                   child: profileImageUrl == null
-                                                      ? const Icon(Icons.person, size: 48, color: Colors.white)
+                                                      ? const Icon(Icons.person,
+                                                          size: 48,
+                                                          color: Colors.white)
                                                       : null,
                                                 ),
                                               ),
@@ -310,27 +452,36 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                 right: 2,
                                                 child: Container(
                                                   decoration: BoxDecoration(
-                                                    color: isDarkMode ? Colors.grey[700] : Colors.white,
+                                                    color: isDarkMode
+                                                        ? Colors.grey[700]
+                                                        : Colors.white,
                                                     shape: BoxShape.circle,
                                                     boxShadow: [
                                                       BoxShadow(
-                                                        color: Colors.black.withOpacity(0.1),
+                                                        color: Colors.black
+                                                            .withOpacity(0.1),
                                                         blurRadius: 2,
                                                       ),
                                                     ],
                                                   ),
-                                                  child: Icon(Icons.edit, size: 16, color: Colors.green[800]),
+                                                  child: Icon(Icons.edit,
+                                                      size: 16,
+                                                      color: Colors.green[800]),
                                                 ),
                                               ),
                                             ],
                                           ),
-                                          const SizedBox(height: 10), // Reduced spacing
+                                          const SizedBox(
+                                              height: 10), // Reduced spacing
                                           Text(
                                             computedUsername ?? '',
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 18, // Slightly smaller font
-                                              color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                                              fontSize:
+                                                  18, // Slightly smaller font
+                                              color: isDarkMode
+                                                  ? Colors.orange[200]
+                                                  : const Color(0xFF386A53),
                                             ),
                                           ),
                                           const SizedBox(height: 2),
@@ -338,13 +489,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                             currentUser.email!,
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                                              color: isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : Colors.grey[700],
                                             ),
                                           ),
                                           const SizedBox(height: 10),
                                           if (bio != null && bio.isNotEmpty)
                                             Container(
-                                              width: 400, // Set your desired fixed width
+                                              constraints: const BoxConstraints(maxWidth: 300), // Limit the width
                                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                               decoration: BoxDecoration(
                                                 color: isDarkMode ? Colors.grey[900] : Colors.green[50],
@@ -357,8 +510,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                   color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
                                                 ),
                                                 textAlign: TextAlign.left,
-                                                softWrap: true,
-                                                overflow: TextOverflow.visible,
+                                                softWrap: true, // Ensure text wraps
+                                                overflow: TextOverflow.visible, // Prevent clipping
                                               ),
                                             ),
                                           if (bio == null || bio.isEmpty)
@@ -371,40 +524,93 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                             ),
                                           const SizedBox(height: 10),
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
                                             children: [
                                               OutlinedButton.icon(
-                                                onPressed: () => editField("username"),
-                                                icon: Icon(Icons.edit, size: 16, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
-                                                label: Text("Edit Username", style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
+                                                onPressed: () =>
+                                                    editField("username"),
+                                                icon: Icon(Icons.edit,
+                                                    size: 16,
+                                                    color: isDarkMode
+                                                        ? Colors.orange[200]
+                                                        : const Color(
+                                                            0xFF386A53)),
+                                                label: Text("Edit Username",
+                                                    style: TextStyle(
+                                                        fontSize: 13,
+                                                        color: isDarkMode
+                                                            ? Colors.orange[200]
+                                                            : const Color(
+                                                                0xFF386A53))),
                                                 style: OutlinedButton.styleFrom(
-                                                  side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
-                                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                  side: BorderSide(
+                                                      color: isDarkMode
+                                                          ? Colors.orange[200]!
+                                                          : const Color(
+                                                              0xFF386A53)),
+                                                  shape: RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              8)),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 6),
                                                 ),
                                               ),
                                               const SizedBox(width: 8),
                                               OutlinedButton.icon(
-                                                onPressed: () => editField("bio"),
-                                                icon: Icon(Icons.info_outline, size: 16, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
-                                                label: Text("Edit Bio", style: TextStyle(fontSize: 13, color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53))),
+                                                onPressed: () =>
+                                                    editField("bio"),
+                                                icon: Icon(Icons.info_outline,
+                                                    size: 16,
+                                                    color: isDarkMode
+                                                        ? Colors.orange[200]
+                                                        : const Color(
+                                                            0xFF386A53)),
+                                                label: Text("Edit Bio",
+                                                    style: TextStyle(
+                                                        fontSize: 13,
+                                                        color: isDarkMode
+                                                            ? Colors.orange[200]
+                                                            : const Color(
+                                                                0xFF386A53))),
                                                 style: OutlinedButton.styleFrom(
-                                                  side: BorderSide(color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53)),
-                                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                  side: BorderSide(
+                                                      color: isDarkMode
+                                                          ? Colors.orange[200]!
+                                                          : const Color(
+                                                              0xFF386A53)),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 6),
                                                 ),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 14),
                                           ElevatedButton.icon(
-                                            icon: const Icon(Icons.add_business, size: 18),
-                                            label: const Text("Add Product/Service", style: TextStyle(fontSize: 14)),
+                                            icon: const Icon(Icons.add_business,
+                                                size: 18),
+                                            label: const Text(
+                                                "Add Product/Service",
+                                                style: TextStyle(fontSize: 14)),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
-                                              foregroundColor: isDarkMode ? Colors.black : Colors.white,
-                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                              backgroundColor: isDarkMode
+                                                  ? Colors.orange[200]
+                                                  : const Color(0xFF386A53),
+                                              foregroundColor: isDarkMode
+                                                  ? Colors.black
+                                                  : Colors.white,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 14,
+                                                      vertical: 8),
                                             ),
-                                            onPressed: () => _showAddProductDialog(context),
+                                            onPressed: () =>
+                                                _showAddProductDialog(context),
                                           ),
                                         ],
                                       ),
@@ -422,67 +628,119 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                     flex: 2,
                                     child: Card(
                                       elevation: 3,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(24)),
                                       child: Padding(
-                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 24),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12, vertical: 24),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            const Text("My Listings", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                            const Text("My Listings",
+                                                style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
                                             StreamBuilder<QuerySnapshot>(
-                                              stream: usersCollection.doc(currentUser.email).collection('products').snapshots(),
+                                              stream: usersCollection
+                                                  .doc(currentUser.email)
+                                                  .collection('products')
+                                                  .snapshots(),
                                               builder: (context, snapshot) {
-                                                if (snapshot.connectionState == ConnectionState.waiting) {
-                                                  return const Center(child: CircularProgressIndicator());
+                                                if (snapshot.connectionState ==
+                                                    ConnectionState.waiting) {
+                                                  return const Center(
+                                                      child:
+                                                          CircularProgressIndicator());
                                                 }
-                                                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                                                  return const Text("No listings found.");
+                                                if (!snapshot.hasData ||
+                                                    snapshot
+                                                        .data!.docs.isEmpty) {
+                                                  return const Text(
+                                                      "No listings found.");
                                                 }
-                                                final listings = snapshot.data!.docs.map((doc) {
-                                                  final data = doc.data() as Map<String, dynamic>;
+                                                final listings = snapshot
+                                                    .data!.docs
+                                                    .map((doc) {
+                                                  final data = doc.data()
+                                                      as Map<String, dynamic>;
                                                   return ListingTile(
                                                     listing: data,
-                                                    onEdit: () => _showEditProductDialog(context, doc),
+                                                    onEdit: () =>
+                                                        _showEditProductDialog(
+                                                            context, doc),
                                                     onDelete: () async {
-                                                      final confirm = await showDialog<bool>(
+                                                      final confirm =
+                                                          await showDialog<
+                                                              bool>(
                                                         context: context,
-                                                        builder: (context) => AlertDialog(
-                                                          title: const Text('Delete Listing'),
-                                                          content: const Text('Are you sure you want to delete this listing?'),
+                                                        builder: (context) =>
+                                                            AlertDialog(
+                                                          title: const Text(
+                                                              'Delete Listing'),
+                                                          content: const Text(
+                                                              'Are you sure you want to delete this listing?'),
                                                           actions: [
                                                             TextButton(
-                                                              onPressed: () => Navigator.pop(context, false),
-                                                              child: const Text('Cancel'),
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                      context,
+                                                                      false),
+                                                              child: const Text(
+                                                                  'Cancel'),
                                                             ),
                                                             TextButton(
-                                                              onPressed: () => Navigator.pop(context, true),
-                                                              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                                              onPressed: () =>
+                                                                  Navigator.pop(
+                                                                      context,
+                                                                      true),
+                                                              child: const Text(
+                                                                  'Delete',
+                                                                  style: TextStyle(
+                                                                      color: Colors
+                                                                          .red)),
                                                             ),
                                                           ],
                                                         ),
                                                       );
                                                       if (confirm == true) {
-                                                        if (data['imageUrl'] != null && (data['imageUrl'] as String).isNotEmpty) {
+                                                        if (data['imageUrl'] !=
+                                                                null &&
+                                                            (data['imageUrl']
+                                                                    as String)
+                                                                .isNotEmpty) {
                                                           try {
-                                                            await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
+                                                            await FirebaseStorage
+                                                                .instance
+                                                                .refFromURL(data[
+                                                                    'imageUrl'])
+                                                                .delete();
                                                           } catch (_) {}
                                                         }
-                                                        await doc.reference.delete();
+                                                        await doc.reference
+                                                            .delete();
                                                       }
                                                     },
                                                   );
                                                 }).toList();
                                                 return GridView.builder(
                                                   shrinkWrap: true,
-                                                  physics: const NeverScrollableScrollPhysics(),
+                                                  physics:
+                                                      const NeverScrollableScrollPhysics(),
                                                   itemCount: listings.length,
-                                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                                    crossAxisCount: 3,
+                                                  gridDelegate:
+                                                      const SliverGridDelegateWithMaxCrossAxisExtent(
+                                                    maxCrossAxisExtent: 250,
                                                     mainAxisSpacing: 12,
                                                     crossAxisSpacing: 12,
-                                                    childAspectRatio: 0.85, // Adjust for card shape
+                                                    childAspectRatio:
+                                                        0.7, // Make tiles taller
                                                   ),
-                                                  itemBuilder: (context, index) => listings[index],
+                                                  itemBuilder:
+                                                      (context, index) =>
+                                                          listings[index],
                                                 );
                                               },
                                             ),
@@ -496,24 +754,39 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                     flex: 2,
                                     child: Card(
                                       elevation: 4,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                                      shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(24)),
                                       child: Padding(
                                         padding: const EdgeInsets.all(24),
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            const Text("Ratings & Reviews", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                                            const Text("Ratings & Reviews",
+                                                style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
                                             const SizedBox(height: 16),
                                             // TODO: Replace with actual reviews
                                             Column(
                                               children: const [
                                                 ListTile(
-                                                  title: Text("Maria L.", style: TextStyle(fontWeight: FontWeight.bold)),
-                                                  subtitle: Text("Great tutoring session, super helpful! ⭐⭐⭐⭐⭐"),
+                                                  title: Text("Maria L.",
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold)),
+                                                  subtitle: Text(
+                                                      "Great tutoring session, super helpful! ⭐⭐⭐⭐⭐"),
                                                 ),
                                                 ListTile(
-                                                  title: Text("Josh K.", style: TextStyle(fontWeight: FontWeight.bold)),
-                                                  subtitle: Text("Quick turnaround and great UI suggestions. ⭐⭐⭐⭐☆"),
+                                                  title: Text("Josh K.",
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold)),
+                                                  subtitle: Text(
+                                                      "Quick turnaround and great UI suggestions. ⭐⭐⭐⭐☆"),
                                                 ),
                                               ],
                                             ),
@@ -551,7 +824,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
       final userData = userDoc.data() as Map<String, dynamic>;
       if (field == 'username') {
         // Use stored username or fallback to email prefix
-        currentValue = (userData['username'] == null || userData['username'].toString().trim().isEmpty)
+        currentValue = (userData['username'] == null ||
+                userData['username'].toString().trim().isEmpty)
             ? currentUser.email!.split('@')[0]
             : userData['username'];
       } else {
@@ -562,24 +836,39 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final TextEditingController controller =
         TextEditingController(text: currentValue);
 
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     await showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.white, // Match description background
+        backgroundColor: isDarkMode ? Colors.grey[900] : const Color(0xFFF5FBF7),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        insetPadding: const EdgeInsets.symmetric(horizontal: 24), // width wrapped
+        elevation: 8,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
           child: IntrinsicWidth(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.edit, size: 40, color: const Color(0xFF386A53)),
-                const SizedBox(height: 12),
+                Icon(Icons.edit, size: 44, color: const Color(0xFF386A53)),
+                const SizedBox(height: 10),
                 Text(
                   'Edit ${field.substring(0, 1).toUpperCase() + field.substring(1)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22, color: Colors.black),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 22,
+                    color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                    letterSpacing: 0.2,
+                  ),
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Divider(
+                  color: isDarkMode
+                      ? Colors.orange[200]!.withOpacity(0.2)
+                      : const Color(0xFF386A53).withOpacity(0.15),
+                  thickness: 1,
                 ),
                 const SizedBox(height: 18),
                 StatefulBuilder(
@@ -591,18 +880,42 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SizedBox(
-                            width: 400, // Set your desired fixed width
+                            width: 340,
                             child: TextField(
                               controller: controller,
                               maxLength: 200,
                               maxLines: null,
+                              cursorColor: const Color(0xFF386A53),
+                              style: TextStyle(
+                                color: isDarkMode ? Colors.orange[100] : Colors.black,
+                                fontSize: 15,
+                              ),
                               decoration: InputDecoration(
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: BorderSide(color: isFocused ? const Color(0xFF386A53) : Colors.grey),
+                                filled: true,
+                                fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                                border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                                    width: 1.5,
+                                  ),
                                 ),
-                                counterText: '', // Hide default counter
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: const Color(0xFF386A53),
+                                    width: 2,
+                                  ),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                counterText: '',
                               ),
                             ),
                           ),
@@ -612,7 +925,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             builder: (context, value, child) {
                               return Text(
                                 '${value.text.length}/200',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDarkMode ? Colors.orange[200] : Colors.grey[600],
+                                ),
                               );
                             },
                           ),
@@ -621,13 +937,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     );
                   },
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.normal)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                      ),
+                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.normal)),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
@@ -651,14 +971,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 .get();
 
                             // If another user already has this username (excluding current user)
-                            final isTaken = query.docs.any((doc) => doc.id != currentUser.email);
+                            final isTaken = query.docs
+                                .any((doc) => doc.id != currentUser.email);
 
                             if (isTaken) {
                               if (mounted) {
-                                Navigator.pop(context); // Close loading indicator
+                                Navigator.pop(
+                                    context); // Close loading indicator
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: const Text('That username is already taken.'),
+                                    content: const Text(
+                                        'That username is already taken.'),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
@@ -705,10 +1028,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF386A53),
                         foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 10),
                       ),
-                      child: const Text('Save', style: TextStyle(fontWeight: FontWeight.normal)),
+                      child: const Text('Save',
+                          style: TextStyle(fontWeight: FontWeight.normal)),
                     ),
                   ],
                 ),
@@ -717,7 +1043,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         ),
       ),
-    );
+      );
   }
 
   Future<void> _showAddProductDialog(BuildContext context) async {
@@ -727,166 +1053,372 @@ class _UserProfilePageState extends State<UserProfilePage> {
     XFile? pickedImage;
     final ImagePicker _picker = ImagePicker();
     bool isUploading = false;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    String? selectedCategory;
 
     await showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
+          builder: (context, setState) => Dialog(
+            backgroundColor: isDarkMode ? Colors.grey[900] : const Color(0xFFF5FBF7),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            title: Center(
-              child: Text(
-                'Add Product/Service',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
-              ),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-                      if (image != null) {
-                        setState(() {
-                          pickedImage = image;
-                        });
-                      }
-                    },
-                    child: Container(
-                      width: 140,
-                      height: 140,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[200],
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey[400]!),
+            elevation: 8,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              child: IntrinsicWidth(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add_business, size: 44, color: const Color(0xFF386A53)),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Add Product/Service',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 22,
+                        color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                        letterSpacing: 0.2,
                       ),
-                      child: pickedImage != null
-                          ? (kIsWeb
-                              ? FutureBuilder<Uint8List>(
-                                  future: pickedImage!.readAsBytes(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-                                      return ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: Image.memory(snapshot.data!, fit: BoxFit.cover, width: 140, height: 140),
-                                      );
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Divider(
+                      color: isDarkMode
+                          ? Colors.orange[200]!.withOpacity(0.2)
+                          : const Color(0xFF386A53).withOpacity(0.15),
+                      thickness: 1,
+                    ),
+                    const SizedBox(height: 18),
+                    GestureDetector(
+                      onTap: () async {
+                        final XFile? image =
+                            await _picker.pickImage(source: ImageSource.gallery);
+                        if (image != null) {
+                          setState(() {
+                            pickedImage = image;
+                          });
+                        }
+                      },
+                      child: Container(
+                        width: 140,
+                        height: 140,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[850] : Colors.grey[200],
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: isDarkMode ? Colors.orange[200]! : Colors.grey[400]!,
+                          ),
+                        ),
+                        child: pickedImage != null
+                            ? (kIsWeb
+                                ? FutureBuilder<Uint8List>(
+                                    future: pickedImage!.readAsBytes(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.done &&
+                                          snapshot.hasData) {
+                                        return ClipRRect(
+                                          borderRadius: BorderRadius.circular(16),
+                                          child: Image.memory(snapshot.data!,
+                                              fit: BoxFit.cover,
+                                              width: 140,
+                                              height: 140),
+                                        );
+                                      }
+                                      return const Center(child: CircularProgressIndicator());
+                                    },
+                                  )
+                                : ClipRRect(
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: Image.file(File(pickedImage!.path),
+                                        fit: BoxFit.cover,
+                                        width: 140,
+                                        height: 140),
+                                  ))
+                            : Icon(Icons.add_a_photo,
+                                size: 48,
+                                color: isDarkMode ? Colors.orange[200] : Colors.grey),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    TextField(
+                      controller: nameController,
+                      cursorColor: const Color(0xFF386A53),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.orange[100] : Colors.black,
+                        fontSize: 15,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Name',
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.orange[200] : Colors.grey[700],
+                        ),
+                        filled: true,
+                        fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            width: 1.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: const Color(0xFF386A53),
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(Icons.label,
+                            color: isDarkMode ? Colors.orange[200] : Color(0xFF386A53)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.orange[100] : Colors.black,
+                        fontSize: 15,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Category',
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.orange[200] : Colors.grey[700],
+                        ),
+                        filled: true,
+                        fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53),
+                            width: 1.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53),
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: const Color(0xFF386A53),
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(Icons.category,
+                            color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                      dropdownColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                      items: categoriesList.map((category) {
+                        return DropdownMenuItem<String>(
+                          value: category,
+                          child: Text(
+                            category,
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.orange[100] : Colors.black,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          selectedCategory = newValue;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: descController,
+                      cursorColor: const Color(0xFF386A53),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.orange[100] : Colors.black,
+                        fontSize: 15,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Description',
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.orange[200] : Colors.grey[700],
+                        ),
+                        filled: true,
+                        fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            width: 1.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: const Color(0xFF386A53),
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(Icons.description,
+                            color: isDarkMode ? Colors.orange[200] : Color(0xFF386A53)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: priceController,
+                      cursorColor: const Color(0xFF386A53),
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.orange[100] : Colors.black,
+                        fontSize: 15,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Price (USD)',
+                        labelStyle: TextStyle(
+                          color: isDarkMode ? Colors.orange[200] : Colors.grey[700],
+                        ),
+                        filled: true,
+                        fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            width: 1.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            width: 1.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(
+                            color: const Color(0xFF386A53),
+                            width: 2,
+                          ),
+                        ),
+                        prefixIcon: Icon(Icons.attach_money,
+                            color: isDarkMode ? Colors.orange[200] : Color(0xFF386A53)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                      ),
+                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: TextButton.styleFrom(
+                            foregroundColor: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                          ),
+                          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.normal)),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: isUploading
+                              ? null
+                              : () async {
+                                  final name = nameController.text.trim();
+                                  final desc = descController.text.trim();
+                                  final price =
+                                      double.tryParse(priceController.text.trim()) ?? 0.0;
+
+                                  if (name.isEmpty || price <= 0 || selectedCategory == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text('Please enter valid name, price, and select a category')),
+                                    );
+                                    return;
+                                  }
+
+                                  setState(() {
+                                    isUploading = true;
+                                  });
+
+                                  String? imageUrl;
+                                  if (pickedImage != null) {
+                                    final storageRef = FirebaseStorage.instance.ref().child(
+                                        'productImages/${currentUser.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
+                                    if (kIsWeb) {
+                                      final bytes = await pickedImage!.readAsBytes();
+                                      await storageRef.putData(bytes);
+                                    } else {
+                                      await storageRef.putFile(File(pickedImage!.path));
                                     }
-                                    return const Center(child: CircularProgressIndicator());
-                                  },
-                                )
-                              : ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: Image.file(File(pickedImage!.path), fit: BoxFit.cover, width: 140, height: 140),
-                                ))
-                          : const Icon(Icons.add_a_photo, size: 48, color: Colors.grey),
+                                    imageUrl = await storageRef.getDownloadURL();
+                                  }
+                                  // Save imageUrl to Firestore
+                                  await usersCollection
+                                      .doc(currentUser.email)
+                                      .collection('products')
+                                      .add({
+                                    'name': name,
+                                    'description': desc,
+                                    'price': price,
+                                    'category': selectedCategory,
+                                    'imageUrl': imageUrl,
+                                    'createdAt': FieldValue.serverTimestamp(),
+                                  });
+
+                                  Navigator.pop(context);
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF386A53),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                          ),
+                          child: isUploading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white))
+                              : const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 18),
-                  TextField(
-                    controller: nameController,
-                    decoration: InputDecoration(
-                      labelText: 'Name',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      prefixIcon: const Icon(Icons.label),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: descController,
-                    decoration: InputDecoration(
-                      labelText: 'Description',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      prefixIcon: const Icon(Icons.description),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: priceController,
-                    decoration: InputDecoration(
-                      labelText: 'Price (USD)',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      prefixIcon: const Icon(Icons.attach_money),
-                    ),
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-            actionsAlignment: MainAxisAlignment.spaceBetween,
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.normal)),
-              ),
-              ElevatedButton(
-                onPressed: isUploading
-                    ? null
-                    : () async {
-                        final name = nameController.text.trim();
-                        final desc = descController.text.trim();
-                        final price = double.tryParse(priceController.text.trim()) ?? 0.0;
-
-                        if (name.isEmpty || price <= 0) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter valid name and price')),
-                          );
-                          return;
-                        }
-
-                        setState(() {
-                          isUploading = true;
-                        });
-
-                        String? imageUrl;
-                        if (pickedImage != null) {
-                          final storageRef = FirebaseStorage.instance
-                              .ref()
-                              .child('productImages/${currentUser.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
-                          if (kIsWeb) {
-                            final bytes = await pickedImage!.readAsBytes();
-                            await storageRef.putData(bytes);
-                          } else {
-                            await storageRef.putFile(File(pickedImage!.path));
-                          }
-                          imageUrl = await storageRef.getDownloadURL();
-                        }
-                        // Save imageUrl to Firestore
-                        await usersCollection
-                            .doc(currentUser.email)
-                            .collection('products')
-                            .add({
-                          'name': name,
-                          'description': desc,
-                          'price': price,
-                          'imageUrl': imageUrl,
-                          'createdAt': FieldValue.serverTimestamp(),
-                        });
-
-                        Navigator.pop(context);
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-                ),
-                child: isUploading
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ],
           ),
         );
       },
     );
   }
 
-  Future<void> _showEditProductDialog(BuildContext context, QueryDocumentSnapshot doc) async {
+  Future<void> _showEditProductDialog(
+      BuildContext context, QueryDocumentSnapshot doc) async {
     final data = doc.data() as Map<String, dynamic>;
-    final TextEditingController nameController = TextEditingController(text: data['name'] ?? '');
-    final TextEditingController descController = TextEditingController(text: data['description'] ?? '');
-    final TextEditingController priceController = TextEditingController(text: data['price']?.toString() ?? '');
+    final TextEditingController nameController =
+        TextEditingController(text: data['name'] ?? '');
+    final TextEditingController descController =
+        TextEditingController(text: data['description'] ?? '');
+    final TextEditingController priceController =
+        TextEditingController(text: data['price']?.toString() ?? '');
     XFile? pickedImage;
     final ImagePicker _picker = ImagePicker();
     bool isUploading = false;
@@ -897,12 +1429,15 @@ class _UserProfilePageState extends State<UserProfilePage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-            backgroundColor: const Color(0xFFF5F5F5), // Match description background
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor:
+                const Color(0xFFF5F5F5), // Match description background
             title: Center(
               child: Text(
                 'Edit Product/Service',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
               ),
             ),
             content: SingleChildScrollView(
@@ -911,7 +1446,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 children: [
                   GestureDetector(
                     onTap: () async {
-                      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+                      final XFile? image =
+                          await _picker.pickImage(source: ImageSource.gallery);
                       if (image != null) {
                         setState(() {
                           pickedImage = image;
@@ -931,33 +1467,49 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               ? FutureBuilder<Uint8List>(
                                   future: pickedImage!.readAsBytes(),
                                   builder: (context, snapshot) {
-                                    if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                                    if (snapshot.connectionState ==
+                                            ConnectionState.done &&
+                                        snapshot.hasData) {
                                       return ClipRRect(
                                         borderRadius: BorderRadius.circular(16),
-                                        child: Image.memory(snapshot.data!, fit: BoxFit.cover, width: 140, height: 140),
+                                        child: Image.memory(snapshot.data!,
+                                            fit: BoxFit.cover,
+                                            width: 140,
+                                            height: 140),
                                       );
                                     }
-                                    return const Center(child: CircularProgressIndicator());
+                                    return const Center(
+                                        child: CircularProgressIndicator());
                                   },
                                 )
                               : ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
-                                  child: Image.file(File(pickedImage!.path), fit: BoxFit.cover, width: 140, height: 140),
+                                  child: Image.file(File(pickedImage!.path),
+                                      fit: BoxFit.cover,
+                                      width: 140,
+                                      height: 140),
                                 ))
                           : (imageUrl != null && imageUrl!.isNotEmpty
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(16),
-                                  child: Image.network(imageUrl!, fit: BoxFit.cover, width: 140, height: 140),
+                                  child: Image.network(imageUrl!,
+                                      fit: BoxFit.cover,
+                                      width: 140,
+                                      height: 140),
                                 )
-                              : const Icon(Icons.add_a_photo, size: 48, color: Colors.grey)),
+                              : const Icon(Icons.add_a_photo,
+                                  size: 48, color: Colors.grey)),
                     ),
                   ),
-                  if (imageUrl != null && imageUrl!.isNotEmpty && pickedImage == null)
+                  if (imageUrl != null &&
+                      imageUrl!.isNotEmpty &&
+                      pickedImage == null)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: TextButton.icon(
                         icon: const Icon(Icons.delete, color: Colors.red),
-                        label: const Text('Remove Image', style: TextStyle(color: Colors.red)),
+                        label: const Text('Remove Image',
+                            style: TextStyle(color: Colors.red)),
                         onPressed: () {
                           setState(() {
                             imageUrl = null;
@@ -965,37 +1517,45 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         },
                         style: TextButton.styleFrom(
                           foregroundColor: Colors.red,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
                         ),
                       ),
                     ),
                   const SizedBox(height: 18),
                   TextField(
                     controller: nameController,
+                    cursorColor: const Color(0xFF386A53),
                     decoration: InputDecoration(
                       labelText: 'Name',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                       prefixIcon: const Icon(Icons.label),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: descController,
+                    cursorColor: const Color(0xFF386A53),
                     decoration: InputDecoration(
                       labelText: 'Description',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                       prefixIcon: const Icon(Icons.description),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: priceController,
+                    cursorColor: const Color(0xFF386A53),
                     decoration: InputDecoration(
                       labelText: 'Price (USD)',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10)),
                       prefixIcon: const Icon(Icons.attach_money),
                     ),
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType:
+                        TextInputType.numberWithOptions(decimal: true),
                   ),
                 ],
               ),
@@ -1004,7 +1564,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                child: const Text('Cancel',
+                    style: TextStyle(
+                        color: Colors.red, fontWeight: FontWeight.bold)),
               ),
               ElevatedButton(
                 onPressed: isUploading
@@ -1012,11 +1574,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     : () async {
                         final name = nameController.text.trim();
                         final desc = descController.text.trim();
-                        final price = double.tryParse(priceController.text.trim()) ?? 0.0;
+                        final price =
+                            double.tryParse(priceController.text.trim()) ?? 0.0;
 
                         if (name.isEmpty || price <= 0) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Please enter valid name and price')),
+                            const SnackBar(
+                                content:
+                                    Text('Please enter valid name and price')),
                           );
                           return;
                         }
@@ -1029,9 +1594,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
                         // If user picked a new image, upload it
                         if (pickedImage != null) {
-                          final storageRef = FirebaseStorage.instance
-                              .ref()
-                              .child('productImages/${currentUser.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
+                          final storageRef = FirebaseStorage.instance.ref().child(
+                              'productImages/${currentUser.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
                           if (kIsWeb) {
                             final bytes = await pickedImage!.readAsBytes();
                             await storageRef.putData(bytes);
@@ -1040,15 +1604,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           }
                           newImageUrl = await storageRef.getDownloadURL();
                           // Optionally delete old image from storage
-                          if (data['imageUrl'] != null && (data['imageUrl'] as String).isNotEmpty) {
+                          if (data['imageUrl'] != null &&
+                              (data['imageUrl'] as String).isNotEmpty) {
                             try {
-                              await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
+                              await FirebaseStorage.instance
+                                  .refFromURL(data['imageUrl'])
+                                  .delete();
                             } catch (_) {}
                           }
-                        } else if (imageUrl == null && data['imageUrl'] != null && (data['imageUrl'] as String).isNotEmpty) {
+                        } else if (imageUrl == null &&
+                            data['imageUrl'] != null &&
+                            (data['imageUrl'] as String).isNotEmpty) {
                           // If image was removed, delete from storage and set Firestore field to null
                           try {
-                            await FirebaseStorage.instance.refFromURL(data['imageUrl']).delete();
+                            await FirebaseStorage.instance
+                                .refFromURL(data['imageUrl'])
+                                .delete();
                           } catch (_) {}
                           newImageUrl = null;
                         }
@@ -1066,12 +1637,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[700],
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 ),
                 child: isUploading
-                    ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text('Save', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                            strokeWidth: 2, color: Colors.white))
+                    : const Text('Save',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ],
           ),

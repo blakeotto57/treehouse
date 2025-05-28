@@ -68,22 +68,8 @@ class _NavbarState extends State<Navbar> {
           ),
           const SizedBox(width: 24),
           // Flexible Search Bar
-          Expanded(
-            child: Container(
-              height: 40,
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search...',
-                  fillColor: Colors.white,
-                  filled: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
+          const Expanded(
+            child: UserSearch(),
           ),
         ],
       ),

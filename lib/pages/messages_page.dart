@@ -4,6 +4,12 @@ import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/nav_bar.dart';
 import 'package:treehouse/auth/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart' as emoji_picker;
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart'; // <-- Add this import
+
 
 class MessagesPage extends StatefulWidget {
   MessagesPage({Key? key}) : super(key: key);
@@ -236,7 +242,7 @@ class _MessagesPageState extends State<MessagesPage> {
                                 ),
                               ),
                               Divider(
-                                color: Colors.grey[300],
+                                color: Color(0xFF386A53),
                                 thickness: 1,
                                 height: 1,
                               ),
@@ -264,15 +270,27 @@ class _DateSeparator extends StatelessWidget {
 
   const _DateSeparator({required this.date, Key? key}) : super(key: key);
 
-  String _formatDate(DateTime date) {
+  String _formatDateTime(DateTime date) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final messageDay = DateTime(date.year, date.month, date.day);
 
-    if (messageDay == today) return "Today";
-    if (messageDay == today.subtract(const Duration(days: 1))) return "Yesterday";
+    String dayString;
+    if (messageDay == today) {
+      dayString = "Today";
+    } else if (messageDay == today.subtract(const Duration(days: 1))) {
+      dayString = "Yesterday";
+    } else {
+      dayString = "${date.month}/${date.day}/${date.year}";
+    }
 
-    return "${date.month}/${date.day}/${date.year}"; // Simple fallback
+    // Format time as h:mm a (e.g., 2:15 PM)
+    final hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+    final minute = date.minute.toString().padLeft(2, '0');
+    final ampm = date.hour >= 12 ? "PM" : "AM";
+    final timeString = "$hour:$minute $ampm";
+
+    return "$dayString · $timeString";
   }
 
   @override
@@ -286,7 +304,7 @@ class _DateSeparator extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          _formatDate(date),
+          _formatDateTime(date),
           style: const TextStyle(color: Colors.black87, fontSize: 13),
         ),
       ),
@@ -324,24 +342,43 @@ class _ChatMessagesWidget extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         final messages = snapshot.data!.docs;
-        return Expanded(
-          child: ListView.builder(
-            controller: scrollController,
-            reverse: true, // This makes the list start from the bottom
-            itemCount: messages.length,
-            itemBuilder: (context, index) {
-              // If your messages are oldest-to-newest, reverse the index:
-              final message = messages[messages.length - 1 - index];
-              return _MessageBubble(message: message);
-            },
-          ),
-        );
 
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (scrollController.hasClients) {
-            scrollController.jumpTo(scrollController.position.maxScrollExtent);
+        // Build a list of widgets with date separators
+        List<Widget> messageWidgets = [];
+        DateTime? lastDate;
+
+        for (int i = 0; i < messages.length; i++) {
+          final message = messages[i];
+          final data = message.data() as Map<String, dynamic>;
+          final timestamp = data['timestamp'];
+          DateTime? messageDate;
+          if (timestamp is Timestamp) {
+            messageDate = timestamp.toDate();
           }
-        });
+
+          // Insert a date separator if it's the first message or a new day
+          if (messageDate != null) {
+            if (lastDate == null ||
+                messageDate.year != lastDate.year ||
+                messageDate.month != lastDate.month ||
+                messageDate.day != lastDate.day) {
+              messageWidgets.add(_DateSeparator(date: messageDate));
+              lastDate = messageDate;
+            }
+          }
+
+          messageWidgets.add(_MessageBubble(message: message));
+        }
+
+        return ListView.builder(
+          controller: scrollController,
+          reverse: true, // This makes the list start from the bottom
+          itemCount: messageWidgets.length,
+          itemBuilder: (context, index) {
+            // Reverse the list so newest messages are at the bottom
+            return messageWidgets[messageWidgets.length - 1 - index];
+          },
+        );
       },
     );
   }
@@ -368,6 +405,8 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
   final TextEditingController controller = TextEditingController();
   final FocusNode focusNode = FocusNode();
   bool isFocused = false;
+  bool showEmojiPicker = false;
+  XFile? pickedImage; // Add this line
 
   @override
   void initState() {
@@ -375,6 +414,7 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
     focusNode.addListener(() {
       setState(() {
         isFocused = focusNode.hasFocus;
+        if (isFocused) showEmojiPicker = false;
       });
     });
   }
@@ -387,26 +427,35 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
   }
 
   Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+    if (text.trim().isEmpty && pickedImage == null) return;
+
+    String? imageUrl;
+    if (pickedImage != null) {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('chat_images/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
+      await storageRef.putData(await pickedImage!.readAsBytes());
+      imageUrl = await storageRef.getDownloadURL();
+    }
+
     final chatId = _getChatId(widget.currentUserEmail, widget.receiverEmail);
     final messageData = {
-      'text': text.trim(),
+      'text': text.trim(), // Always include text, even if empty
+      if (imageUrl != null) 'imageUrl': imageUrl,
       'sender': widget.currentUserEmail,
       'timestamp': FieldValue.serverTimestamp(),
+      'type': imageUrl != null ? 'image' : 'text',
     };
-    // Add to messages subcollection and get the reference
     final docRef = await FirebaseFirestore.instance
         .collection('chats')
         .doc(chatId)
         .collection('messages')
         .add(messageData);
 
-    // Fetch the message with the actual timestamp
     final sentMsg = await docRef.get();
     final sentData = sentMsg.data();
 
     if (sentData != null) {
-      // Set lastMessage to the text just sent
       await FirebaseFirestore.instance
           .collection('chats')
           .doc(chatId)
@@ -419,69 +468,203 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
           }, SetOptions(merge: true));
     }
     controller.clear();
+    setState(() {
+      pickedImage = null;
+    });
+  }
+
+  Future<void> pickAndPreviewImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+    if (picked != null) {
+      setState(() {
+        pickedImage = picked;
+      });
+    }
+  }
+
+  void onEmojiSelected(emoji_picker.Emoji emoji) {
+    controller.text += emoji.emoji;
+    controller.selection = TextSelection.fromPosition(TextPosition(offset: controller.text.length));
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.green[50],
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              focusNode: focusNode,
-              cursorColor: Colors.green[900],
-              style: TextStyle(
-                color: isFocused ? Colors.black : Colors.black,
-              ),
-              decoration: InputDecoration(
-                hintText: "Send a message...",
-                hintStyle: TextStyle(
-                  color: isFocused ? Colors.grey[700] : Colors.grey[600],
-                ),
-                filled: true,
-                fillColor: isFocused ? Colors.white : Colors.grey[100],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide(
-                    color: Colors.green[100]!, // Slightly darker green border
-                    width: 2,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide(
-                    color: Colors.green[100]!, // Slightly darker green border
-                    width: 2,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide(
-                    color: Colors.green[300]!, // Even darker green when focused
-                    width: 2,
-                  ),
+    return Column(
+      children: [
+        if (pickedImage != null)
+          Stack(
+            children: [
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: kIsWeb
+                      ? Image.network(
+                          pickedImage!.path,
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.cover,
+                        )
+                      : Image.file(
+                          File(pickedImage!.path),
+                          width: 120,
+                          height: 120,
+                          fit: BoxFit.cover,
+                        ),
                 ),
               ),
-              onSubmitted: (text) => sendMessage(text),
-            ),
+              Positioned(
+                right: 10,
+                top: 2,
+                child: IconButton(
+                  icon: const Icon(Icons.close, color: Colors.red),
+                  onPressed: () {
+                    setState(() {
+                      pickedImage = null;
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.grey),
-            onPressed: () {},
-            splashRadius: 22,
+        if (showEmojiPicker)
+          Stack(
+            children: [
+              // Dismiss area (optional, can keep or remove)
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      showEmojiPicker = false;
+                    });
+                  },
+                  child: Container(
+                    color: Colors.transparent,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: SizedBox(
+                  height: 180,
+                  child: Stack(
+                    children: [
+                      emoji_picker.EmojiPicker(
+                        onEmojiSelected: (category, emoji) => onEmojiSelected(emoji),
+                        config: emoji_picker.Config(
+                          columns: 9,
+                          emojiSizeMax: 22,
+                          verticalSpacing: 0,
+                          horizontalSpacing: 0,
+                          gridPadding: EdgeInsets.zero,
+                          initCategory: emoji_picker.Category.SMILEYS,
+                          bgColor: const Color(0xFFF2F2F2),
+                          indicatorColor: const Color(0xFF386A53),
+                          iconColor: Colors.grey,
+                          iconColorSelected: const Color(0xFF386A53),
+                          backspaceColor: const Color(0xFF386A53),
+                          recentsLimit: 28,
+                          noRecents: const Text('No Recents'),
+                          tabIndicatorAnimDuration: kTabScrollDuration,
+                          categoryIcons: const emoji_picker.CategoryIcons(),
+                          buttonMode: emoji_picker.ButtonMode.MATERIAL,
+                        ),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.close, color: Colors.grey),
+                          onPressed: () {
+                            setState(() {
+                              showEmojiPicker = false;
+                            });
+                          },
+                          splashRadius: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            icon: const Icon(Icons.send, color: Color(0xFF386A53)),
-            onPressed: () => sendMessage(controller.text),
-            splashRadius: 22,
+        Container(
+          color: Colors.green[50],
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.image, color: Color(0xFF386A53)),
+                onPressed: pickAndPreviewImage,
+                splashRadius: 22,
+              ),
+              Expanded(
+                child: TextField(
+                  controller: controller,
+                  focusNode: focusNode,
+                  cursorColor: Colors.green[900],
+                  style: TextStyle(
+                    color: isFocused ? Colors.black : Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Send a message...",
+                    hintStyle: TextStyle(
+                      color: isFocused ? Colors.grey[700] : Colors.grey[600],
+                    ),
+                    filled: true,
+                    fillColor: isFocused ? Colors.white : Colors.grey[100],
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Colors.green[100]!,
+                        width: 2,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Colors.green[100]!,
+                        width: 2,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Colors.green[300]!,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      showEmojiPicker = false;
+                    });
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.emoji_emotions_outlined, color: Color(0xFF386A53)),
+                onPressed: () {
+                  FocusScope.of(context).unfocus();
+                  setState(() {
+                    showEmojiPicker = !showEmojiPicker;
+                  });
+                },
+                splashRadius: 22,
+              ),
+              IconButton(
+                icon: const Icon(Icons.send, color: Color(0xFF386A53)),
+                onPressed: () => sendMessage(controller.text),
+                splashRadius: 22,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -498,9 +681,8 @@ class _MessageBubble extends StatelessWidget {
     final data = message.data() as Map<String, dynamic>;
     final isMe = data['sender'] == currentUserEmail;
     final text = data['text'] ?? '';
-    final timestamp = data['timestamp'] is Timestamp
-        ? (data['timestamp'] as Timestamp).toDate()
-        : null;
+    final imageUrl = data['imageUrl'];
+    final type = data['type'] ?? 'text';
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -519,16 +701,30 @@ class _MessageBubble extends StatelessWidget {
           ],
         ),
         child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              text,
-              style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
-                fontSize: 16,
+            if (imageUrl != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.network(
+                  imageUrl,
+                  width: 180,
+                  height: 180,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                ),
               ),
-            ),
+            if (text.isNotEmpty)
+              Padding(
+                padding: EdgeInsets.only(top: imageUrl != null ? 8 : 0),
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    color: isMe ? Colors.white : Colors.black87,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

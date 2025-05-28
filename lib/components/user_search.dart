@@ -102,13 +102,13 @@ class _UserSearchState extends State<UserSearch> {
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        width: size?.width ?? 300,
+        width: size?.width ?? _controller.value.text.length.toDouble(), // Match the exact width of the search bar
         child: CompositedTransformFollower(
           link: _layerLink,
           offset: Offset(0, size?.height ?? 40),
           showWhenUnlinked: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 0), // Adjust padding if needed
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(8),
@@ -125,11 +125,11 @@ class _UserSearchState extends State<UserSearch> {
                             onPressed: () {
                               setState(() {
                                 _pastSearches.removeAt(index);
-                              });
-                              _savePastSearches();
-                              _showPastSearches();
-                            },
-                          ),
+                            });
+                            _savePastSearches();
+                            _showPastSearches();
+                          },
+                        ),
                           onTap: () {
                             _onUserSelected(search);
                           },
@@ -155,13 +155,13 @@ class _UserSearchState extends State<UserSearch> {
 
     _overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        width: size?.width ?? 300,
+        width: size?.width ?? _controller.value.text.length.toDouble(), // Match the exact width of the search bar
         child: CompositedTransformFollower(
           link: _layerLink,
           offset: Offset(0, size?.height ?? 40),
           showWhenUnlinked: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 0), // Adjust padding if needed
             child: Material(
               elevation: 4,
               borderRadius: BorderRadius.circular(8),
@@ -226,13 +226,13 @@ class _UserSearchState extends State<UserSearch> {
     return CompositedTransformTarget(
       link: _layerLink,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: SizedBox(
           height: 38,
           child: TextField(
             controller: _controller,
             focusNode: _focusNode,
-            cursorColor: Colors.black,
+            cursorColor: const Color(0xFF386A53),
             decoration: InputDecoration(
               hintText: 'Search users by username...',
               hintStyle: const TextStyle(color: Colors.grey),
