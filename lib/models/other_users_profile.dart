@@ -22,7 +22,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: Colors.black54,
+        backgroundColor: Colors.transparent,
         insetPadding: const EdgeInsets.all(20),
         child: GestureDetector(
           onTap: () => Navigator.pop(context),

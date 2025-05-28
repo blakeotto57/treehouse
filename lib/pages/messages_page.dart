@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart'; // For kIsWeb
+
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/components/drawer.dart';
@@ -6,6 +10,7 @@ import 'package:treehouse/auth/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 
 class MessagesPage extends StatefulWidget {
   final String? initialSelectedUserEmail; // Add this
@@ -107,12 +112,23 @@ class _MessagesPageState extends State<MessagesPage> {
     final text = _messageController.text.trim();
     if (text.isEmpty && imageUrl == null) return;
 
-    // Your existing sendMessage logic, but add imageUrl
-    await _chatService.sendMessage(
-      selectedUserEmail!,
-      text,
-      imageUrl: imageUrl,
-    );
+    final currentUserEmail = await _authService.getCurrentUserEmail();
+    final chatId = _getChatId(currentUserEmail, selectedUserEmail!);
+
+    final messageData = {
+      'text': text,
+      'imageUrl': imageUrl,
+      'sender': currentUserEmail,
+      'timestamp': FieldValue.serverTimestamp(),
+    };
+
+    // Save the message to Firestore
+    await FirebaseFirestore.instance
+        .collection('chats')
+        .doc(chatId)
+        .collection('messages')
+        .add(messageData);
+
     _messageController.clear();
   }
 
@@ -336,6 +352,10 @@ class _DateSeparator extends StatelessWidget {
     return "${date.month}/${date.day}/${date.year}"; // Simple fallback
   }
 
+  String _formatTime(DateTime date) {
+    return "${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -346,9 +366,19 @@ class _DateSeparator extends StatelessWidget {
           color: Colors.grey[300],
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(
-          _formatDate(date),
-          style: const TextStyle(color: Colors.black87, fontSize: 13),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _formatDate(date),
+              style: const TextStyle(color: Colors.black87, fontSize: 13),
+            ),
+            const SizedBox(width: 8), // Add spacing between date and time
+            Text(
+              _formatTime(date),
+              style: const TextStyle(color: Colors.black54, fontSize: 13),
+            ),
+          ],
         ),
       ),
     );
@@ -385,17 +415,34 @@ class _ChatMessagesWidget extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
         final messages = snapshot.data!.docs;
-        return Expanded(
-          child: ListView.builder(
-            controller: scrollController,
-            reverse: true, // This makes the list start from the bottom
-            itemCount: messages.length,
-            itemBuilder: (context, index) {
-              // If your messages are oldest-to-newest, reverse the index:
-              final message = messages[messages.length - 1 - index];
-              return _MessageBubble(message: message);
-            },
-          ),
+
+        return ListView.builder(
+          controller: scrollController,
+          reverse: true, // Start from the bottom
+          itemCount: messages.length,
+          itemBuilder: (context, index) {
+            final message = messages[messages.length - 1 - index];
+            final previousMessage = index < messages.length - 1
+                ? messages[messages.length - 2 - index]
+                : null;
+
+            final currentTimestamp = (message['timestamp'] as Timestamp?)?.toDate();
+            final previousTimestamp = previousMessage != null
+                ? (previousMessage['timestamp'] as Timestamp?)?.toDate()
+                : null;
+
+            final showDateSeparator = previousTimestamp == null ||
+                currentTimestamp == null ||
+                currentTimestamp.difference(previousTimestamp).inMinutes > 5;
+
+            return Column(
+              children: [
+                if (showDateSeparator && currentTimestamp != null)
+                  _DateSeparator(date: currentTimestamp), // Centered timestamp
+                _MessageBubble(message: message),
+              ],
+            );
+          },
         );
       },
     );
@@ -428,6 +475,8 @@ class _ChatInputWidget extends StatefulWidget {
 class _ChatInputWidgetState extends State<_ChatInputWidget> {
   final FocusNode focusNode = FocusNode();
   bool isFocused = false;
+  bool isEmojiPickerVisible = false; // Track emoji picker visibility
+  XFile? selectedImage;
 
   @override
   void initState() {
@@ -435,6 +484,9 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
     focusNode.addListener(() {
       setState(() {
         isFocused = focusNode.hasFocus;
+        if (isFocused) {
+          isEmojiPickerVisible = false; // Hide emoji picker when input is focused
+        }
       });
     });
   }
@@ -445,73 +497,207 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
     super.dispose();
   }
 
-  void _sendMessage() {
-    widget.sendMessage(imageUrl: null);
+  void _toggleEmojiPicker() {
+    setState(() {
+      isEmojiPickerVisible = !isEmojiPickerVisible;
+      if (isEmojiPickerVisible) {
+        focusNode.unfocus(); // Unfocus the text field when emoji picker is shown
+      }
+    });
+  }
+
+  void _onEmojiSelected(Emoji emoji) {
+    widget.messageController.text += emoji.emoji; // Add emoji to the text field
+    widget.messageController.selection = TextSelection.fromPosition(
+      TextPosition(offset: widget.messageController.text.length),
+    );
+  }
+
+  void _dismissEmojiPicker() {
+    setState(() {
+      isEmojiPickerVisible = false;
+    });
+  }
+
+  void _sendMessage() async {
+    await widget.sendMessage();
+    setState(() {
+      selectedImage = null;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        selectedImage = pickedFile;
+      });
+      // Optionally, send the image immediately:
+      await widget.sendMessage(imageUrl: null); // You may want to upload and send the image here
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.green[50],
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: Row(
+    return GestureDetector(
+      onTap: () {
+        if (isEmojiPickerVisible) {
+          _dismissEmojiPicker(); // Dismiss emoji picker when tapping outside
+        }
+      },
+      child: Column(
         children: [
-          IconButton(
-            icon: Icon(Icons.image),
-            onPressed: widget.pickAndSendImage,
-          ),
-          Expanded(
-            child: TextField(
-              controller: widget.messageController,
-              focusNode: focusNode,
-              cursorColor: Colors.green[900],
-              style: TextStyle(
-                color: isFocused ? Colors.black : Colors.black,
+          if (selectedImage != null) // Show image preview if an image is selected
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              child: Stack(
+                children: [
+                  kIsWeb
+                      ? FutureBuilder<Uint8List>(
+                          future: selectedImage!.readAsBytes(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Container(
+                                height: 80,
+                                width: 80,
+                                color: Colors.grey[200],
+                                child: const Center(child: CircularProgressIndicator()),
+                              );
+                            }
+                            if (snapshot.hasError || !snapshot.hasData) {
+                              return Container(
+                                height: 80,
+                                width: 80,
+                                color: Colors.grey[200],
+                                child: const Center(child: Icon(Icons.broken_image)),
+                              );
+                            }
+                            return Image.memory(
+                              snapshot.data!,
+                              height: 80,
+                              width: 80,
+                              fit: BoxFit.cover,
+                            );
+                          },
+                        )
+                      : Image.file(
+                          File(selectedImage!.path),
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.cover,
+                        ),
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      iconSize: 16,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () {
+                        setState(() {
+                          selectedImage = null;
+                        });
+                      },
+                    ),
+                  ),
+                ],
               ),
-              decoration: InputDecoration(
-                hintText: "Type a message...",
-                hintStyle: TextStyle(
-                  color: isFocused ? Colors.grey[700] : Colors.grey[600],
-                ),
-                filled: true,
-                fillColor: isFocused ? Colors.white : Colors.grey[100],
-                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide(
-                    color: Colors.green[100]!, // Slightly darker green border
-                    width: 2,
-                  ),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide(
-                    color: Colors.green[100]!, // Slightly darker green border
-                    width: 2,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(28),
-                  borderSide: BorderSide(
-                    color: Colors.green[300]!, // Even darker green when focused
-                    width: 2,
-                  ),
-                ),
-              ),
-              onSubmitted: (text) => widget.sendMessage(imageUrl: null),
             ),
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.image, color: const Color(0xFF386A53)),
+                onPressed: _pickImage, // Use the new _pickImage method
+              ),
+              Expanded(
+                child: TextField(
+                  controller: widget.messageController,
+                  focusNode: focusNode,
+                  cursorColor: Colors.green[900],
+                  style: TextStyle(
+                    color: isFocused ? Colors.black : Colors.black,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Type a message...",
+                    hintStyle: TextStyle(
+                      color: isFocused ? Colors.grey[700] : Colors.grey[600],
+                    ),
+                    filled: true,
+                    fillColor: isFocused ? Colors.white : Colors.grey[100],
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Colors.green[100]!,
+                        width: 2,
+                      ),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Colors.green[100]!,
+                        width: 2,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(28),
+                      borderSide: BorderSide(
+                        color: Colors.green[300]!,
+                        width: 2,
+                      ),
+                    ),
+                  ),
+                  onSubmitted: (text) => _sendMessage(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.emoji_emotions_outlined, color: const Color(0xFF386A53)),
+                onPressed: _toggleEmojiPicker, // Toggle emoji picker
+                splashRadius: 22,
+              ),
+              IconButton(
+                icon: const Icon(Icons.send, color: Color(0xFF386A53)),
+                onPressed: _sendMessage,
+                splashRadius: 22,
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          IconButton(
-            icon: const Icon(Icons.emoji_emotions_outlined, color: Colors.grey),
-            onPressed: () {},
-            splashRadius: 22,
-          ),
-          IconButton(
-            icon: const Icon(Icons.send, color: Color(0xFF386A53)),
-            onPressed: _sendMessage,
-            splashRadius: 22,
-          ),
+          if (isEmojiPickerVisible)
+            GestureDetector(
+              onTap: () {}, // Prevent dismissing when tapping inside the picker
+              child: SizedBox(
+                height: 250, // Adjust height as needed
+                child: EmojiPicker(
+                  onEmojiSelected: (category, emoji) => _onEmojiSelected(emoji),
+                  config: const Config(
+                    columns: 7,
+                    emojiSizeMax: 32,
+                    verticalSpacing: 8,
+                    horizontalSpacing: 8,
+                    gridPadding: EdgeInsets.all(8),
+                    bgColor: Color(0xFFF2F2F2),
+                    indicatorColor: Color(0xFF386A53),
+                    iconColor: Colors.grey,
+                    iconColorSelected: Color(0xFF386A53),
+                    backspaceColor: Color(0xFF386A53),
+                    skinToneDialogBgColor: Colors.white,
+                    enableSkinTones: true,
+                    recentsLimit: 28,
+                    noRecents: Text(
+                      'No Recents',
+                      style: TextStyle(fontSize: 20, color: Colors.black26),
+                      textAlign: TextAlign.center,
+                    ),
+                    tabIndicatorAnimDuration: kTabScrollDuration,
+                    categoryIcons: CategoryIcons(),
+                    buttonMode: ButtonMode.MATERIAL,
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -524,51 +710,89 @@ class _MessageBubble extends StatelessWidget {
 
   const _MessageBubble({required this.message, Key? key}) : super(key: key);
 
+  void showEnlargedImage(BuildContext context, String imageUrl) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: GestureDetector(
+          onTap: () => Navigator.of(context).pop(), // Close the dialog on tap
+          child: InteractiveViewer(
+            child: Image.network(
+              imageUrl,
+              fit: BoxFit.contain,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentUserEmail = AuthService().currentUser?.email;
     final data = message.data() as Map<String, dynamic>;
     final isMe = data['sender'] == currentUserEmail;
     final text = data['text'] ?? '';
-    final timestamp = data['timestamp'] is Timestamp
-        ? (data['timestamp'] as Timestamp).toDate()
-        : null;
-    final imageUrl = data['imageUrl'];
+    final imageUrl = data['imageUrl'] ?? null; // Get the image URL if it exists
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          if (imageUrl != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4.0),
-              child: Image.network(imageUrl, width: 200),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isMe ? const Color(0xFF386A53) : Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 2,
+              offset: const Offset(0, 1),
             ),
-          if (text.isNotEmpty)
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
-              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-              decoration: BoxDecoration(
-                color: isMe ? const Color(0xFF386A53) : Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.04),
-                    blurRadius: 2,
-                    offset: const Offset(0, 1),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment:
+              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          children: [
+            if (imageUrl != null) // Display the image if it exists
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: GestureDetector(
+                  onTap: () => showEnlargedImage(context, imageUrl), // Enlarge image on tap
+                  child: Image.network(
+                    imageUrl,
+                    height: 150, // Adjust the height as needed
+                    width: 150,  // Adjust the width as needed
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Center(
+                        child: CircularProgressIndicator(
+                          value: loadingProgress.expectedTotalBytes != null
+                              ? loadingProgress.cumulativeBytesLoaded /
+                                  (loadingProgress.expectedTotalBytes ?? 1)
+                              : null,
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(Icons.broken_image, size: 50);
+                    },
                   ),
-                ],
+                ),
               ),
-              child: Text(
+            if (text.isNotEmpty) // Display the text if it exists
+              Text(
                 text,
                 style: TextStyle(
                   color: isMe ? Colors.white : Colors.black87,
                   fontSize: 16,
                 ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
   }
