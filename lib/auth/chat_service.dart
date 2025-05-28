@@ -129,7 +129,7 @@ class ChatService {
 
 
   //send messages
-  Future<void> sendMessage(String receiverID, String message) async {
+  Future<void> sendMessage(String receiverID, String message, {String? imageUrl}) async {
     final currentUserEmail = _firebaseAuth.currentUser!.email!;
     final timestamp = Timestamp.now();
 
@@ -160,6 +160,7 @@ class ChatService {
       receiverID: receiverID,
       message: message,
       timestamp: timestamp,
+      imageUrl: imageUrl, // Add this field to your Message model
     );
 
     // Construct chat room ID

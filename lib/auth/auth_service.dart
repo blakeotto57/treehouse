@@ -18,4 +18,8 @@ class AuthService {
       throw Exception(e.code);
     }
   }
+
+  Future<String> getCurrentUserEmail() async {
+    return FirebaseAuth.instance.currentUser!.email!;
+  }
 }

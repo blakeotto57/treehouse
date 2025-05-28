@@ -12,7 +12,7 @@ class Message {
     required this.senderEmail,
     required this.receiverID,
     required this.message,
-    required this.timestamp,
+    required this.timestamp, String? imageUrl,
   });
 
   //convert to a map
