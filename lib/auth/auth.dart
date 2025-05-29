@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/auth/login_or_register.dart';
 import 'package:treehouse/pages/explore_page.dart';
-import 'package:treehouse/pages/home.dart';
 
 class AuthPage extends StatelessWidget {
   const AuthPage({super.key});

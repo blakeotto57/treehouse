@@ -26,6 +26,7 @@ class _RegisterPageState extends State<RegisterPage> {
     return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email);
   }
 
+  /*
   Future<void> signInWithGoogle() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
@@ -71,6 +72,7 @@ class _RegisterPageState extends State<RegisterPage> {
       print("Google sign-in error: $e");
     }
   }
+  */
 
   Future<void> signUp() async {
     if (passwordTextController.text != confirmPasswordTextController.text) {
@@ -169,7 +171,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         color: const Color(0xFF386A53),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 32),
 
                     Stack(
                       children: [
@@ -239,6 +241,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 16),
 
+                    /*
                     SizedBox(
                       child: ElevatedButton(
                         onPressed: signInWithGoogle,
@@ -262,6 +265,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
 
+                    */
                     const SizedBox(height: 16),
 
                     SizedBox(

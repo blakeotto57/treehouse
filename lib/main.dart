@@ -3,7 +3,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:provider/provider.dart';
 import 'package:treehouse/auth/login_page.dart';
-import 'package:treehouse/pages/home.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:treehouse/auth/auth.dart';
 import 'package:treehouse/pages/login_page.dart';

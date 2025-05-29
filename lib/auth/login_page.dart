@@ -4,7 +4,6 @@ import 'package:treehouse/auth/register_page.dart';
 import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/text_field.dart';
 import 'package:treehouse/pages/explore_page.dart';
-import 'package:treehouse/pages/home.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
