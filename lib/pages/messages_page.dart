@@ -134,13 +134,14 @@ class _MessagesPageState extends State<MessagesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pastelGreen = const Color(0xFFF5FBF7);
-    final darkCard = const Color(0xFF232323);
-    final darkBackground = const Color(0xFF181818);
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkMode ? const Color(0xFF181818) : Colors.green[50];
+    final cardColor = isDarkMode ? const Color(0xFF232323) : Colors.white;
+    final dividerColor = isDarkMode ? Colors.grey[700] : Colors.grey[300];
+    final textColor = isDarkMode ? Colors.white : const Color(0xFF222222);
 
     return Scaffold(
-      backgroundColor: Colors.green[50],
+      backgroundColor: backgroundColor,
       drawer: customDrawer(context),
       appBar: const Navbar(),
       body: Row(
@@ -148,7 +149,7 @@ class _MessagesPageState extends State<MessagesPage> {
           // Left: Conversations List
           Container(
             width: 320,
-            color: Colors.white,
+            color: cardColor,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -164,7 +165,7 @@ class _MessagesPageState extends State<MessagesPage> {
                   ),
                 ),
                 Divider(
-                  color: Colors.grey[300],
+                  color: dividerColor,
                   height: 1,
                   thickness: 1,
                   indent: 16,
@@ -175,19 +176,29 @@ class _MessagesPageState extends State<MessagesPage> {
                     stream: _chatService.getAcceptedChatsStream(),
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
-                        return Center(child: Text('Error: ${snapshot.error}'));
+                        return Center(
+                          child: Text(
+                            'Error: ${snapshot.error}',
+                            style: TextStyle(color: textColor),
+                          ),
+                        );
                       }
                       if (!snapshot.hasData) {
                         return const Center(child: CircularProgressIndicator());
                       }
                       final users = snapshot.data!;
                       if (users.isEmpty) {
-                        return const Center(child: Text('No conversations yet'));
+                        return Center(
+                          child: Text(
+                            'No conversations yet',
+                            style: TextStyle(color: textColor),
+                          ),
+                        );
                       }
                       return ListView.separated(
                         itemCount: users.length,
                         separatorBuilder: (context, index) => Divider(
-                          color: Colors.grey[200],
+                          color: dividerColor,
                           height: 1,
                           thickness: 1,
                           indent: 16,
@@ -200,13 +211,14 @@ class _MessagesPageState extends State<MessagesPage> {
                           final profileUrl = user["profileImageUrl"];
                           final isSelected = selectedUserEmail == email;
 
-                          // Example: lastMessage = {'text': 'hello', 'sender': 'CoolKidCarsen'}
                           final lastMessage = user['lastMessage'] ?? {};
                           final lastSender = lastMessage['sender'] ?? username;
                           final lastMessageText = lastMessage['text'] ?? '';
 
                           return Material(
-                            color: isSelected ? Colors.grey[200] : Colors.white,
+                            color: isSelected
+                                ? (isDarkMode ? Colors.grey[800] : Colors.grey[200])
+                                : cardColor,
                             child: InkWell(
                               borderRadius: BorderRadius.circular(0),
                               onTap: () {
@@ -223,10 +235,11 @@ class _MessagesPageState extends State<MessagesPage> {
                                   children: [
                                     CircleAvatar(
                                       radius: 24,
-                                      backgroundImage:
-                                          profileUrl != null ? NetworkImage(profileUrl) : null,
+                                      backgroundImage: profileUrl != null ? NetworkImage(profileUrl) : null,
                                       backgroundColor: Colors.grey[300],
-                                      child: profileUrl == null ? const Icon(Icons.person, color: Colors.white) : null,
+                                      child: profileUrl == null
+                                          ? const Icon(Icons.person, color: Colors.white)
+                                          : null,
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
@@ -236,10 +249,10 @@ class _MessagesPageState extends State<MessagesPage> {
                                         children: [
                                           Text(
                                             username,
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
-                                              color: Colors.black,
+                                              color: textColor,
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -248,7 +261,7 @@ class _MessagesPageState extends State<MessagesPage> {
                                           Text(
                                             "$lastSender: $lastMessageText",
                                             style: TextStyle(
-                                              color: Colors.grey[600],
+                                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                                               fontSize: 12,
                                             ),
                                             maxLines: 1,
@@ -258,7 +271,12 @@ class _MessagesPageState extends State<MessagesPage> {
                                       ),
                                     ),
                                     PopupMenuButton<String>(
-                                      icon: Icon(Icons.more_horiz, color: isSelected ? Colors.black : Colors.grey[500]),
+                                      icon: Icon(
+                                        Icons.more_horiz,
+                                        color: isSelected
+                                            ? textColor
+                                            : (isDarkMode ? Colors.grey[400] : Colors.grey[500]),
+                                      ),
                                       onSelected: (value) async {
                                         if (value == 'delete') {
                                           await _deleteChat(email);
@@ -267,7 +285,10 @@ class _MessagesPageState extends State<MessagesPage> {
                                       itemBuilder: (context) => [
                                         PopupMenuItem(
                                           value: 'delete',
-                                          child: Text('Delete Chat'),
+                                          child: Text(
+                                            'Delete Chat',
+                                            style: TextStyle(color: textColor),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -290,14 +311,13 @@ class _MessagesPageState extends State<MessagesPage> {
                 ? Center(
                     child: Text(
                       "Select a conversation",
-                      style: TextStyle(color: Colors.grey[600], fontSize: 18),
+                      style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[600], fontSize: 18),
                     ),
                   )
                 : Container(
-                    color: Colors.green[50],
+                    color: backgroundColor,
                     child: Column(
                       children: [
-                        
                         // Chat messages
                         Expanded(
                           child: Column(
@@ -309,8 +329,11 @@ class _MessagesPageState extends State<MessagesPage> {
                                   scrollController: _scrollController,
                                 ),
                               ),
+                              
+                              const SizedBox(height: 8), // Add some spacing
+                              
                               Divider(
-                                color: Colors.grey[300],
+                                color: Color(0xFF386A53),
                                 thickness: 1,
                                 height: 1,
                               ),
@@ -605,65 +628,68 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                 ],
               ),
             ),
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.image, color: const Color(0xFF386A53)),
-                onPressed: _pickImage, // Use the new _pickImage method
-              ),
-              Expanded(
-                child: TextField(
-                  controller: widget.messageController,
-                  focusNode: focusNode,
-                  cursorColor: Colors.green[900],
-                  style: TextStyle(
-                    color: isFocused ? Colors.black : Colors.black,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: "Type a message...",
-                    hintStyle: TextStyle(
-                      color: isFocused ? Colors.grey[700] : Colors.grey[600],
-                    ),
-                    filled: true,
-                    fillColor: isFocused ? Colors.white : Colors.grey[100],
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide(
-                        color: Colors.green[100]!,
-                        width: 2,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide(
-                        color: Colors.green[100]!,
-                        width: 2,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(28),
-                      borderSide: BorderSide(
-                        color: Colors.green[300]!,
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  onSubmitted: (text) => _sendMessage(),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: Icon(Icons.image, color: const Color(0xFF386A53)),
+                  onPressed: _pickImage, // Use the new _pickImage method
                 ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.emoji_emotions_outlined, color: const Color(0xFF386A53)),
-                onPressed: _toggleEmojiPicker, // Toggle emoji picker
-                splashRadius: 22,
-              ),
-              IconButton(
-                icon: const Icon(Icons.send, color: Color(0xFF386A53)),
-                onPressed: _sendMessage,
-                splashRadius: 22,
-              ),
-            ],
+                Expanded(
+                  child: TextField(
+                    controller: widget.messageController,
+                    focusNode: focusNode,
+                    cursorColor: Colors.green[900],
+                    style: TextStyle(
+                      color: isFocused ? Colors.black : Colors.black,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: "Type a message...",
+                      hintStyle: TextStyle(
+                        color: isFocused ? Colors.grey[700] : Colors.grey[600],
+                      ),
+                      filled: true,
+                      fillColor: isFocused ? Colors.white : Colors.grey[100],
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20), // Added vertical padding
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide(
+                          color: Colors.green[100]!,
+                          width: 2,
+                        ),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide(
+                          color: Colors.green[100]!,
+                          width: 2,
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(28),
+                        borderSide: BorderSide(
+                          color: Colors.green[300]!,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                    onSubmitted: (text) => _sendMessage(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.emoji_emotions_outlined, color: const Color(0xFF386A53)),
+                  onPressed: _toggleEmojiPicker, // Toggle emoji picker
+                  splashRadius: 22,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.send, color: Color(0xFF386A53)),
+                  onPressed: _sendMessage,
+                  splashRadius: 22,
+                ),
+              ],
+            ),
           ),
           if (isEmojiPickerVisible)
             GestureDetector(
