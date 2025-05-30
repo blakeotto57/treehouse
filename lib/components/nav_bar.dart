@@ -20,6 +20,15 @@ class Navbar extends StatefulWidget implements PreferredSizeWidget {
   @override
   State<Navbar> createState() => _NavbarState();
 }
+Widget _buildNavButton(IconData icon, String label, VoidCallback onTap) {
+  return TextButton.icon(
+    onPressed: onTap,
+    icon: Icon(icon, color: Colors.white),
+    label: Text(label, style: const TextStyle(color: Colors.white)),
+    style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12.0)),
+  );
+}
+
 
 class _NavbarState extends State<Navbar> {
   @override
@@ -29,50 +38,57 @@ class _NavbarState extends State<Navbar> {
       backgroundColor: const Color(0xFF386A53),
       title: LayoutBuilder(
         builder: (context, constraints) {
-          final showTitle = constraints.maxWidth > 600; // Adjust width threshold for hiding title
+          final showTitle = constraints.maxWidth > 600;
           return Row(
             children: [
-              if (showTitle) // Show "Treehouse | School Name" only if width is above threshold
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      "Treehouse",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+              if (showTitle)
+                Flexible(
+                  flex: 0,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        "Treehouse",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      height: 24,
-                      width: 1,
-                      color: Colors.white54,
-                    ),
-                    const SizedBox(width: 12),
-                    Builder(
-                      builder: (context) {
-                        final userEmail = FirebaseAuth.instance.currentUser?.email ?? '';
-                        final school = (userEmail.contains('@') && userEmail.contains('.edu'))
-                            ? userEmail.split('@')[1].split('.edu')[0]
-                            : '';
-                        return Text(
-                          school,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        );
-                      },
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Container(
+                        height: 24,
+                        width: 1,
+                        color: Colors.white54,
+                      ),
+                      const SizedBox(width: 12),
+                      Builder(
+                        builder: (context) {
+                          final userEmail =
+                              FirebaseAuth.instance.currentUser?.email ?? '';
+                          final school = (userEmail.contains('@') &&
+                                  userEmail.contains('.edu'))
+                              ? userEmail.split('@')[1].split('.edu')[0]
+                              : '';
+                          return Text(
+                            school,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                  ),
                 ),
-              const SizedBox(width: 24),
-              // Flexible Search Bar
-              const Expanded(
-                child: UserSearch(),
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.only(left: 8.0),
+                  child: const UserSearch(),
+                ),
               ),
             ],
           );
@@ -81,60 +97,83 @@ class _NavbarState extends State<Navbar> {
       actions: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final showText = constraints.maxWidth > 500; // Adjust width threshold for hiding text
+            final isWide = constraints.maxWidth > 700;
 
-            return Row(
-              children: [
-                TextButton.icon(
-                  onPressed: () {
+            if (isWide) {
+              // Show buttons with text and icons
+              return Row(
+                children: [
+                  _buildNavButton(Icons.explore, "Explore", () {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (_) => const ExplorePage()));
+                  }),
+                  _buildNavButton(Icons.message, "Messages", () {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (_) => MessagesPage()));
+                  }),
+                  _buildNavButton(Icons.person, "Profile", () {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (_) => UserProfilePage()));
+                  }),
+                  _buildNavButton(Icons.settings, "Settings", () {
                     Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const ExplorePage()),
-                    );
-                  },
-                  icon: const Icon(Icons.explore, color: Colors.white),
-                  label: showText
-                      ? const Text("Explore", style: TextStyle(color: Colors.white))
-                      : const SizedBox.shrink(),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => MessagesPage()),
-                    );
-                  },
-                  icon: const Icon(Icons.message, color: Colors.white),
-                  label: showText
-                      ? const Text("Messages", style: TextStyle(color: Colors.white))
-                      : const SizedBox.shrink(),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => UserProfilePage()),
-                    );
-                  },
-                  icon: const Icon(Icons.person, color: Colors.white),
-                  label: showText
-                      ? const Text("Profile", style: TextStyle(color: Colors.white))
-                      : const SizedBox.shrink(),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => const UserSettingsPage()),
-                    );
-                  },
-                  icon: const Icon(Icons.settings, color: Colors.white),
-                  label: showText
-                      ? const Text("Settings", style: TextStyle(color: Colors.white))
-                      : const SizedBox.shrink(),
-                ),
-              ],
-            );
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const UserSettingsPage()));
+                  }),
+                ],
+              );
+            } else {
+              // Show popup menu on small screens
+              return PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert, color: Colors.white),
+                onSelected: (value) {
+                  switch (value) {
+                    case 'Explore':
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const ExplorePage()));
+                      break;
+                    case 'Messages':
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (_) => MessagesPage()));
+                      break;
+                    case 'Profile':
+                      Navigator.pushReplacement(context,
+                          MaterialPageRoute(builder: (_) => UserProfilePage()));
+                      break;
+                    case 'Settings':
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const UserSettingsPage()));
+                      break;
+                  }
+                },
+                itemBuilder: (BuildContext context) => [
+                  const PopupMenuItem(
+                      value: 'Explore',
+                      child: ListTile(
+                          leading: Icon(Icons.explore),
+                          title: Text('Explore'))),
+                  const PopupMenuItem(
+                      value: 'Messages',
+                      child: ListTile(
+                          leading: Icon(Icons.message),
+                          title: Text('Messages'))),
+                  const PopupMenuItem(
+                      value: 'Profile',
+                      child: ListTile(
+                          leading: Icon(Icons.person), title: Text('Profile'))),
+                  const PopupMenuItem(
+                      value: 'Settings',
+                      child: ListTile(
+                          leading: Icon(Icons.settings),
+                          title: Text('Settings'))),
+                ],
+              );
+            }
           },
         ),
       ],
