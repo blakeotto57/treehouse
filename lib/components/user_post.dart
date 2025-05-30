@@ -32,7 +32,8 @@ class _ExplorePageState extends State<ExplorePage> {
       ),
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500), // Adjust width as needed
+          constraints:
+              const BoxConstraints(maxWidth: 500), // Adjust width as needed
           child: Column(
             children: [
               Padding(
@@ -40,20 +41,24 @@ class _ExplorePageState extends State<ExplorePage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const Text("Sort by:", style: TextStyle(fontSize: 13, color: Colors.black54)),
+                    const Text("Sort by:",
+                        style: TextStyle(fontSize: 13, color: Colors.black54)),
                     const SizedBox(width: 8),
                     DropdownButton<String>(
                       value: _sortBy,
                       items: const [
-                        DropdownMenuItem(value: 'Most Recent', child: Text('Most Recent')),
-                        DropdownMenuItem(value: 'Most Liked', child: Text('Most Liked')),
+                        DropdownMenuItem(
+                            value: 'Most Recent', child: Text('Most Recent')),
+                        DropdownMenuItem(
+                            value: 'Most Liked', child: Text('Most Liked')),
                       ],
                       onChanged: (value) {
                         setState(() {
                           _sortBy = value!;
                         });
                       },
-                      style: const TextStyle(fontSize: 13, color: Colors.black87),
+                      style:
+                          const TextStyle(fontSize: 13, color: Colors.black87),
                       underline: Container(),
                     ),
                   ],
@@ -61,14 +66,17 @@ class _ExplorePageState extends State<ExplorePage> {
               ),
               // Search bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SizedBox(
                   width: 400, // Constrain search bar width
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search...',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(24)),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
                       filled: true,
                       fillColor: Colors.grey[100],
                     ),
@@ -78,7 +86,9 @@ class _ExplorePageState extends State<ExplorePage> {
               // Posts list
               Expanded(
                 child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance.collection("personal_care_posts").snapshots(),
+                  stream: FirebaseFirestore.instance
+                      .collection("personal_care_posts")
+                      .snapshots(),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData) {
                       return const Center(
@@ -103,9 +113,11 @@ class _ExplorePageState extends State<ExplorePage> {
                       itemBuilder: (context, index) {
                         final sortedPosts = [...posts];
                         if (_sortBy == 'Most Recent') {
-                          sortedPosts.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+                          sortedPosts.sort(
+                              (a, b) => b.timestamp.compareTo(a.timestamp));
                         } else {
-                          sortedPosts.sort((a, b) => b.likes.length.compareTo(a.likes.length));
+                          sortedPosts.sort((a, b) =>
+                              b.likes.length.compareTo(a.likes.length));
                         }
                         final post = sortedPosts[index];
                         return Center(
@@ -208,15 +220,19 @@ class _UserPostState extends State<UserPost> {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) => PostDetailPage(post: widget),
+              PageRouteBuilder(
+                pageBuilder: (context, animation1, animation2) =>
+                    PostDetailPage(post: widget),
+                transitionDuration: Duration.zero,
+                reverseTransitionDuration: Duration.zero,
               ),
             );
           },
           child: Card(
             margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               child: Column(
@@ -231,22 +247,29 @@ class _UserPostState extends State<UserPost> {
                             .snapshots(),
                         builder: (context, snapshot) {
                           String? profileImageUrl;
-                          if (snapshot.hasData && snapshot.data!.data() != null) {
-                            final data = snapshot.data!.data() as Map<String, dynamic>;
-                            profileImageUrl = data['profileImageUrl'] as String?;
+                          if (snapshot.hasData &&
+                              snapshot.data!.data() != null) {
+                            final data =
+                                snapshot.data!.data() as Map<String, dynamic>;
+                            profileImageUrl =
+                                data['profileImageUrl'] as String?;
                           } else {
                             profileImageUrl = null;
                           }
                           return CircleAvatar(
                             radius: 16,
-                            backgroundColor: (profileImageUrl == null || profileImageUrl.isEmpty)
+                            backgroundColor: (profileImageUrl == null ||
+                                    profileImageUrl.isEmpty)
                                 ? const Color(0xFF386A53)
                                 : Colors.grey[300],
-                            backgroundImage: (profileImageUrl != null && profileImageUrl.isNotEmpty)
+                            backgroundImage: (profileImageUrl != null &&
+                                    profileImageUrl.isNotEmpty)
                                 ? NetworkImage(profileImageUrl)
                                 : null,
-                            child: (profileImageUrl == null || profileImageUrl.isEmpty)
-                                ? const Icon(Icons.person, color: Colors.white, size: 18)
+                            child: (profileImageUrl == null ||
+                                    profileImageUrl.isEmpty)
+                                ? const Icon(Icons.person,
+                                    color: Colors.white, size: 18)
                                 : null,
                           );
                         },
@@ -262,9 +285,12 @@ class _UserPostState extends State<UserPost> {
                                   .doc(widget.user)
                                   .snapshots(),
                               builder: (context, snapshot) {
-                                if (snapshot.hasData && snapshot.data!.data() != null) {
-                                  final userData = snapshot.data!.data() as Map<String, dynamic>;
-                                  final username = userData['username'] ?? widget.user.split('@').first;
+                                if (snapshot.hasData &&
+                                    snapshot.data!.data() != null) {
+                                  final userData = snapshot.data!.data()
+                                      as Map<String, dynamic>;
+                                  final username = userData['username'] ??
+                                      widget.user.split('@').first;
                                   return Text(
                                     username,
                                     style: const TextStyle(
@@ -298,7 +324,8 @@ class _UserPostState extends State<UserPost> {
                       ),
                       if (currentUser.email == widget.user)
                         IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.redAccent, size: 18),
                           tooltip: "Delete Post",
                           onPressed: () {
                             // TODO: Implement delete functionality
@@ -346,7 +373,8 @@ class _UserPostState extends State<UserPost> {
                       ),
                       Text(
                         likes.length.toString(),
-                        style: const TextStyle(fontSize: 13, color: Colors.black87),
+                        style: const TextStyle(
+                            fontSize: 13, color: Colors.black87),
                       ),
                       const SizedBox(width: 18),
                       const Icon(
@@ -361,19 +389,22 @@ class _UserPostState extends State<UserPost> {
                             .collection("comments")
                             .snapshots(),
                         builder: (context, snapshot) {
-                          final count = snapshot.hasData ? snapshot.data!.docs.length : 0;
+                          final count =
+                              snapshot.hasData ? snapshot.data!.docs.length : 0;
                           return Padding(
                             padding: const EdgeInsets.only(left: 4, right: 0),
                             child: Text(
                               count.toString(),
-                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                              style: const TextStyle(
+                                  fontSize: 13, color: Colors.black87),
                             ),
                           );
                         },
                       ),
                       const SizedBox(width: 18),
                       IconButton(
-                        icon: const Icon(Icons.share_outlined, color: Colors.grey, size: 18),
+                        icon: const Icon(Icons.share_outlined,
+                            color: Colors.grey, size: 18),
                         tooltip: "Share",
                         onPressed: () {
                           // TODO: Implement share functionality
@@ -397,7 +428,8 @@ class _UserPostState extends State<UserPost> {
     if (diff.inMinutes < 1) return 'just now';
     if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
     if (diff.inHours < 24) return '${diff.inHours} hr ago';
-    if (diff.inDays < 7) return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
+    if (diff.inDays < 7)
+      return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
     return '${date.month}/${date.day}/${date.year}';
   }
 }
@@ -410,7 +442,8 @@ class PostDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
+    final background =
+        isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
 
     return Scaffold(
       backgroundColor: background,
@@ -443,7 +476,9 @@ class PostDetailPage extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Divider(
-                        color: isDark ? Colors.white24 : const Color(0xFF386A53).withOpacity(0.2),
+                        color: isDark
+                            ? Colors.white24
+                            : const Color(0xFF386A53).withOpacity(0.2),
                         thickness: 1,
                       ),
                     ),
@@ -472,15 +507,18 @@ class PostDetailPage extends StatelessWidget {
                       final comments = snapshot.data!.docs;
                       if (comments.isEmpty) {
                         return const Center(
-                          child: Text("No comments yet.", style: TextStyle(color: Colors.grey)),
+                          child: Text("No comments yet.",
+                              style: TextStyle(color: Colors.grey)),
                         );
                       }
                       return ListView.separated(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: comments.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
                         itemBuilder: (context, index) {
-                          final commentData = comments[index].data() as Map<String, dynamic>;
+                          final commentData =
+                              comments[index].data() as Map<String, dynamic>;
                           return TreeComment(
                             commentData: commentData,
                             postId: post.postId,
@@ -492,7 +530,8 @@ class PostDetailPage extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 16, left: 8, right: 8, top: 8),
+                padding: const EdgeInsets.only(
+                    bottom: 16, left: 8, right: 8, top: 8),
                 child: _CommentInput(postId: post.postId),
               ),
             ],
@@ -558,13 +597,14 @@ class _CommentInputState extends State<_CommentInput> {
                 hintText: "Add a comment...",
                 hintStyle: TextStyle(color: Colors.grey[500]),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 14, horizontal: 20),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
               ),
             ),
           ),
           IconButton(
-            icon: Icon(Icons.send, color: isDark ? Colors.white : const Color(0xFF386A53)),
+            icon: Icon(Icons.send,
+                color: isDark ? Colors.white : const Color(0xFF386A53)),
             onPressed: () {
               addComment(_commentTextController.text);
               FocusScope.of(context).unfocus();
@@ -632,10 +672,12 @@ class _TreeCommentState extends State<TreeComment> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final commentId = widget.commentData['id'] ?? widget.commentData['comment'];
-    final children = widget.commentData['children'] as List<Map<String, dynamic>>? ?? [];
+    final children =
+        widget.commentData['children'] as List<Map<String, dynamic>>? ?? [];
 
     return Padding(
-      padding: EdgeInsets.only(left: widget.depth * 18.0, right: 4, top: 4, bottom: 4),
+      padding: EdgeInsets.only(
+          left: widget.depth * 18.0, right: 4, top: 4, bottom: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -653,16 +695,19 @@ class _TreeCommentState extends State<TreeComment> {
             child: Card(
               margin: EdgeInsets.zero,
               color: isDark ? Colors.grey[900] : Colors.grey[100],
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
                         Text(
-                          widget.commentData['comment by']?.split('@').first ?? 'user',
+                          widget.commentData['comment by']?.split('@').first ??
+                              'user',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 13,
@@ -693,7 +738,8 @@ class _TreeCommentState extends State<TreeComment> {
                           icon: Icon(
                             isLiked ? Icons.favorite : Icons.favorite_border,
                             size: 16,
-                            color: isLiked ? Colors.redAccent : Colors.grey[600],
+                            color:
+                                isLiked ? Colors.redAccent : Colors.grey[600],
                           ),
                           onPressed: toggleLike,
                           padding: EdgeInsets.zero,
@@ -702,7 +748,8 @@ class _TreeCommentState extends State<TreeComment> {
                         ),
                         Text(
                           likes.length.toString(),
-                          style: const TextStyle(fontSize: 12, color: Colors.black54),
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.black54),
                         ),
                         const SizedBox(width: 12),
                         TextButton(
@@ -713,7 +760,8 @@ class _TreeCommentState extends State<TreeComment> {
                             padding: EdgeInsets.zero,
                             minimumSize: Size(30, 24),
                           ),
-                          child: const Text('Reply', style: TextStyle(fontSize: 12)),
+                          child: const Text('Reply',
+                              style: TextStyle(fontSize: 12)),
                         ),
                       ],
                     ),
@@ -743,7 +791,8 @@ class _VerticalLinePainter extends CustomPainter {
     final paint = Paint()
       ..color = color
       ..strokeWidth = 2.0;
-    canvas.drawLine(Offset(size.width / 2, 0), Offset(size.width / 2, size.height), paint);
+    canvas.drawLine(
+        Offset(size.width / 2, 0), Offset(size.width / 2, size.height), paint);
   }
 
   @override

@@ -75,9 +75,11 @@ class _UserSearchState extends State<UserSearch> {
     });
     _removeOverlay();
     Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => OtherUsersProfilePage(username: username),
-      ),
+      PageRouteBuilder(
+    pageBuilder: (context, animation1, animation2) => OtherUsersProfilePage(username: username),
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+  ),
     );
   }
 

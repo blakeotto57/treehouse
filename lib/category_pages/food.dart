@@ -240,9 +240,11 @@ class SellerCard extends StatelessWidget {
         onTap: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => OtherUsersProfilePage(username: username),
-            ),
+            PageRouteBuilder(
+    pageBuilder: (context, animation1, animation2) => OtherUsersProfilePage(username: username),
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+  ),
           );
         },
       ),

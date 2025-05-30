@@ -33,18 +33,22 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(
-        builder: (context) => LoginPage(), // or remove onTap if not needed
-      ),
+      PageRouteBuilder(
+    pageBuilder: (context, animation1, animation2) => LoginPage(),
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+  ),
     );
   }
 
   void navigateToFeedback() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => FeedbackPage(),
-      ),
+      PageRouteBuilder(
+    pageBuilder: (context, animation1, animation2) => FeedbackPage(),
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+  ),
     );
   }
 

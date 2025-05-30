@@ -32,7 +32,8 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 
   Future<void> _deleteOldPosts() async {
-    final cutoff = Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 24)));
+    final cutoff =
+        Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 24)));
     final query = await FirebaseFirestore.instance
         .collection('bulletin_posts')
         .where('timestamp', isLessThan: cutoff)
@@ -75,7 +76,8 @@ class _ExplorePageState extends State<ExplorePage> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           title: Row(
             children: [
               const Icon(Icons.edit_note, color: Color(0xFF386A53)),
@@ -108,13 +110,16 @@ class _ExplorePageState extends State<ExplorePage> {
                     fillColor: const Color(0xFFF5FBF7),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF386A53), width: 1.5),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF386A53), width: 1.5),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Color(0xFF386A53), width: 2),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF386A53), width: 2),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 18, horizontal: 16),
                     errorText: errorText,
                   ),
                   style: const TextStyle(fontSize: 16),
@@ -143,8 +148,10 @@ class _ExplorePageState extends State<ExplorePage> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF386A53),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
               ),
               onPressed: _isPosting
                   ? null
@@ -159,7 +166,9 @@ class _ExplorePageState extends State<ExplorePage> {
                       setState(() => _isPosting = true);
                       final user = FirebaseAuth.instance.currentUser;
                       if (user == null) return;
-                      await FirebaseFirestore.instance.collection('bulletin_posts').add({
+                      await FirebaseFirestore.instance
+                          .collection('bulletin_posts')
+                          .add({
                         'message': message,
                         'timestamp': Timestamp.now(),
                         'userEmail': user.email,
@@ -172,9 +181,11 @@ class _ExplorePageState extends State<ExplorePage> {
                   ? const SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text("Post", style: TextStyle(fontSize: 16, color: Colors.white)),
+                  : const Text("Post",
+                      style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
           ],
         ),
@@ -211,13 +222,16 @@ class _ExplorePageState extends State<ExplorePage> {
                     ),
                     decoration: InputDecoration(
                       hintText: "Search the bulletin board...",
-                      hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey),
+                      hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey),
                       filled: true,
                       fillColor: isDark ? darkCard : Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 18),
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 18, horizontal: 18),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: const Color(0xFF386A53), width: 2),
+                        borderSide: BorderSide(
+                            color: const Color(0xFF386A53), width: 2),
                       ),
                     ),
                   ),
@@ -239,7 +253,10 @@ class _ExplorePageState extends State<ExplorePage> {
                       padding: EdgeInsets.symmetric(horizontal: 2),
                       child: Text(
                         "Search",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white),
                       ),
                     ),
                   ),
@@ -251,21 +268,26 @@ class _ExplorePageState extends State<ExplorePage> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             child: Row(
               children: [
-                Icon(Icons.campaign, color: isDark ? Colors.orange[200] : const Color(0xFF386A53)),
+                Icon(Icons.campaign,
+                    color:
+                        isDark ? Colors.orange[200] : const Color(0xFF386A53)),
                 const SizedBox(width: 10),
                 Text(
                   "See what's new on the bulletin board",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color: isDark ? Colors.orange[200] : const Color(0xFF386A53),
+                    color:
+                        isDark ? Colors.orange[200] : const Color(0xFF386A53),
                     letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Divider(
-                    color: (isDark ? Colors.orange[200]! : const Color(0xFF386A53)).withOpacity(0.3),
+                    color:
+                        (isDark ? Colors.orange[200]! : const Color(0xFF386A53))
+                            .withOpacity(0.3),
                     thickness: 1,
                   ),
                 ),
@@ -288,31 +310,40 @@ class _ExplorePageState extends State<ExplorePage> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                    return const Center(child: Text("No posts on the bulletin board."));
+                    return const Center(
+                        child: Text("No posts on the bulletin board."));
                   }
                   final posts = snapshot.data!.docs;
                   return ListView.builder(
                     itemCount: posts.length,
                     itemBuilder: (context, index) {
-                      final postDoc = posts[index]; // This is a DocumentSnapshot
-                      final post = postDoc.data() as Map<String, dynamic>; // This is the map
-                      final timestamp = (post['timestamp'] as Timestamp).toDate();
-                      final formattedTime = DateFormat('MMM d, h:mm a').format(timestamp);
+                      final postDoc =
+                          posts[index]; // This is a DocumentSnapshot
+                      final post = postDoc.data()
+                          as Map<String, dynamic>; // This is the map
+                      final timestamp =
+                          (post['timestamp'] as Timestamp).toDate();
+                      final formattedTime =
+                          DateFormat('MMM d, h:mm a').format(timestamp);
                       final currentUser = FirebaseAuth.instance.currentUser;
-                      final isCurrentUser = currentUser != null && post['userEmail'] == currentUser.email;
+                      final isCurrentUser = currentUser != null &&
+                          post['userEmail'] == currentUser.email;
 
                       return Align(
-                        alignment: Alignment.center, // Center the card horizontally
+                        alignment:
+                            Alignment.center, // Center the card horizontally
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(
                             maxWidth: 350,
                           ),
                           child: Card(
                             color: isDark ? darkCard : Colors.white,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
                             elevation: 2,
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10.0, vertical: 8.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
@@ -322,7 +353,9 @@ class _ExplorePageState extends State<ExplorePage> {
                                     post['message'] ?? '',
                                     style: TextStyle(
                                       fontSize: 15,
-                                      color: isDark ? Colors.white : Colors.black87,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -332,10 +365,15 @@ class _ExplorePageState extends State<ExplorePage> {
                                       onTap: () {
                                         Navigator.push(
                                           context,
-                                          MaterialPageRoute(
-                                            builder: (context) => OtherUsersProfilePage(
+                                          PageRouteBuilder(
+                                            pageBuilder: (context, animation1,
+                                                    animation2) =>
+                                                OtherUsersProfilePage(
                                               username: post['username'],
                                             ),
+                                            transitionDuration: Duration.zero,
+                                            reverseTransitionDuration:
+                                                Duration.zero,
                                           ),
                                         );
                                       },
@@ -344,7 +382,9 @@ class _ExplorePageState extends State<ExplorePage> {
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 15,
-                                          color: isDark ? Colors.orange[200] : const Color(0xFF386A53),
+                                          color: isDark
+                                              ? Colors.orange[200]
+                                              : const Color(0xFF386A53),
                                           decoration: TextDecoration.underline,
                                         ),
                                         maxLines: 1,
@@ -354,44 +394,69 @@ class _ExplorePageState extends State<ExplorePage> {
                                   const SizedBox(height: 4),
                                   // Timestamp and delete button row
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         formattedTime,
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: isDark ? Colors.grey[400] : Colors.grey,
+                                          color: isDark
+                                              ? Colors.grey[400]
+                                              : Colors.grey,
                                         ),
                                       ),
                                       if (isCurrentUser)
                                         IconButton(
-                                          icon: Icon(Icons.edit, color: isDark ? Colors.orange[200] : const Color(0xFF386A53), size: 18),
+                                          icon: Icon(Icons.edit,
+                                              color: isDark
+                                                  ? Colors.orange[200]
+                                                  : const Color(0xFF386A53),
+                                              size: 18),
                                           tooltip: "Delete this post",
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(),
                                           onPressed: () async {
-                                            final confirm = await showDialog<bool>(
+                                            final confirm =
+                                                await showDialog<bool>(
                                               context: context,
                                               builder: (context) => AlertDialog(
-                                                backgroundColor: isDark ? darkCard : Colors.white,
-                                                title: const Text("Delete Post"),
-                                                content: const Text("Are you sure you want to delete this post?"),
+                                                backgroundColor: isDark
+                                                    ? darkCard
+                                                    : Colors.white,
+                                                title:
+                                                    const Text("Delete Post"),
+                                                content: const Text(
+                                                    "Are you sure you want to delete this post?"),
                                                 actions: [
                                                   TextButton(
-                                                    onPressed: () => Navigator.pop(context, false),
-                                                    child: const Text("Cancel", style: TextStyle(color: Colors.blue),),
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, false),
+                                                    child: const Text(
+                                                      "Cancel",
+                                                      style: TextStyle(
+                                                          color: Colors.blue),
+                                                    ),
                                                   ),
                                                   TextButton(
-                                                    onPressed: () => Navigator.pop(context, true),
-                                                    child: const Text("Delete", style: TextStyle(color: Colors.red)),
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, true),
+                                                    child: const Text("Delete",
+                                                        style: TextStyle(
+                                                            color: Colors.red)),
                                                   ),
                                                 ],
                                               ),
                                             );
                                             if (confirm == true) {
                                               postDoc.reference.delete();
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text("Post deleted.")),
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                    content:
+                                                        Text("Post deleted.")),
                                               );
                                             }
                                           },
@@ -443,7 +508,10 @@ class _ExplorePageState extends State<ExplorePage> {
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("OK", style: TextStyle(color: Colors.blue),),
+                      child: const Text(
+                        "OK",
+                        style: TextStyle(color: Colors.blue),
+                      ),
                     ),
                   ],
                 ),
@@ -454,8 +522,10 @@ class _ExplorePageState extends State<ExplorePage> {
           _showPostDialog();
         },
         icon: const Icon(Icons.add),
-        label: const Text("New Post", 
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+        label: const Text(
+          "New Post",
+          style: TextStyle(
+              fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
         ),
       ),
     );

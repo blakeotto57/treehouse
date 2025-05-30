@@ -81,7 +81,11 @@ class _LoginPageState extends State<LoginPage> {
         passwordTextController.clear();
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => ExplorePage()),
+          PageRouteBuilder(
+            pageBuilder: (context, animation1, animation2) => ExplorePage(),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+          ),
         );
       } else {
         /*
@@ -173,7 +177,6 @@ class _LoginPageState extends State<LoginPage> {
                       height: 200,
                     ),
 
-        
                     if (errorMessage != null) // <-- Show error message
                       Padding(
                         padding: const EdgeInsets.only(bottom: 10),
@@ -224,10 +227,13 @@ class _LoginPageState extends State<LoginPage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                  builder: (context) => RegisterPage(
-                                        onTap: () {},
-                                      )),
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation1, animation2) =>
+                                        RegisterPage(onTap: widget.onTap),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
+                              ),
                             );
                           },
                           child: const Text(

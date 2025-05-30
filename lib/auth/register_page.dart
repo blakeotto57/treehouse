@@ -118,7 +118,12 @@ class _RegisterPageState extends State<RegisterPage> {
                     if (!mounted) return;
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => ExplorePage()),
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            ExplorePage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
                     );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -163,7 +168,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                     Text(
+                    Text(
                       "Welcome to Treehouse",
                       style: TextStyle(
                         fontSize: 24, // Match register page
@@ -172,7 +177,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
                     Stack(
                       children: [
                         MyTextField(
@@ -267,7 +271,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     */
                     const SizedBox(height: 16),
-
                     SizedBox(
                       width: double.infinity,
                       child: MyButton(
@@ -276,7 +279,6 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 16),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -293,8 +295,13 @@ class _RegisterPageState extends State<RegisterPage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                  builder: (_) => LoginPage(onTap: () {})),
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation1, animation2) =>
+                                        LoginPage(),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
+                              ),
                             );
                           },
                           child: const Text(

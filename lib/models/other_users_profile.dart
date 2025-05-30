@@ -78,7 +78,8 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
     );
   }
 
-  Future<void> onMessageButtonPressed(BuildContext context, String profileEmail) async {
+  Future<void> onMessageButtonPressed(
+      BuildContext context, String profileEmail) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
@@ -128,9 +129,12 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
     // Navigate to MessagesPage and select the chat
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => MessagesPage(initialSelectedUserEmail: profileEmail, // Pass Bob's email
-    ),
+      PageRouteBuilder(
+        pageBuilder: (context, animation1, animation2) => MessagesPage(
+          initialSelectedUserEmail: profileEmail, // Pass Bob's email
+        ),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
     );
   }

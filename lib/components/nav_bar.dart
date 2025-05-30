@@ -31,7 +31,6 @@ class _NavbarState extends State<Navbar> {
             onPressed: onTap,
             icon: Icon(icon, color: Colors.white),
             label: Text(label, style: const TextStyle(color: Colors.white)),
-            
           )
         : IconButton(
             icon: Icon(icon, color: Colors.white, size: 22),
@@ -85,7 +84,8 @@ class _NavbarState extends State<Navbar> {
                     Expanded(
                       child: SizedBox(
                         height: 36,
-                        child: UserSearch(), // Use your custom search bar widget
+                        child:
+                            UserSearch(), // Use your custom search bar widget
                       ),
                     ),
                   ],
@@ -101,32 +101,60 @@ class _NavbarState extends State<Navbar> {
                 icon: Icons.explore,
                 label: "Explore",
                 onTap: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (_) => const ExplorePage()));
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          ExplorePage(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.message,
                 label: "Messages",
                 onTap: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (_) => MessagesPage()));
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          MessagesPage(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.person,
                 label: "Profile",
                 onTap: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (_) => UserProfilePage()));
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          UserProfilePage(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.settings,
                 label: "Settings",
                 onTap: () {
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (_) => const UserSettingsPage()));
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) =>
+                          UserSettingsPage(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
                 },
                 isWide: isWide),
             ...?widget.actions,
