@@ -67,7 +67,10 @@ class _MessagesPageState extends State<MessagesPage> {
     await FirebaseFirestore.instance.collection('chats').doc(chatId).delete();
 
     // Optionally delete chat_room and messages
-    await FirebaseFirestore.instance.collection('chat_rooms').doc(chatId).delete();
+    await FirebaseFirestore.instance
+        .collection('chat_rooms')
+        .doc(chatId)
+        .delete();
 
     // Remove from accepted_chats for both users
     await FirebaseFirestore.instance
@@ -98,9 +101,8 @@ class _MessagesPageState extends State<MessagesPage> {
     if (pickedFile == null) return;
 
     // Upload to Firebase Storage
-    final storageRef = FirebaseStorage.instance
-        .ref()
-        .child('chat_images/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}');
+    final storageRef = FirebaseStorage.instance.ref().child(
+        'chat_images/${DateTime.now().millisecondsSinceEpoch}_${pickedFile.name}');
     await storageRef.putData(await pickedFile.readAsBytes());
     final imageUrl = await storageRef.getDownloadURL();
 
@@ -140,221 +142,431 @@ class _MessagesPageState extends State<MessagesPage> {
     final dividerColor = isDarkMode ? Colors.grey[700] : Colors.grey[300];
     final textColor = isDarkMode ? Colors.white : const Color(0xFF222222);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: backgroundColor,
       drawer: customDrawer(context),
       appBar: const Navbar(),
-      body: Row(
-        children: [
-          // Left: Conversations List
-          Container(
-            width: 320,
-            color: cardColor,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(10),
-                  child: Text(
-                    "Messages",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                      color: Color(0xFF222222),
-                    ),
-                  ),
-                ),
-                Divider(
-                  color: dividerColor,
-                  height: 1,
-                  thickness: 1,
-                  indent: 16,
-                  endIndent: 16,
-                ),
-                Expanded(
-                  child: StreamBuilder<List<Map<String, dynamic>>>(
-                    stream: _chatService.getAcceptedChatsStream(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasError) {
-                        return Center(
-                          child: Text(
-                            'Error: ${snapshot.error}',
-                            style: TextStyle(color: textColor),
-                          ),
-                        );
-                      }
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final users = snapshot.data!;
-                      if (users.isEmpty) {
-                        return Center(
-                          child: Text(
-                            'No conversations yet',
-                            style: TextStyle(color: textColor),
-                          ),
-                        );
-                      }
-                      return ListView.separated(
-                        itemCount: users.length,
-                        separatorBuilder: (context, index) => Divider(
-                          color: dividerColor,
-                          height: 1,
-                          thickness: 1,
-                          indent: 16,
-                          endIndent: 16,
-                        ),
-                        itemBuilder: (context, index) {
-                          final user = users[index];
-                          final email = user["email"];
-                          final username = user["username"] ?? user["name"] ?? email;
-                          final profileUrl = user["profileImageUrl"];
-                          final isSelected = selectedUserEmail == email;
-
-                          final lastMessage = user['lastMessage'] ?? {};
-                          final lastSender = lastMessage['sender'] ?? username;
-                          final lastMessageText = lastMessage['text'] ?? '';
-
-                          return Material(
-                            color: isSelected
-                                ? (isDarkMode ? Colors.grey[800] : Colors.grey[200])
-                                : cardColor,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(0),
-                              onTap: () {
-                                _onChatSelected(email);
-                                setState(() {
-                                  selectedUserName = username;
-                                  selectedUserProfileUrl = profileUrl;
-                                });
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 24,
-                                      backgroundImage: profileUrl != null ? NetworkImage(profileUrl) : null,
-                                      backgroundColor: Colors.grey[300],
-                                      child: profileUrl == null
-                                          ? const Icon(Icons.person, color: Colors.white)
-                                          : null,
+      body: screenWidth < 600 // Adjust layout for phone screens
+          ? selectedUserEmail == null
+              ? Column(
+                  children: [
+                    // Messages Stream
+                    Expanded(
+                      child: Container(
+                        color: cardColor,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(10),
+                              child: Text(
+                                "Messages",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 22,
+                                  color: Color(0xFF222222),
+                                ),
+                              ),
+                            ),
+                            Divider(
+                              color: dividerColor,
+                              height: 1,
+                              thickness: 1,
+                              indent: 16,
+                              endIndent: 16,
+                            ),
+                            Expanded(
+                              child: StreamBuilder<List<Map<String, dynamic>>>(
+                                stream: _chatService.getAcceptedChatsStream(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.hasError) {
+                                    return Center(
+                                      child: Text(
+                                        'Error: ${snapshot.error}',
+                                        style: TextStyle(color: textColor),
+                                      ),
+                                    );
+                                  }
+                                  if (!snapshot.hasData) {
+                                    return const Center(
+                                        child: CircularProgressIndicator());
+                                  }
+                                  final users = snapshot.data!;
+                                  if (users.isEmpty) {
+                                    return Center(
+                                      child: Text(
+                                        'No conversations yet',
+                                        style: TextStyle(color: textColor),
+                                      ),
+                                    );
+                                  }
+                                  return ListView.separated(
+                                    itemCount: users.length,
+                                    separatorBuilder: (context, index) => Divider(
+                                      color: dividerColor,
+                                      height: 1,
+                                      thickness: 1,
+                                      indent: 16,
+                                      endIndent: 16,
                                     ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Text(
-                                            username,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                              color: textColor,
+                                    itemBuilder: (context, index) {
+                                      final user = users[index];
+                                      final email = user["email"];
+                                      final username =
+                                          user["username"] ?? user["name"] ?? email;
+                                      final profileUrl = user["profileImageUrl"];
+                                      final isSelected = selectedUserEmail == email;
+
+                                      final lastMessage = user['lastMessage'] ?? {};
+                                      final lastSender =
+                                          lastMessage['sender'] ?? username;
+                                      final lastMessageText =
+                                          lastMessage['text'] ?? '';
+
+                                      return Material(
+                                        color: isSelected
+                                            ? (isDarkMode
+                                                ? Colors.grey[800]
+                                                : Colors.grey[200])
+                                            : cardColor,
+                                        child: InkWell(
+                                          borderRadius: BorderRadius.circular(0),
+                                          onTap: () {
+                                            _onChatSelected(email);
+                                            setState(() {
+                                              selectedUserName = username;
+                                              selectedUserProfileUrl = profileUrl;
+                                            });
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 12, vertical: 8),
+                                            child: Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.center,
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 24,
+                                                  backgroundImage:
+                                                      profileUrl != null
+                                                          ? NetworkImage(profileUrl)
+                                                          : null,
+                                                  backgroundColor: Colors.grey[300],
+                                                  child: profileUrl == null
+                                                      ? const Icon(Icons.person,
+                                                          color: Colors.white)
+                                                      : null,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment.start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      Text(
+                                                        username,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 16,
+                                                          color: textColor,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow:
+                                                            TextOverflow.ellipsis,
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        "$lastSender: $lastMessageText",
+                                                        style: TextStyle(
+                                                          color: isDarkMode
+                                                              ? Colors.grey[400]
+                                                              : Colors.grey[600],
+                                                          fontSize: 12,
+                                                        ),
+                                                        maxLines: 1,
+                                                        overflow:
+                                                            TextOverflow.ellipsis,
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            "$lastSender: $lastMessageText",
-                                            style: TextStyle(
-                                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                                              fontSize: 12,
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Column(
+                  children: [
+                    // Chat Page
+                    Expanded(
+                      child: Container(
+                        color: backgroundColor,
+                        child: Column(
+                          children: [
+                            // Back Button
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.arrow_back,
+                                        color: Color(0xFF386A53)),
+                                    onPressed: () {
+                                      setState(() {
+                                        selectedUserEmail = null;
+                                      });
+                                    },
+                                  ),
+                                  Text(
+                                    selectedUserName ?? "Chat",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                      color: Color(0xFF386A53),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: _ChatMessagesWidget(
+                                      receiverEmail: selectedUserEmail!,
+                                      themeColor: const Color(0xFF386A53),
+                                      scrollController: _scrollController,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Divider(
+                                    color: Color(0xFF386A53),
+                                    thickness: 1,
+                                    height: 1,
+                                  ),
+                                  _ChatInputWidget(
+                                    onSend: (text) {},
+                                    receiverEmail: selectedUserEmail!,
+                                    currentUserEmail:
+                                        _authService.currentUser?.email ?? '',
+                                    messageController: _messageController,
+                                    pickAndSendImage: _pickAndSendImage,
+                                    sendMessage: _sendMessage,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+          : Row(
+              children: [
+                // Left: Conversations List
+                Container(
+                  width: 320,
+                  color: cardColor,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.all(10),
+                        child: Text(
+                          "Messages",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            color: Color(0xFF222222),
+                          ),
+                        ),
+                      ),
+                      Divider(
+                        color: dividerColor,
+                        height: 1,
+                        thickness: 1,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                      Expanded(
+                        child: StreamBuilder<List<Map<String, dynamic>>>(
+                          stream: _chatService.getAcceptedChatsStream(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasError) {
+                              return Center(
+                                child: Text(
+                                  'Error: ${snapshot.error}',
+                                  style: TextStyle(color: textColor),
+                                ),
+                              );
+                            }
+                            if (!snapshot.hasData) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            final users = snapshot.data!;
+                            if (users.isEmpty) {
+                              return Center(
+                                child: Text(
+                                  'No conversations yet',
+                                  style: TextStyle(color: textColor),
+                                ),
+                              );
+                            }
+                            return ListView.separated(
+                              itemCount: users.length,
+                              separatorBuilder: (context, index) => Divider(
+                                color: dividerColor,
+                                height: 1,
+                                thickness: 1,
+                                indent: 16,
+                                endIndent: 16,
+                              ),
+                              itemBuilder: (context, index) {
+                                final user = users[index];
+                                final email = user["email"];
+                                final username =
+                                    user["username"] ?? user["name"] ?? email;
+                                final profileUrl = user["profileImageUrl"];
+                                final isSelected = selectedUserEmail == email;
+
+                                final lastMessage = user['lastMessage'] ?? {};
+                                final lastSender =
+                                    lastMessage['sender'] ?? username;
+                                final lastMessageText =
+                                    lastMessage['text'] ?? '';
+
+                                return Material(
+                                  color: isSelected
+                                      ? (isDarkMode ? Colors.grey[800] : Colors.grey[200])
+                                      : cardColor,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(0),
+                                    onTap: () {
+                                      _onChatSelected(email);
+                                      setState(() {
+                                        selectedUserName = username;
+                                        selectedUserProfileUrl = profileUrl;
+                                      });
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 24,
+                                            backgroundImage: profileUrl != null ? NetworkImage(profileUrl) : null,
+                                            backgroundColor: Colors.grey[300],
+                                            child: profileUrl == null
+                                                ? const Icon(Icons.person, color: Colors.white)
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  username,
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    color: textColor,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  "$lastSender: $lastMessageText",
+                                                  style: TextStyle(
+                                                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                                    fontSize: 12,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ],
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
                                           ),
                                         ],
                                       ),
                                     ),
-                                    PopupMenuButton<String>(
-                                      icon: Icon(
-                                        Icons.more_horiz,
-                                        color: isSelected
-                                            ? textColor
-                                            : (isDarkMode ? Colors.grey[400] : Colors.grey[500]),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Right: Chat Page
+                Expanded(
+                  child: selectedUserEmail == null
+                      ? Center(
+                          child: Text(
+                            "Select a conversation",
+                            style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[600], fontSize: 18),
+                          ),
+                        )
+                      : Container(
+                          color: backgroundColor,
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    Expanded(
+                                      child: _ChatMessagesWidget(
+                                        receiverEmail: selectedUserEmail!,
+                                        themeColor: const Color(0xFF386A53),
+                                        scrollController: _scrollController,
                                       ),
-                                      onSelected: (value) async {
-                                        if (value == 'delete') {
-                                          await _deleteChat(email);
-                                        }
-                                      },
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
-                                          value: 'delete',
-                                          child: Text(
-                                            'Delete Chat',
-                                            style: TextStyle(color: textColor),
-                                          ),
-                                        ),
-                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Divider(
+                                      color: Color(0xFF386A53),
+                                      thickness: 1,
+                                      height: 1,
+                                    ),
+                                    _ChatInputWidget(
+                                      onSend: (text) {},
+                                      receiverEmail: selectedUserEmail!,
+                                      currentUserEmail: _authService.currentUser?.email ?? '',
+                                      messageController: _messageController,
+                                      pickAndSendImage: _pickAndSendImage,
+                                      sendMessage: _sendMessage,
                                     ),
                                   ],
                                 ),
                               ),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Right: Chat Page
-          Expanded(
-            child: selectedUserEmail == null
-                ? Center(
-                    child: Text(
-                      "Select a conversation",
-                      style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[600], fontSize: 18),
-                    ),
-                  )
-                : Container(
-                    color: backgroundColor,
-                    child: Column(
-                      children: [
-                        // Chat messages
-                        Expanded(
-                          child: Column(
-                            children: [
-                              Expanded(
-                                child: _ChatMessagesWidget(
-                                  receiverEmail: selectedUserEmail!,
-                                  themeColor: const Color(0xFF386A53),
-                                  scrollController: _scrollController,
-                                ),
-                              ),
-                              
-                              const SizedBox(height: 8), // Add some spacing
-                              
-                              Divider(
-                                color: Color(0xFF386A53),
-                                thickness: 1,
-                                height: 1,
-                              ),
-                              // Message input
-                              _ChatInputWidget(
-                                onSend: (text) {},
-                                receiverEmail: selectedUserEmail!,
-                                currentUserEmail: _authService.currentUser?.email ?? '',
-                                messageController: _messageController,
-                                pickAndSendImage: _pickAndSendImage,
-                                sendMessage: _sendMessage,
-                              ),
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
-      ),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -370,7 +582,8 @@ class _DateSeparator extends StatelessWidget {
     final messageDay = DateTime(date.year, date.month, date.day);
 
     if (messageDay == today) return "Today";
-    if (messageDay == today.subtract(const Duration(days: 1))) return "Yesterday";
+    if (messageDay == today.subtract(const Duration(days: 1)))
+      return "Yesterday";
 
     return "${date.month}/${date.day}/${date.year}"; // Simple fallback
   }
@@ -408,7 +621,6 @@ class _DateSeparator extends StatelessWidget {
   }
 }
 
-
 // Chat messages widget (moved from ChatPage)
 class _ChatMessagesWidget extends StatelessWidget {
   final String receiverEmail;
@@ -439,6 +651,19 @@ class _ChatMessagesWidget extends StatelessWidget {
         }
         final messages = snapshot.data!.docs;
 
+        if (messages.isEmpty) {
+          return Center(
+            child: Text(
+              "Let's have a chat",
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: themeColor,
+              ),
+            ),
+          );
+        }
+
         return ListView.builder(
           controller: scrollController,
           reverse: true, // Start from the bottom
@@ -449,7 +674,8 @@ class _ChatMessagesWidget extends StatelessWidget {
                 ? messages[messages.length - 2 - index]
                 : null;
 
-            final currentTimestamp = (message['timestamp'] as Timestamp?)?.toDate();
+            final currentTimestamp =
+                (message['timestamp'] as Timestamp?)?.toDate();
             final previousTimestamp = previousMessage != null
                 ? (previousMessage['timestamp'] as Timestamp?)?.toDate()
                 : null;
@@ -508,7 +734,8 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
       setState(() {
         isFocused = focusNode.hasFocus;
         if (isFocused) {
-          isEmojiPickerVisible = false; // Hide emoji picker when input is focused
+          isEmojiPickerVisible =
+              false; // Hide emoji picker when input is focused
         }
       });
     });
@@ -524,7 +751,8 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
     setState(() {
       isEmojiPickerVisible = !isEmojiPickerVisible;
       if (isEmojiPickerVisible) {
-        focusNode.unfocus(); // Unfocus the text field when emoji picker is shown
+        focusNode
+            .unfocus(); // Unfocus the text field when emoji picker is shown
       }
     });
   }
@@ -557,7 +785,8 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
         selectedImage = pickedFile;
       });
       // Optionally, send the image immediately:
-      await widget.sendMessage(imageUrl: null); // You may want to upload and send the image here
+      await widget.sendMessage(
+          imageUrl: null); // You may want to upload and send the image here
     }
   }
 
@@ -571,7 +800,8 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
       },
       child: Column(
         children: [
-          if (selectedImage != null) // Show image preview if an image is selected
+          if (selectedImage !=
+              null) // Show image preview if an image is selected
             Container(
               margin: const EdgeInsets.only(bottom: 8),
               child: Stack(
@@ -580,12 +810,14 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                       ? FutureBuilder<Uint8List>(
                           future: selectedImage!.readAsBytes(),
                           builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
                               return Container(
                                 height: 80,
                                 width: 80,
                                 color: Colors.grey[200],
-                                child: const Center(child: CircularProgressIndicator()),
+                                child: const Center(
+                                    child: CircularProgressIndicator()),
                               );
                             }
                             if (snapshot.hasError || !snapshot.hasData) {
@@ -593,7 +825,8 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                                 height: 80,
                                 width: 80,
                                 color: Colors.grey[200],
-                                child: const Center(child: Icon(Icons.broken_image)),
+                                child: const Center(
+                                    child: Icon(Icons.broken_image)),
                               );
                             }
                             return Image.memory(
@@ -651,7 +884,9 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                       ),
                       filled: true,
                       fillColor: isFocused ? Colors.white : Colors.grey[100],
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20), // Added vertical padding
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 20), // Added vertical padding
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: BorderSide(
@@ -679,7 +914,8 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.emoji_emotions_outlined, color: const Color(0xFF386A53)),
+                  icon: const Icon(Icons.emoji_emotions_outlined,
+                      color: const Color(0xFF386A53)),
                   onPressed: _toggleEmojiPicker, // Toggle emoji picker
                   splashRadius: 22,
                 ),
@@ -786,11 +1022,12 @@ class _MessageBubble extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: GestureDetector(
-                  onTap: () => showEnlargedImage(context, imageUrl), // Enlarge image on tap
+                  onTap: () => showEnlargedImage(
+                      context, imageUrl), // Enlarge image on tap
                   child: Image.network(
                     imageUrl,
                     height: 150, // Adjust the height as needed
-                    width: 150,  // Adjust the width as needed
+                    width: 150, // Adjust the width as needed
                     fit: BoxFit.cover,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
