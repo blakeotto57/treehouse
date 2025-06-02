@@ -214,6 +214,7 @@ class _UserPostState extends State<UserPost> {
         final data = snapshot.data!.data() as Map<String, dynamic>;
         final likes = List<String>.from(data['likes'] ?? []);
         final isLiked = likes.contains(currentUser.email);
+        final comments = List<Map<String, dynamic>>.from(data['comments'] ?? []);
 
         return InkWell(
           borderRadius: BorderRadius.circular(12),
@@ -291,12 +292,13 @@ class _UserPostState extends State<UserPost> {
                                       as Map<String, dynamic>;
                                   final username = userData['username'] ??
                                       widget.user.split('@').first;
+                                  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
                                   return Text(
                                     username,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 14,
-                                      color: Colors.black87,
+                                      color: isDarkMode ? Colors.white : Colors.black87,
                                     ),
                                   );
                                 } else {
@@ -338,8 +340,8 @@ class _UserPostState extends State<UserPost> {
                   Text(
                     widget.message.split('\n').first,
                     style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontWeight: FontWeight.normal,
                       color: Colors.black,
                     ),
                     maxLines: 1,
@@ -360,23 +362,32 @@ class _UserPostState extends State<UserPost> {
                     ),
                   const SizedBox(height: 10),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      IconButton(
-                        icon: Icon(
-                          isLiked ? Icons.favorite : Icons.favorite_border,
-                          color: isLiked ? Colors.redAccent : Colors.grey,
-                          size: 18,
+                      // Heart Icon with Like Count
+                      GestureDetector(
+                        onTap: () => toggleLike(likes, isLiked),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isLiked ? Icons.favorite : Icons.favorite_border,
+                              color: isLiked ? Colors.redAccent : Colors.grey,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              likes.length.toString(),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.black87,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
-                        tooltip: "Like",
-                        onPressed: () => toggleLike(likes, isLiked),
-                        splashRadius: 16,
                       ),
-                      Text(
-                        likes.length.toString(),
-                        style: const TextStyle(
-                            fontSize: 13, color: Colors.black87),
-                      ),
-                      const SizedBox(width: 18),
+                      const SizedBox(width: 20),
+                      // Comment Icon with Comment Count
                       const Icon(
                         Icons.mode_comment_outlined,
                         color: Colors.grey,
@@ -400,16 +411,7 @@ class _UserPostState extends State<UserPost> {
                             ),
                           );
                         },
-                      ),
-                      const SizedBox(width: 18),
-                      IconButton(
-                        icon: const Icon(Icons.share_outlined,
-                            color: Colors.grey, size: 18),
-                        tooltip: "Share",
-                        onPressed: () {
-                          // TODO: Implement share functionality
-                        },
-                        splashRadius: 16,
+                      
                       ),
                     ],
                   ),
@@ -450,6 +452,15 @@ class PostDetailPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Post & Comments"),
         backgroundColor: const Color(0xFF386A53),
+        elevation: 4, // Adds a shadow for better visual depth
+        titleTextStyle: const TextStyle(
+          color: Colors.white, // White text color
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // White color for icons
+        ),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -465,13 +476,26 @@ class PostDetailPage extends StatelessWidget {
                   children: [
                     const Icon(Icons.comment, color: Color(0xFF386A53)),
                     const SizedBox(width: 8),
-                    Text(
-                      "Comments",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: isDark ? Colors.white : const Color(0xFF386A53),
-                      ),
+                    StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection("personal_care_posts")
+                          .doc(post.postId)
+                          .collection("comments")
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        final commentsCount =
+                            snapshot.hasData ? snapshot.data!.docs.length : 0;
+                        return Text(
+                          "Comments (${commentsCount})",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                            color: isDark
+                                ? Colors.white
+                                : const Color(0xFF386A53),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -797,4 +821,17 @@ class _VerticalLinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+Widget buildUserPost(BuildContext context, bool isPostAndCommentsPage) {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white.withOpacity(0.15),
+      ),
+      
+    ),
+  );
 }

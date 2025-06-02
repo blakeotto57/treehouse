@@ -75,6 +75,7 @@ class _ExplorePageState extends State<ExplorePage> {
   Future<void> _showPostDialog() async {
     _messageController.clear();
     String? errorText;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -96,51 +97,57 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
           content: SizedBox(
             width: 320,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: _messageController,
-                  maxLines: 5,
-                  minLines: 2,
-                  cursorColor: Colors.black,
-                  maxLength: 200,
-                  maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                  decoration: InputDecoration(
-                    hintText: "What are you offering today?",
-                    hintStyle: const TextStyle(color: Colors.grey),
-                    filled: true,
-                    fillColor: const Color(0xFFF5FBF7),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                          color: Color(0xFF386A53), width: 1.5),
+            child: Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: _messageController,
+                      maxLines: 5,
+                      minLines: 2,
+                      cursorColor: Colors.black,
+                      maxLength: 200,
+                      maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                      decoration: InputDecoration(
+                        hintText: "What are you offering today?",
+                        hintStyle: const TextStyle(color: Colors.grey),
+                        filled: true,
+                        fillColor: const Color(0xFFF5FBF7),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF386A53), width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFF386A53), width: 2),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: 18, horizontal: 16),
+                        errorText: errorText,
+                      ),
+                      style: const TextStyle(
+                        color: Colors.black,
+                      ),
+                      onChanged: (_) {
+                        if (errorText != null) {
+                          setState(() {
+                            errorText = null;
+                          });
+                        }
+                      },
                     ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide:
-                          const BorderSide(color: Color(0xFF386A53), width: 2),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "Keep it friendly and helpful! Posts are visible for 24 hours.",
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                      textAlign: TextAlign.center,
                     ),
-                    contentPadding: const EdgeInsets.symmetric(
-                        vertical: 18, horizontal: 16),
-                    errorText: errorText,
-                  ),
-                  style: const TextStyle(fontSize: 16),
-                  onChanged: (_) {
-                    if (errorText != null) {
-                      setState(() {
-                        errorText = null;
-                      });
-                    }
-                  },
+                  ],
                 ),
-                const SizedBox(height: 10),
-                const Text(
-                  "Keep it friendly and helpful! Posts are visible for 24 hours.",
-                  style: TextStyle(fontSize: 13, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+              ),
             ),
           ),
           actions: [
@@ -321,11 +328,12 @@ class _ExplorePageState extends State<ExplorePage> {
                   return SingleChildScrollView(
                     child: Wrap(
                       spacing: 10, // Horizontal spacing between posts
-                      runSpacing: 5, // Reduced vertical spacing between rows of posts
+                      runSpacing:
+                          5, // Reduced vertical spacing between rows of posts
                       children: posts.map((postDoc) {
                         final post = postDoc.data() as Map<String, dynamic>;
-                        final timestamp = (post['timestamp'] as Timestamp)
-                            .toDate();
+                        final timestamp =
+                            (post['timestamp'] as Timestamp).toDate();
                         final formattedTime =
                             DateFormat('MMM d, h:mm a').format(timestamp);
                         final currentUser = FirebaseAuth.instance.currentUser;
@@ -333,7 +341,8 @@ class _ExplorePageState extends State<ExplorePage> {
                             post['userEmail'] == currentUser.email;
 
                         return SizedBox(
-                          width: MediaQuery.of(context).size.width / 5 - 12, // Fit 5 posts in a row
+                          width: MediaQuery.of(context).size.width / 5 -
+                              12, // Fit 5 posts in a row
                           child: Card(
                             color: isDark ? darkCard : Colors.white,
                             shape: RoundedRectangleBorder(
@@ -344,34 +353,37 @@ class _ExplorePageState extends State<ExplorePage> {
                                   horizontal: 10.0, vertical: 8.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min, // Shrinkwrap the height
+                                mainAxisSize:
+                                    MainAxisSize.min, // Shrinkwrap the height
                                 children: [
                                   // Message
                                   Text(
                                     post['message'] ?? '',
                                     style: TextStyle(
                                       fontSize: 15,
-                                      color: isDark ? Colors.white : Colors.black87,
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black87,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
+                                  // Image
+                                  if (post['imageUrl'] != null)
+                                    Flexible(
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(8), // Optional: Add rounded corners
+                                        child: Image.network(
+                                          post['imageUrl'],
+                                          fit: BoxFit.cover, // Ensures the image scales properly
+                                          width: double.infinity, // Makes the image take up available width
+                                          height: 200, // Set a fixed height or use constraints
+                                        ),
+                                      ),
+                                    ),
+                                  const SizedBox(height: 4),
                                   // Username (instead of email)
                                   if (post['username'] != null)
-                                    GestureDetector(
-                                      onTap: () {
-                                        Navigator.push(
-                                          context,
-                                          PageRouteBuilder(
-                                            pageBuilder: (context, animation1,
-                                                    animation2) =>
-                                                OtherUsersProfilePage(
-                                              username: post['username'],
-                                            ),
-                                            transitionDuration: Duration.zero,
-                                            reverseTransitionDuration: Duration.zero,
-                                          ),
-                                        );
-                                      },
+                                    Expanded(
                                       child: Text(
                                         post['username'],
                                         style: TextStyle(
@@ -382,6 +394,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                               : const Color(0xFF386A53),
                                           decoration: TextDecoration.underline,
                                         ),
+                                        overflow: TextOverflow.ellipsis, // Prevents overflow by truncating text
                                       ),
                                     ),
                                   const SizedBox(height: 4),
@@ -394,7 +407,9 @@ class _ExplorePageState extends State<ExplorePage> {
                                         formattedTime,
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: isDark ? Colors.grey[400] : Colors.grey,
+                                          color: isDark
+                                              ? Colors.grey[400]
+                                              : Colors.grey,
                                         ),
                                       ),
                                       if (isCurrentUser)
@@ -408,18 +423,22 @@ class _ExplorePageState extends State<ExplorePage> {
                                           padding: EdgeInsets.zero,
                                           constraints: const BoxConstraints(),
                                           onPressed: () async {
-                                            final confirm = await showDialog<bool>(
+                                            final confirm =
+                                                await showDialog<bool>(
                                               context: context,
                                               builder: (context) => AlertDialog(
-                                                backgroundColor:
-                                                    isDark ? darkCard : Colors.white,
-                                                title: const Text("Delete Post"),
+                                                backgroundColor: isDark
+                                                    ? darkCard
+                                                    : Colors.white,
+                                                title:
+                                                    const Text("Delete Post"),
                                                 content: const Text(
                                                     "Are you sure you want to delete this post?"),
                                                 actions: [
                                                   TextButton(
                                                     onPressed: () =>
-                                                        Navigator.pop(context, false),
+                                                        Navigator.pop(
+                                                            context, false),
                                                     child: const Text(
                                                       "Cancel",
                                                       style: TextStyle(
@@ -428,7 +447,8 @@ class _ExplorePageState extends State<ExplorePage> {
                                                   ),
                                                   TextButton(
                                                     onPressed: () =>
-                                                        Navigator.pop(context, true),
+                                                        Navigator.pop(
+                                                            context, true),
                                                     child: const Text("Delete",
                                                         style: TextStyle(
                                                             color: Colors.red)),
