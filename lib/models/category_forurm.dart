@@ -5,19 +5,19 @@ import 'package:flutter/services.dart';
 import 'package:treehouse/components/user_post.dart';
 
 class CategoryForumPage extends StatefulWidget {
-  final String collectionName;
-  final String forumTitle;
+  final String title;
+  final IconData icon;
   final Color appBarColor;
-  final Color iconColor;
-  final IconData forumIcon;
+  final Color forumIconColor;
+  final String firestoreCollection;
 
   const CategoryForumPage({
     Key? key,
-    required this.collectionName,
-    required this.forumTitle,
+    required this.title,
+    required this.icon,
     required this.appBarColor,
-    required this.iconColor,
-    required this.forumIcon,
+    required this.forumIconColor,
+    required this.firestoreCollection,
   }) : super(key: key);
 
   @override
@@ -33,7 +33,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
   Future<void> postMessage() async {
     if (textController.text.isNotEmpty) {
       await FirebaseFirestore.instance
-          .collection(widget.collectionName)
+          .collection(widget.firestoreCollection)
           .doc(textController.text)
           .set({
         "email": FirebaseAuth.instance.currentUser?.email,
@@ -52,8 +52,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background =
-        isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
+    final background = isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
 
     return Scaffold(
       backgroundColor: background,
@@ -84,15 +83,21 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                   ),
                   child: TextField(
                     controller: searchController,
+                    textAlignVertical: TextAlignVertical.center,
                     style: const TextStyle(color: Colors.white),
                     decoration: InputDecoration(
-                      hintText: "Search posts",
-                      hintStyle: const TextStyle(
-                        color: Colors.grey, // Customize hint text color
-                      ),
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12), // Adjust vertical padding
+                      prefixIcon: const Icon(Icons.search, color: Colors.white),
+                      hintText: 'Search posts...',
+                      hintStyle: const TextStyle(color: Colors.white70),
+                      border: InputBorder.none,
+                      isCollapsed: true,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
                     ),
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                    },
                   ),
                 ),
               ),
@@ -111,23 +116,21 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                 // Section header
                 Row(
                   children: [
-                    Icon(widget.forumIcon, color: widget.iconColor),
+                    Icon(widget.icon, color: widget.forumIconColor),
                     const SizedBox(width: 8),
                     Text(
-                      widget.forumTitle,
+                      "${widget.title} Forum",
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
-                        color: isDark ? Colors.white : widget.iconColor,
+                        color: isDark ? Colors.white : widget.forumIconColor,
                         letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Divider(
-                        color: isDark
-                            ? Colors.white24
-                            : widget.iconColor,
+                        color: isDark ? Colors.white24 : widget.forumIconColor.withOpacity(0.2),
                         thickness: 1,
                       ),
                     ),
@@ -137,14 +140,13 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                 Expanded(
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
-                        .collection(widget.collectionName)
+                        .collection(widget.firestoreCollection)
                         .orderBy("timestamp", descending: true)
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         var filteredPosts = snapshot.data!.docs.where((doc) {
-                          Map<String, dynamic> data =
-                              doc.data() as Map<String, dynamic>;
+                          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
                           return searchQuery.isEmpty ||
                               data["message"]
                                   .toString()
@@ -156,8 +158,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                           return const Center(
                             child: Text(
                               "No posts found.",
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 16),
+                              style: TextStyle(color: Colors.grey, fontSize: 16),
                             ),
                           );
                         }
@@ -165,11 +166,9 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                         return ListView.separated(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           itemCount: filteredPosts.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 8),
+                          separatorBuilder: (context, index) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            final post = filteredPosts[index].data()
-                                as Map<String, dynamic>;
+                            final post = filteredPosts[index].data() as Map<String, dynamic>;
                             return UserPost(
                               message: post["message"],
                               user: post["email"],
@@ -190,8 +189,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                 ),
                 // Message Input
                 Padding(
-                  padding: const EdgeInsets.only(
-                      bottom: 16, left: 8, right: 8, top: 8),
+                  padding: const EdgeInsets.only(bottom: 16, left: 8, right: 8, top: 8),
                   child: Container(
                     decoration: BoxDecoration(
                       color: isDark ? Colors.grey[900] : Colors.white,
@@ -209,20 +207,22 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                         Expanded(
                           child: TextField(
                             controller: textController,
+                            cursorColor: Colors.black,
                             style: TextStyle(
-                              color: Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.white // Text color for dark mode
-                                  : Colors.black, // Text color for light mode
+                              color: isDark ? Colors.white : Colors.black,
                             ),
                             decoration: InputDecoration(
-                              hintText: "Enter your text here...",
-                              hintStyle: TextStyle(
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.grey[400] // Hint text color for dark mode
-                                    : Colors.grey[600], // Hint text color for light mode
-                              ),
+                              hintText: "Type your message...",
+                              hintStyle: TextStyle(color: Colors.grey[500]),
+                              border: InputBorder.none,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 0, horizontal: 20),
                             ),
                           ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.send, color: isDark ? Colors.white : widget.forumIconColor),
+                          onPressed: postMessage,
                         ),
                       ],
                     ),

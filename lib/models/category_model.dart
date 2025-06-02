@@ -59,13 +59,13 @@ class CategoryModel {
           name: Text(
             "Food",
             style: TextStyle(
-              color: Color.fromRGBO(150, 40, 167, 1),
+              color: Color.fromRGBO(90, 124, 239, 1),
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           icon: Icons.food_bank,
-          boxColor: Color.fromRGBO(215, 57, 239, 1),
+          boxColor: Color.fromRGBO(57, 84, 239, 1),
           onTap: (context) {
             Navigator.push(
               context,
