@@ -7,143 +7,13 @@ import 'package:treehouse/components/comment.dart';
 import 'package:treehouse/components/delete_button.dart';
 import 'package:treehouse/components/like_button.dart';
 import 'package:treehouse/models/other_users_profile.dart';
-import 'package:treehouse/pages/user_profile.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:treehouse/models/user_post_page.dart';
 import 'dart:io';
 
 import '../helper/helper_methods.dart';
 
-class ExplorePage extends StatefulWidget {
-  const ExplorePage({super.key});
-
-  @override
-  State<ExplorePage> createState() => _ExplorePageState();
-}
-
-class _ExplorePageState extends State<ExplorePage> {
-  String _sortBy = 'Most Recent'; // or 'Most Liked'
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Explore'),
-      ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints:
-              const BoxConstraints(maxWidth: 500), // Adjust width as needed
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    const Text("Sort by:",
-                        style: TextStyle(fontSize: 13, color: Colors.black54)),
-                    const SizedBox(width: 8),
-                    DropdownButton<String>(
-                      value: _sortBy,
-                      items: const [
-                        DropdownMenuItem(
-                            value: 'Most Recent', child: Text('Most Recent')),
-                        DropdownMenuItem(
-                            value: 'Most Liked', child: Text('Most Liked')),
-                      ],
-                      onChanged: (value) {
-                        setState(() {
-                          _sortBy = value!;
-                        });
-                      },
-                      style:
-                          const TextStyle(fontSize: 13, color: Colors.black87),
-                      underline: Container(),
-                    ),
-                  ],
-                ),
-              ),
-              // Search bar
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: SizedBox(
-                  width: 400, // Constrain search bar width
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24)),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 12),
-                      filled: true,
-                      fillColor: Colors.grey[100],
-                    ),
-                  ),
-                ),
-              ),
-              // Posts list
-              Expanded(
-                child: StreamBuilder<QuerySnapshot>(
-                  stream: FirebaseFirestore.instance
-                      .collection("personal_care_posts")
-                      .snapshots(),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
-                    }
-
-                    List<Post> posts = snapshot.data!.docs.map((doc) {
-                      final data = doc.data() as Map<String, dynamic>;
-                      return Post(
-                        message: data['message'],
-                        user: data['user'],
-                        postId: doc.id,
-                        likes: List<String>.from(data['likes'] ?? []),
-                        timestamp: data['timestamp'],
-                      );
-                    }).toList();
-
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: posts.length,
-                      itemBuilder: (context, index) {
-                        final sortedPosts = [...posts];
-                        if (_sortBy == 'Most Recent') {
-                          sortedPosts.sort(
-                              (a, b) => b.timestamp.compareTo(a.timestamp));
-                        } else {
-                          sortedPosts.sort((a, b) =>
-                              b.likes.length.compareTo(a.likes.length));
-                        }
-                        final post = sortedPosts[index];
-                        return Center(
-                          child: SizedBox(
-                            width: 500, // Constrain post width
-                            child: UserPost(
-                              message: post.message,
-                              user: post.user,
-                              postId: post.postId,
-                              likes: post.likes,
-                              timestamp: post.timestamp,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
 
 class Post {
   final String message;
@@ -221,11 +91,11 @@ class _UserPostState extends State<UserPost> {
           onTap: () {
             Navigator.push(
               context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) =>
-                    PostDetailPage(post: widget),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
+              MaterialPageRoute(
+                builder: (context) => UserPostPage(
+                  post: widget,
+                  categoryColor: const Color(0xFF386A53),
+                ),
               ),
             );
           },
