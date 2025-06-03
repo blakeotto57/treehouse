@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:treehouse/components/drawer.dart';
+import 'package:treehouse/components/nav_bar.dart';
 import '../components/user_post.dart';
 import '../components/comment.dart';
 
@@ -17,33 +19,24 @@ class UserPostPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark
-        ? categoryColor.withOpacity(0.18)
-        : categoryColor.withOpacity(0.08);
+    final pastelGreen = const Color(0xFFF5FBF7);
+    final darkCard = const Color(0xFF232323);
+    final darkBackground = const Color(0xFF181818);
+   
 
     return Scaffold(
-      backgroundColor: background,
-      // Remove the AppBar and add a custom back button at the top left
+      backgroundColor: isDark ? darkBackground : pastelGreen,
+      drawer: customDrawer(context),
+      appBar: const Navbar(),   
       body: Center(
+        
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Column(
             children: [
-              const SizedBox(height: 32),
-              // Custom back button in the top left
-              Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(left: 4.0, bottom: 8.0),
-                    child: IconButton(
-                      icon: Icon(Icons.arrow_back, color: categoryColor, size: 28),
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      tooltip: 'Back',
-                    ),
-                  ),
-                  const Spacer(),
-                ],
-              ),
+              
+              const SizedBox(height: 10),
+              
               post,
               const SizedBox(height: 8),
               Padding(

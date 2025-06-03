@@ -217,7 +217,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                                 color: isDarkMode
-                                    ? Colors.orange[200]
+                                    ? Colors.white
                                     : const Color(0xFF386A53),
                               ),
                             ),
@@ -249,7 +249,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: isDarkMode
-                                        ? Colors.orange[200]
+                                        ? Colors.white
                                         : const Color(0xFF386A53),
                                   ),
                                   textAlign: TextAlign.left,

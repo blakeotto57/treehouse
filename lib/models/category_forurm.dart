@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 import 'package:treehouse/components/user_post.dart';
+import 'package:treehouse/components/drawer.dart';
+import 'package:treehouse/components/nav_bar.dart';
 
 class CategoryForumPage extends StatefulWidget {
   final String title;
@@ -26,9 +28,8 @@ class CategoryForumPage extends StatefulWidget {
 
 class _CategoryForumPageState extends State<CategoryForumPage> {
   final textController = TextEditingController();
-  final searchController = TextEditingController();
   final currentUser = FirebaseAuth.instance.currentUser!;
-  String searchQuery = '';
+  String searchQuery = "";
 
   Future<void> postMessage() async {
     if (textController.text.isNotEmpty) {
@@ -52,59 +53,13 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
+    final background =
+        isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
 
     return Scaffold(
       backgroundColor: background,
-      appBar: AppBar(
-        backgroundColor: widget.appBarColor,
-        automaticallyImplyLeading: false,
-        titleSpacing: 0,
-        title: Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 0),
-              child: IconButton(
-                padding: EdgeInsets.zero,
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  height: 42,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    color: Colors.white.withOpacity(0.15),
-                  ),
-                  child: TextField(
-                    controller: searchController,
-                    textAlignVertical: TextAlignVertical.center,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search, color: Colors.white),
-                      hintText: 'Search posts...',
-                      hintStyle: const TextStyle(color: Colors.white70),
-                      border: InputBorder.none,
-                      isCollapsed: true,
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        searchQuery = value;
-                      });
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      drawer: customDrawer(context),
+      appBar: const Navbar(),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -112,6 +67,56 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
             onTap: () => FocusScope.of(context).unfocus(),
             child: Column(
               children: [
+                const SizedBox(height: 16),
+                // Search bar
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[900] : Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TextField(
+                    controller: textController,
+                    cursorColor: Colors.black,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        searchQuery = value.toLowerCase();
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Search posts...',
+                      hintStyle: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey[600]),
+                      prefixIcon:
+                          const Icon(Icons.search, color: Color(0xFF386A53)),
+                      
+                      contentPadding: const EdgeInsets.symmetric(
+                          vertical: 12, horizontal: 16),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                            color: const Color(0xFF386A53), width: 1.5),
+                      ),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 16),
                 // Section header
                 Row(
@@ -123,14 +128,16 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 20,
-                        color: isDark ? Colors.white : widget.forumIconColor,
+                        color: widget.forumIconColor,
                         letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Divider(
-                        color: isDark ? Colors.white24 : widget.forumIconColor.withOpacity(0.2),
+                        color: isDark
+                            ? Colors.white24
+                            : widget.forumIconColor.withOpacity(0.2),
                         thickness: 1,
                       ),
                     ),
@@ -146,7 +153,8 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
                         var filteredPosts = snapshot.data!.docs.where((doc) {
-                          Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+                          Map<String, dynamic> data =
+                              doc.data() as Map<String, dynamic>;
                           return searchQuery.isEmpty ||
                               data["message"]
                                   .toString()
@@ -158,7 +166,8 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                           return const Center(
                             child: Text(
                               "No posts found.",
-                              style: TextStyle(color: Colors.grey, fontSize: 16),
+                              style:
+                                  TextStyle(color: Colors.grey, fontSize: 16),
                             ),
                           );
                         }
@@ -166,9 +175,11 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                         return ListView.separated(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           itemCount: filteredPosts.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 8),
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            final post = filteredPosts[index].data() as Map<String, dynamic>;
+                            final post = filteredPosts[index].data()
+                                as Map<String, dynamic>;
                             return UserPost(
                               message: post["message"],
                               user: post["email"],
@@ -189,7 +200,8 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                 ),
                 // Message Input
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 16, left: 8, right: 8, top: 8),
+                  padding: const EdgeInsets.only(
+                      bottom: 16, left: 8, right: 8, top: 8),
                   child: Container(
                     decoration: BoxDecoration(
                       color: isDark ? Colors.grey[900] : Colors.white,
@@ -207,7 +219,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                         Expanded(
                           child: TextField(
                             controller: textController,
-                            cursorColor: Colors.black,
+                            cursorColor: Colors.black54,
                             style: TextStyle(
                               color: isDark ? Colors.white : Colors.black,
                             ),
@@ -221,7 +233,10 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.send, color: isDark ? Colors.white : widget.forumIconColor),
+                          icon: Icon(Icons.send,
+                              color: isDark
+                                  ? Colors.white
+                                  : widget.forumIconColor),
                           onPressed: postMessage,
                         ),
                       ],

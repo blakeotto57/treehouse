@@ -5,10 +5,12 @@ import 'package:treehouse/models/category_model.dart';
 
 // Rename to avoid conflict with Flutter's Drawer
 Widget customDrawer(BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
   return IntrinsicWidth(
     stepWidth: 0,
     child: Drawer(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? const Color(0xFF181818) : Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           topRight: Radius.circular(24),
@@ -19,9 +21,9 @@ Widget customDrawer(BuildContext context) {
         padding: EdgeInsets.zero,
         children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               color: Color(0xFF386A53),
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(24),
               ),
             ),
@@ -31,8 +33,8 @@ Widget customDrawer(BuildContext context) {
                 "Discussion Categories",
                 style: TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 26,
                 ),
               ),
             ),
@@ -55,7 +57,7 @@ Widget customDrawer(BuildContext context) {
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               child: Card(
                 elevation: 0,
-                color: category.boxColor.withOpacity(0.08),
+                color: isDark ? Colors.black12 : category.boxColor.withOpacity(0.08),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),

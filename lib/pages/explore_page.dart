@@ -273,7 +273,7 @@ class _ExplorePageState extends State<ExplorePage> {
               children: [
                 Icon(Icons.campaign,
                     color:
-                        isDark ? Colors.orange[200] : const Color(0xFF386A53)),
+                        isDark ? Colors.white : const Color(0xFF386A53)),
                 const SizedBox(width: 10),
                 Text(
                   "See what's new on the bulletin board",
@@ -281,7 +281,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                     color:
-                        isDark ? Colors.orange[200] : const Color(0xFF386A53),
+                        isDark ? Colors.white : const Color(0xFF386A53),
                     letterSpacing: 0.5,
                   ),
                 ),
@@ -289,7 +289,7 @@ class _ExplorePageState extends State<ExplorePage> {
                 Expanded(
                   child: Divider(
                     color:
-                        (isDark ? Colors.orange[200]! : const Color(0xFF386A53))
+                        (isDark ? Colors.white! : const Color(0xFF386A53))
                             .withOpacity(0.3),
                     thickness: 1,
                   ),
@@ -384,7 +384,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                         fontWeight: FontWeight.bold,
                                         fontSize: 15,
                                         color: isDark
-                                            ? Colors.orange[200]
+                                            ? Colors.white
                                             : const Color(0xFF386A53),
                                         decoration: TextDecoration.underline,
                                       ),
@@ -417,7 +417,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                               IconButton(
                                                 icon: Icon(
                                                   Icons.edit,
-                                                  color: isDark ? Colors.orange[200] : const Color(0xFF386A53),
+                                                  color: const Color(0xFF386A53),
                                                   size: 18,
                                                 ),
                                                 tooltip: "Edit this post",

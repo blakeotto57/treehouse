@@ -9,8 +9,8 @@ class CleaningSellersPage extends StatelessWidget {
     return const CategoryForumPage(
       title: "Cleaning",
       icon: Icons.cleaning_services,
-      appBarColor: Color.fromRGBO(109, 27, 123, 1),
-      forumIconColor: Color.fromRGBO(109, 27, 123, 1),
+      appBarColor: Color.fromRGBO(191, 84, 210, 1),
+      forumIconColor: Color.fromRGBO(191, 84, 210, 1),
       firestoreCollection: "cleaning_posts",
     );
   }

@@ -102,7 +102,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final background = isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
     final cardColor = isDark ? const Color(0xFF232323) : Colors.white;
-    final accent = isDark ? Colors.orange[200]! : const Color(0xFF386A53);
+    final accent = isDark ? Colors.white! : const Color(0xFF386A53);
 
     return Scaffold(
       backgroundColor: background,

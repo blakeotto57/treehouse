@@ -12,7 +12,6 @@ import 'package:treehouse/pages/feedback.dart';
 import 'package:treehouse/components/nav_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class UserSettingsPage extends StatefulWidget {
   const UserSettingsPage({super.key});
 
@@ -36,10 +35,10 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-    pageBuilder: (context, animation1, animation2) => LoginPage(),
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
-  ),
+        pageBuilder: (context, animation1, animation2) => LoginPage(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 
@@ -47,10 +46,10 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     Navigator.push(
       context,
       PageRouteBuilder(
-    pageBuilder: (context, animation1, animation2) => FeedbackPage(),
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
-  ),
+        pageBuilder: (context, animation1, animation2) => FeedbackPage(),
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
+      ),
     );
   }
 
@@ -58,115 +57,160 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (context) => SingleChildScrollView(
-        child: AlertDialog(
-          backgroundColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[900] : Colors.white,
-          title: Row(
-            children: [
-              Text(
-                "Change Password",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+      builder: (context) => Center(
+        child: SingleChildScrollView(
+          child: AlertDialog(
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF232323) // Dark mode background
+                : const Color(0xFFFFFFFF), // Light mode background
+            shape: RoundedRectangleBorder(
+              borderRadius:
+                  BorderRadius.circular(12), // Rounded corners for cleaner UI
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.lock,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? const Color(0xFF386A53) // Dark mode icon color
+                      : const Color(0xFF386A53), // Light mode icon color
                 ),
-              ),
-              const SizedBox(width: 16),
+                const SizedBox(width: 10),
+                Text(
+                  "Change Password",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white // Dark mode text color
+                        : Colors.black, // Light mode text color
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: "Current Password",
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400] // Dark mode label color
+                          : Colors.grey[800], // Light mode label color
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF2E2E2E) // Dark mode input background
+                        : const Color(0xFFF5F5F5), // Light mode input background
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF386A53) // Dark mode border color
+                            : const Color(0xFF386A53), // Light mode border color
+                      ),
+                    ),
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white // Dark mode text color
+                        : Colors.black, // Light mode text color
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: "New Password",
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey[800],
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF2E2E2E)
+                        : const Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF386A53)
+                            : const Color(0xFF386A53),
+                      ),
+                    ),
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: "Confirm New Password",
+                    labelStyle: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey[800],
+                    ),
+                    filled: true,
+                    fillColor: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF2E2E2E)
+                        : const Color(0xFFF5F5F5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF386A53)
+                            : const Color(0xFF386A53),
+                      ),
+                    ),
+                  ),
+                  style: TextStyle(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : Colors.black,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  Navigator.pop(context); // Close the dialog
                 },
-                child: const Text(
+                child: Text(
                   "Cancel",
                   style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.grey[400]
+                        : Colors.grey[800],
                   ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Add your change password logic here
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF386A53),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  "Change Password",
+                  style: TextStyle(color: Colors.white),
                 ),
               ),
             ],
           ),
-          content: SingleChildScrollView(
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800]! : Colors.grey[300]!,
-                  width: 1.0,
-                ),
-                borderRadius: BorderRadius.circular(8),
-                color: Theme.of(context).brightness == Brightness.dark ? Colors.grey[850] : Colors.white,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: _currentPasswordController,
-                    decoration: InputDecoration(
-                      labelText: "Current Password",
-                      border: const OutlineInputBorder(),
-                      labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black),
-                      filled: true,
-                      fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.white,
-                    ),
-                    obscureText: true,
-                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _newPasswordController,
-                    decoration: InputDecoration(
-                      labelText: "New Password",
-                      border: const OutlineInputBorder(),
-                      labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black),
-                      filled: true,
-                      fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.white,
-                    ),
-                    obscureText: true,
-                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _confirmPasswordController,
-                    decoration: InputDecoration(
-                      labelText: "Confirm New Password",
-                      border: const OutlineInputBorder(),
-                      labelStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white70 : Colors.black),
-                      filled: true,
-                      fillColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey[800] : Colors.white,
-                    ),
-                    obscureText: true,
-                    style: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          actions: [
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : Center(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _changePassword();
-                        Navigator.of(context).pop();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[300],
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        "Change Password",
-                        style: TextStyle(
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.black : Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-          ],
         ),
       ),
     );
@@ -181,6 +225,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     final darkBackground = const Color(0xFF181818);
 
     return Scaffold(
+      backgroundColor: isDark ? darkBackground : pastelGreen,
       drawer: customDrawer(context),
       appBar: const Navbar(),
       body: Column(
@@ -216,10 +261,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     child: ElevatedButton.icon(
                       onPressed: signOut,
                       icon: const Icon(Icons.logout, color: Colors.white),
-                      label: const Text("Sign Out", style: TextStyle(color: Colors.white)),
+                      label: const Text("Sign Out",
+                          style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red[700],
-                        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 32, vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -246,8 +293,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     titleStyle: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.normal,
-                      color: Provider.of<ThemeProvider>(context).isDarkMode 
-                          ? Colors.orange[200] 
+                      color: Provider.of<ThemeProvider>(context).isDarkMode
+                          ? Colors.white
                           : textColor, // Adjust text color based on theme
                     ),
                   ),
@@ -260,14 +307,15 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.normal,
-                        color: Provider.of<ThemeProvider>(context).isDarkMode 
-                            ? Colors.orange[200] 
+                        color: Provider.of<ThemeProvider>(context).isDarkMode
+                            ? Colors.white
                             : textColor, // Adjust text color based on theme
                       ),
                     ),
                     value: Provider.of<ThemeProvider>(context).isDarkMode,
                     onChanged: (bool value) {
-                      Provider.of<ThemeProvider>(context, listen: false).toggleTheme();
+                      Provider.of<ThemeProvider>(context, listen: false)
+                          .toggleTheme();
                     },
                   ),
                   const Divider(color: Colors.grey),
@@ -279,13 +327,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     titleStyle: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.normal,
-                      color: Provider.of<ThemeProvider>(context).isDarkMode 
-                          ? Colors.orange[200] 
+                      color: Provider.of<ThemeProvider>(context).isDarkMode
+                          ? Colors.white
                           : textColor, // Adjust text color based on theme
                     ),
                   ),
                   const Divider(color: Colors.grey),
-                  
                 ],
               ),
             ),
@@ -350,13 +397,14 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     return ListTile(
       title: Text(
         title,
-        style: titleStyle ?? const TextStyle(fontWeight: FontWeight.normal, fontSize: 18),
+        style: titleStyle ??
+            const TextStyle(fontWeight: FontWeight.normal, fontSize: 18),
       ),
       subtitle: subtitle != null ? Text(subtitle) : null,
       trailing: icon != null
           ? Icon(
               icon,
-              color: Colors.green[800],
+              color: const Color(0xFF386A53),
             )
           : null,
       onTap: onTap,

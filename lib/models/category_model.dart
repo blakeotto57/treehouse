@@ -32,8 +32,7 @@ class CategoryModel {
           name: Text(
             "Personal Care",
             style: TextStyle(
-              color: Color.fromRGBO(
-                  125, 90, 170, 1), // Darkened version of boxColor
+              color: Color.fromRGBO(178, 129, 243, 1), // Darkened version of boxColor
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -65,7 +64,7 @@ class CategoryModel {
             ),
           ),
           icon: Icons.food_bank,
-          boxColor: Color.fromRGBO(57, 84, 239, 1),
+          boxColor: Color.fromRGBO(90, 124, 239, 1),
           onTap: (context) {
             Navigator.push(
               context,
@@ -91,7 +90,7 @@ class CategoryModel {
             ),
           ),
           icon: Icons.camera,
-          boxColor: Color.fromRGBO(57, 210, 192, 1),
+          boxColor: Color.fromRGBO(40, 147, 134, 1),
           onTap: (context) {
             Navigator.push(
               context,
@@ -111,8 +110,7 @@ class CategoryModel {
           name: Text(
             "Academics",
             style: TextStyle(
-              color: Color.fromRGBO(
-                  167, 97, 67, 1), // Darker version of original color,
+              color: Color.fromRGBO(238, 138, 96, 1),
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -138,7 +136,7 @@ class CategoryModel {
           name: Text(
             "Technical",
             style: TextStyle(
-              color: Color.fromRGBO(179, 45, 90, 1),
+              color: Color.fromRGBO(255, 64, 129, 1),
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -164,7 +162,7 @@ class CategoryModel {
           name: Text(
             "Errands & Moving",
             style: TextStyle(
-              color: Color.fromRGBO(179, 135, 5, 1),
+              color: Color.fromRGBO(255, 193, 7, 1),
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -190,7 +188,7 @@ class CategoryModel {
           name: Text(
             "Pet Care",
             style: TextStyle(
-              color: Color.fromRGBO(53, 123, 56, 1),
+              color: Color.fromRGBO(76, 175, 80, 1),
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -216,13 +214,13 @@ class CategoryModel {
           name: Text(
             "Cleaning",
             style: TextStyle(
-              color: Color.fromRGBO(109, 27, 123, 1),
+              color: Color.fromRGBO(191, 84, 210, 1),
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
           ),
           icon: Icons.cleaning_services,
-          boxColor: Color.fromRGBO(156, 39, 176, 1),
+          boxColor: Color.fromRGBO(191, 84, 210, 1),
           onTap: (context) {
             Navigator.push(
               context,

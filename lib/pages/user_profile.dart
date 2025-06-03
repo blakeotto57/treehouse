@@ -326,7 +326,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
               children: [
                 Icon(Icons.person,
                     color: isDarkMode
-                        ? Colors.orange[200]
+                        ? Colors.white
                         : const Color(0xFF386A53)),
                 const SizedBox(width: 10),
                 Text(
@@ -335,7 +335,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
                     color: isDarkMode
-                        ? Colors.orange[200]
+                        ? Colors.white
                         : const Color(0xFF386A53),
                     letterSpacing: 0.5,
                   ),
@@ -344,7 +344,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 Expanded(
                   child: Divider(
                     color: (isDarkMode
-                            ? Colors.orange[200]!
+                            ? Colors.white!
                             : const Color(0xFF386A53))
                         .withOpacity(0.3),
                     thickness: 1,
@@ -480,7 +480,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                               fontSize:
                                                   18, // Slightly smaller font
                                               color: isDarkMode
-                                                  ? Colors.orange[200]
+                                                  ? Colors.white
                                                   : const Color(0xFF386A53),
                                             ),
                                           ),
@@ -507,7 +507,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                 bio,
                                                 style: TextStyle(
                                                   fontSize: 13,
-                                                  color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                                                  color: isDarkMode ? Colors.white : const Color(0xFF386A53),
                                                 ),
                                                 textAlign: TextAlign.left,
                                                 softWrap: true, // Ensure text wraps
@@ -533,20 +533,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                 icon: Icon(Icons.edit,
                                                     size: 16,
                                                     color: isDarkMode
-                                                        ? Colors.orange[200]
+                                                        ? Colors.white
                                                         : const Color(
                                                             0xFF386A53)),
                                                 label: Text("Edit Username",
                                                     style: TextStyle(
                                                         fontSize: 13,
                                                         color: isDarkMode
-                                                            ? Colors.orange[200]
+                                                            ? Colors.white
                                                             : const Color(
                                                                 0xFF386A53))),
                                                 style: OutlinedButton.styleFrom(
                                                   side: BorderSide(
                                                       color: isDarkMode
-                                                          ? Colors.orange[200]!
+                                                          ? Colors.white!
                                                           : const Color(
                                                               0xFF386A53)),
                                                   shape: RoundedRectangleBorder(
@@ -566,20 +566,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                 icon: Icon(Icons.info_outline,
                                                     size: 16,
                                                     color: isDarkMode
-                                                        ? Colors.orange[200]
+                                                        ? Colors.white
                                                         : const Color(
                                                             0xFF386A53)),
                                                 label: Text("Edit Bio",
                                                     style: TextStyle(
                                                         fontSize: 13,
                                                         color: isDarkMode
-                                                            ? Colors.orange[200]
+                                                            ? Colors.white
                                                             : const Color(
                                                                 0xFF386A53))),
                                                 style: OutlinedButton.styleFrom(
                                                   side: BorderSide(
                                                       color: isDarkMode
-                                                          ? Colors.orange[200]!
+                                                          ? Colors.white!
                                                           : const Color(
                                                               0xFF386A53)),
                                                   padding: const EdgeInsets
@@ -599,7 +599,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                 style: TextStyle(fontSize: 14)),
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor: isDarkMode
-                                                  ? Colors.orange[200]
+                                                  ? Colors.white
                                                   : const Color(0xFF386A53),
                                               foregroundColor: isDarkMode
                                                   ? Colors.black
@@ -858,7 +858,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 22,
-                    color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                    color: isDarkMode ? Colors.white : const Color(0xFF386A53),
                     letterSpacing: 0.2,
                   ),
                   textAlign: TextAlign.center,
@@ -866,7 +866,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 const SizedBox(height: 8),
                 Divider(
                   color: isDarkMode
-                      ? Colors.orange[200]!.withOpacity(0.2)
+                      ? Colors.white!.withOpacity(0.2)
                       : const Color(0xFF386A53).withOpacity(0.15),
                   thickness: 1,
                 ),
@@ -896,14 +896,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(
-                                    color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                                    color: isDarkMode ? Colors.white! : Color(0xFF386A53),
                                     width: 1.5,
                                   ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(
-                                    color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                                    color: isDarkMode ? Colors.white! : Color(0xFF386A53),
                                     width: 1.5,
                                   ),
                                 ),
@@ -927,7 +927,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 '${value.text.length}/200',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isDarkMode ? Colors.orange[200] : Colors.grey[600],
+                                  color: isDarkMode ? Colors.white : Colors.grey[600],
                                 ),
                               );
                             },
@@ -1078,7 +1078,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 22,
-                        color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53),
+                        color: isDarkMode ? Colors.white : const Color(0xFF386A53),
                         letterSpacing: 0.2,
                       ),
                       textAlign: TextAlign.center,
@@ -1086,7 +1086,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     const SizedBox(height: 8),
                     Divider(
                       color: isDarkMode
-                          ? Colors.orange[200]!.withOpacity(0.2)
+                          ? Colors.white!.withOpacity(0.2)
                           : const Color(0xFF386A53).withOpacity(0.15),
                       thickness: 1,
                     ),
@@ -1108,7 +1108,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           color: isDarkMode ? Colors.grey[850] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isDarkMode ? Colors.orange[200]! : Colors.grey[400]!,
+                            color: isDarkMode ? Colors.white! : Colors.grey[400]!,
                           ),
                         ),
                         child: pickedImage != null
@@ -1138,7 +1138,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                   ))
                             : Icon(Icons.add_a_photo,
                                 size: 48,
-                                color: isDarkMode ? Colors.orange[200] : Colors.grey),
+                                color: isDarkMode ? Colors.white : Colors.grey),
                       ),
                     ),
                     const SizedBox(height: 18),
@@ -1152,21 +1152,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       decoration: InputDecoration(
                         labelText: 'Name',
                         labelStyle: TextStyle(
-                          color: isDarkMode ? Colors.orange[200] : Colors.grey[700],
+                          color: isDarkMode ? Colors.white : Colors.grey[700],
                         ),
                         filled: true,
                         fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
@@ -1178,7 +1178,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ),
                         prefixIcon: Icon(Icons.label,
-                            color: isDarkMode ? Colors.orange[200] : Color(0xFF386A53)),
+                            color: isDarkMode ? Colors.white : Color(0xFF386A53)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       ),
                     ),
@@ -1192,21 +1192,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       decoration: InputDecoration(
                         labelText: 'Category',
                         labelStyle: TextStyle(
-                          color: isDarkMode ? Colors.orange[200] : Colors.grey[700],
+                          color: isDarkMode ? Colors.white : Colors.grey[700],
                         ),
                         filled: true,
                         fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53),
+                            color: isDarkMode ? Colors.white! : const Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.orange[200]! : const Color(0xFF386A53),
+                            color: isDarkMode ? Colors.white! : const Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
@@ -1218,7 +1218,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ),
                         prefixIcon: Icon(Icons.category,
-                            color: isDarkMode ? Colors.orange[200] : const Color(0xFF386A53)),
+                            color: isDarkMode ? Colors.white : const Color(0xFF386A53)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       ),
                       dropdownColor: isDarkMode ? Colors.grey[850] : Colors.white,
@@ -1250,21 +1250,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       decoration: InputDecoration(
                         labelText: 'Description',
                         labelStyle: TextStyle(
-                          color: isDarkMode ? Colors.orange[200] : Colors.grey[700],
+                          color: isDarkMode ? Colors.white : Colors.grey[700],
                         ),
                         filled: true,
                         fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
@@ -1276,7 +1276,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ),
                         prefixIcon: Icon(Icons.description,
-                            color: isDarkMode ? Colors.orange[200] : Color(0xFF386A53)),
+                            color: isDarkMode ? Colors.white : Color(0xFF386A53)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       ),
                     ),
@@ -1291,21 +1291,21 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       decoration: InputDecoration(
                         labelText: 'Price (USD)',
                         labelStyle: TextStyle(
-                          color: isDarkMode ? Colors.orange[200] : Colors.grey[700],
+                          color: isDarkMode ? Colors.white : Colors.grey[700],
                         ),
                         filled: true,
                         fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.orange[200]! : Color(0xFF386A53),
+                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
@@ -1317,7 +1317,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ),
                         prefixIcon: Icon(Icons.attach_money,
-                            color: isDarkMode ? Colors.orange[200] : Color(0xFF386A53)),
+                            color: isDarkMode ? Colors.white : Color(0xFF386A53)),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                       ),
                       keyboardType: TextInputType.numberWithOptions(decimal: true),
