@@ -34,9 +34,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: Provider.of<ThemeProvider>(context).themeData, // Use the theme from ThemeProvider
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: const AuthPage(),
       title: 'Treehouse',
       // Define your routes here

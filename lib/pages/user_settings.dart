@@ -10,6 +10,8 @@ import 'package:treehouse/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:treehouse/pages/feedback.dart';
 import 'package:treehouse/components/nav_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 
 class UserSettingsPage extends StatefulWidget {
   const UserSettingsPage({super.key});

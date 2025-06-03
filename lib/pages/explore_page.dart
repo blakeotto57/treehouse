@@ -75,7 +75,6 @@ class _ExplorePageState extends State<ExplorePage> {
   Future<void> _showPostDialog() async {
     _messageController.clear();
     String? errorText;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -97,57 +96,51 @@ class _ExplorePageState extends State<ExplorePage> {
           ),
           content: SizedBox(
             width: 320,
-            child: Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: _messageController,
-                      maxLines: 5,
-                      minLines: 2,
-                      cursorColor: Colors.black,
-                      maxLength: 200,
-                      maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                      decoration: InputDecoration(
-                        hintText: "What are you offering today?",
-                        hintStyle: const TextStyle(color: Colors.grey),
-                        filled: true,
-                        fillColor: const Color(0xFFF5FBF7),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: Color(0xFF386A53), width: 1.5),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: Color(0xFF386A53), width: 2),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 18, horizontal: 16),
-                        errorText: errorText,
-                      ),
-                      style: const TextStyle(
-                        color: Colors.black,
-                      ),
-                      onChanged: (_) {
-                        if (errorText != null) {
-                          setState(() {
-                            errorText = null;
-                          });
-                        }
-                      },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: _messageController,
+                  maxLines: 5,
+                  minLines: 2,
+                  cursorColor: Colors.black,
+                  maxLength: 200,
+                  maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                  decoration: InputDecoration(
+                    hintText: "What are you offering today?",
+                    hintStyle: const TextStyle(color: Colors.grey),
+                    filled: true,
+                    fillColor: const Color(0xFFF5FBF7),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                          color: Color(0xFF386A53), width: 1.5),
                     ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      "Keep it friendly and helpful! Posts are visible for 24 hours.",
-                      style: TextStyle(fontSize: 13, color: Colors.grey),
-                      textAlign: TextAlign.center,
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide:
+                          const BorderSide(color: Color(0xFF386A53), width: 2),
                     ),
-                  ],
+                    contentPadding: const EdgeInsets.symmetric(
+                        vertical: 18, horizontal: 16),
+                    errorText: errorText,
+                  ),
+                  style: const TextStyle(fontSize: 16),
+                  onChanged: (_) {
+                    if (errorText != null) {
+                      setState(() {
+                        errorText = null;
+                      });
+                    }
+                  },
                 ),
-              ),
+                const SizedBox(height: 10),
+                const Text(
+                  "Keep it friendly and helpful! Posts are visible for 24 hours.",
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
           ),
           actions: [
