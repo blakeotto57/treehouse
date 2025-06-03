@@ -272,25 +272,22 @@ class _ExplorePageState extends State<ExplorePage> {
             child: Row(
               children: [
                 Icon(Icons.campaign,
-                    color:
-                        isDark ? Colors.white : const Color(0xFF386A53)),
+                    color: isDark ? Colors.white : const Color(0xFF386A53)),
                 const SizedBox(width: 10),
                 Text(
                   "See what's new on the bulletin board",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color:
-                        isDark ? Colors.white : const Color(0xFF386A53),
+                    color: isDark ? Colors.white : const Color(0xFF386A53),
                     letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Divider(
-                    color:
-                        (isDark ? Colors.white! : const Color(0xFF386A53))
-                            .withOpacity(0.3),
+                    color: (isDark ? Colors.white! : const Color(0xFF386A53))
+                        .withOpacity(0.3),
                     thickness: 1,
                   ),
                 ),
@@ -333,9 +330,12 @@ class _ExplorePageState extends State<ExplorePage> {
                         final isCurrentUser = currentUser != null &&
                             post['userEmail'] == currentUser.email;
 
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        final postsPerRow = screenWidth < 600 ? 3 : 5;
+                        final postWidth = screenWidth / postsPerRow - 16;
+
                         return SizedBox(
-                          width: MediaQuery.of(context).size.width / 5 -
-                              12, // Fit 5 posts in a row
+                          width: postWidth,// Fit 5 posts in a row
                           child: Card(
                             color: isDark ? darkCard : Colors.white,
                             shape: RoundedRectangleBorder(
@@ -396,13 +396,16 @@ class _ExplorePageState extends State<ExplorePage> {
                                   // Timestamp + edit button — overflow fix
                                   Container(
                                     constraints: BoxConstraints(
-                                      minWidth: 150, // Adjust this value to fit the edit row properly
+                                      minWidth:
+                                          150, // Adjust this value to fit the edit row properly
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Wrap(
-                                          crossAxisAlignment: WrapCrossAlignment.center,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
                                           spacing: 8,
                                           runSpacing: 4,
                                           children: [
@@ -410,59 +413,70 @@ class _ExplorePageState extends State<ExplorePage> {
                                               formattedTime,
                                               style: TextStyle(
                                                 fontSize: 11,
-                                                color: isDark ? Colors.grey[400] : Colors.grey,
+                                                color: isDark
+                                                    ? Colors.grey[400]
+                                                    : Colors.grey,
                                               ),
                                             ),
                                             if (isCurrentUser)
                                               IconButton(
                                                 icon: Icon(
                                                   Icons.edit,
-                                                  color: const Color(0xFF386A53),
+                                                  color:
+                                                      const Color(0xFF386A53),
                                                   size: 18,
                                                 ),
                                                 tooltip: "Edit this post",
                                                 padding: EdgeInsets.zero,
-                                                constraints: const BoxConstraints(),
+                                                constraints:
+                                                    const BoxConstraints(),
                                                 onPressed: () async {
                                                   final confirm =
                                                       await showDialog<bool>(
                                                     context: context,
-                                                    builder: (context) => AlertDialog(
+                                                    builder: (context) =>
+                                                        AlertDialog(
                                                       backgroundColor: isDark
                                                           ? darkCard
                                                           : Colors.white,
-                                                      title:
-                                                          const Text("Delete Post"),
+                                                      title: const Text(
+                                                          "Delete Post"),
                                                       content: const Text(
                                                           "Are you sure you want to delete this post?"),
                                                       actions: [
                                                         TextButton(
                                                           onPressed: () =>
                                                               Navigator.pop(
-                                                                  context, false),
-                                                          child: const Text("Cancel",
+                                                                  context,
+                                                                  false),
+                                                          child: const Text(
+                                                              "Cancel",
                                                               style: TextStyle(
-                                                                  color:
-                                                                      Colors.blue)),
+                                                                  color: Colors
+                                                                      .blue)),
                                                         ),
                                                         TextButton(
                                                           onPressed: () =>
                                                               Navigator.pop(
-                                                                  context, true),
-                                                          child: const Text("Delete",
+                                                                  context,
+                                                                  true),
+                                                          child: const Text(
+                                                              "Delete",
                                                               style: TextStyle(
-                                                                  color: Colors.red)),
+                                                                  color: Colors
+                                                                      .red)),
                                                         ),
                                                       ],
                                                     ),
                                                   );
                                                   if (confirm == true) {
                                                     postDoc.reference.delete();
-                                                    ScaffoldMessenger.of(context)
+                                                    ScaffoldMessenger.of(
+                                                            context)
                                                         .showSnackBar(
                                                       const SnackBar(
-                                                          content:
-                                                              Text("Post deleted.")),
+                                                          content: Text(
+                                                              "Post deleted.")),
                                                     );
                                                   }
                                                 },
