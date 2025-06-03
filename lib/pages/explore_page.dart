@@ -339,7 +339,8 @@ class _ExplorePageState extends State<ExplorePage> {
                           child: Card(
                             color: isDark ? darkCard : Colors.white,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             elevation: 2,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -360,107 +361,116 @@ class _ExplorePageState extends State<ExplorePage> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
+
                                   // Image
                                   if (post['imageUrl'] != null)
-                                    Flexible(
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(8), // Optional: Add rounded corners
-                                        child: Image.network(
-                                          post['imageUrl'],
-                                          fit: BoxFit.cover, // Ensures the image scales properly
-                                          width: double.infinity, // Makes the image take up available width
-                                          height: 200, // Set a fixed height or use constraints
-                                        ),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        post['imageUrl'],
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                        height: 200,
                                       ),
                                     ),
+
                                   const SizedBox(height: 4),
-                                  // Username (instead of email)
+
+                                  // Username
                                   if (post['username'] != null)
-                                    Expanded(
-                                      child: Text(
-                                        post['username'],
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                          color: isDark
-                                              ? Colors.orange[200]
-                                              : const Color(0xFF386A53),
-                                          decoration: TextDecoration.underline,
-                                        ),
-                                        overflow: TextOverflow.ellipsis, // Prevents overflow by truncating text
+                                    Text(
+                                      post['username'],
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 15,
+                                        color: isDark
+                                            ? Colors.orange[200]
+                                            : const Color(0xFF386A53),
+                                        decoration: TextDecoration.underline,
                                       ),
+                                      overflow: TextOverflow.ellipsis,
                                     ),
+
                                   const SizedBox(height: 4),
-                                  // Timestamp and delete button row
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        formattedTime,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: isDark
-                                              ? Colors.grey[400]
-                                              : Colors.grey,
-                                        ),
-                                      ),
-                                      if (isCurrentUser)
-                                        IconButton(
-                                          icon: Icon(Icons.edit,
-                                              color: isDark
-                                                  ? Colors.orange[200]
-                                                  : const Color(0xFF386A53),
-                                              size: 18),
-                                          tooltip: "Delete this post",
-                                          padding: EdgeInsets.zero,
-                                          constraints: const BoxConstraints(),
-                                          onPressed: () async {
-                                            final confirm =
-                                                await showDialog<bool>(
-                                              context: context,
-                                              builder: (context) => AlertDialog(
-                                                backgroundColor: isDark
-                                                    ? darkCard
-                                                    : Colors.white,
-                                                title:
-                                                    const Text("Delete Post"),
-                                                content: const Text(
-                                                    "Are you sure you want to delete this post?"),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(
-                                                            context, false),
-                                                    child: const Text(
-                                                      "Cancel",
-                                                      style: TextStyle(
-                                                          color: Colors.blue),
-                                                    ),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(
-                                                            context, true),
-                                                    child: const Text("Delete",
-                                                        style: TextStyle(
-                                                            color: Colors.red)),
-                                                  ),
-                                                ],
+
+                                  // Timestamp + edit button — overflow fix
+                                  Container(
+                                    constraints: BoxConstraints(
+                                      minWidth: 150, // Adjust this value to fit the edit row properly
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Wrap(
+                                          crossAxisAlignment: WrapCrossAlignment.center,
+                                          spacing: 8,
+                                          runSpacing: 4,
+                                          children: [
+                                            Text(
+                                              formattedTime,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: isDark ? Colors.grey[400] : Colors.grey,
                                               ),
-                                            );
-                                            if (confirm == true) {
-                                              postDoc.reference.delete();
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                const SnackBar(
-                                                    content:
-                                                        Text("Post deleted.")),
-                                              );
-                                            }
-                                          },
+                                            ),
+                                            if (isCurrentUser)
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.edit,
+                                                  color: isDark ? Colors.orange[200] : const Color(0xFF386A53),
+                                                  size: 18,
+                                                ),
+                                                tooltip: "Edit this post",
+                                                padding: EdgeInsets.zero,
+                                                constraints: const BoxConstraints(),
+                                                onPressed: () async {
+                                                  final confirm =
+                                                      await showDialog<bool>(
+                                                    context: context,
+                                                    builder: (context) => AlertDialog(
+                                                      backgroundColor: isDark
+                                                          ? darkCard
+                                                          : Colors.white,
+                                                      title:
+                                                          const Text("Delete Post"),
+                                                      content: const Text(
+                                                          "Are you sure you want to delete this post?"),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context, false),
+                                                          child: const Text("Cancel",
+                                                              style: TextStyle(
+                                                                  color:
+                                                                      Colors.blue)),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () =>
+                                                              Navigator.pop(
+                                                                  context, true),
+                                                          child: const Text("Delete",
+                                                              style: TextStyle(
+                                                                  color: Colors.red)),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                  if (confirm == true) {
+                                                    postDoc.reference.delete();
+                                                    ScaffoldMessenger.of(context)
+                                                        .showSnackBar(
+                                                      const SnackBar(
+                                                          content:
+                                                              Text("Post deleted.")),
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                          ],
                                         ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ],
                               ),
