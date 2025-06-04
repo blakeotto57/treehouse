@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart'; // For kIsWeb
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
@@ -35,8 +36,18 @@ class _MessagesPageState extends State<MessagesPage> {
   @override
   void initState() {
     super.initState();
+    _loadLastSelectedChat();
+  }
+
+  Future<void> _loadLastSelectedChat() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastChat = prefs.getString('last_selected_chat');
     if (widget.initialSelectedUserEmail != null) {
       selectedUserEmail = widget.initialSelectedUserEmail;
+    } else if (lastChat != null) {
+      setState(() {
+        selectedUserEmail = lastChat;
+      });
     }
   }
 
@@ -47,10 +58,14 @@ class _MessagesPageState extends State<MessagesPage> {
     super.dispose();
   }
 
-  void _onChatSelected(String userEmail) {
+  void _onChatSelected(String userEmail) async {
     setState(() {
       selectedUserEmail = userEmail;
     });
+    // Save to SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_selected_chat', userEmail);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.jumpTo(_scrollController.position.minScrollExtent);
@@ -137,7 +152,8 @@ class _MessagesPageState extends State<MessagesPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? const Color(0xFF181818) : Colors.green[50];
+    final backgroundColor =
+        isDarkMode ? const Color(0xFF181818) : Colors.green[50];
     final cardColor = isDarkMode ? const Color(0xFF232323) : Colors.white;
     final dividerColor = isDarkMode ? Colors.grey[700] : Colors.grey[300];
     final textColor = isDarkMode ? Colors.white : const Color(0xFF222222);
@@ -204,7 +220,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                   }
                                   return ListView.separated(
                                     itemCount: users.length,
-                                    separatorBuilder: (context, index) => Divider(
+                                    separatorBuilder: (context, index) =>
+                                        Divider(
                                       color: dividerColor,
                                       height: 1,
                                       thickness: 1,
@@ -214,12 +231,16 @@ class _MessagesPageState extends State<MessagesPage> {
                                     itemBuilder: (context, index) {
                                       final user = users[index];
                                       final email = user["email"];
-                                      final username =
-                                          user["username"] ?? user["name"] ?? email;
-                                      final profileUrl = user["profileImageUrl"];
-                                      final isSelected = selectedUserEmail == email;
+                                      final username = user["username"] ??
+                                          user["name"] ??
+                                          email;
+                                      final profileUrl =
+                                          user["profileImageUrl"];
+                                      final isSelected =
+                                          selectedUserEmail == email;
 
-                                      final lastMessage = user['lastMessage'] ?? {};
+                                      final lastMessage =
+                                          user['lastMessage'] ?? {};
                                       final lastSender =
                                           lastMessage['sender'] ?? username;
                                       final lastMessageText =
@@ -232,12 +253,14 @@ class _MessagesPageState extends State<MessagesPage> {
                                                 : Colors.grey[200])
                                             : cardColor,
                                         child: InkWell(
-                                          borderRadius: BorderRadius.circular(0),
+                                          borderRadius:
+                                              BorderRadius.circular(0),
                                           onTap: () {
                                             _onChatSelected(email);
                                             setState(() {
                                               selectedUserName = username;
-                                              selectedUserProfileUrl = profileUrl;
+                                              selectedUserProfileUrl =
+                                                  profileUrl;
                                             });
                                           },
                                           child: Padding(
@@ -247,25 +270,143 @@ class _MessagesPageState extends State<MessagesPage> {
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.center,
                                               children: [
+                                                // 3-dot icon
+                                                IconButton(
+                                                  icon: Icon(Icons.more_vert,
+                                                      color: Color(0xFF386A53)),
+                                                  tooltip: "More options",
+                                                  onPressed: () {
+                                                    showDialog(
+                                                      context: context,
+                                                      builder: (context) {
+                                                        final isDark = Theme.of(
+                                                                    context)
+                                                                .brightness ==
+                                                            Brightness.dark;
+                                                        return AlertDialog(
+                                                          backgroundColor:
+                                                              isDark
+                                                                  ? Colors
+                                                                      .grey[900]
+                                                                  : Colors
+                                                                      .white,
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        18),
+                                                          ),
+                                                          title: Row(
+                                                            children: [
+                                                              Icon(
+                                                                  Icons
+                                                                      .warning_amber_rounded,
+                                                                  color: Color(
+                                                                      0xFF386A53)),
+                                                              const SizedBox(
+                                                                  width: 8),
+                                                              Text(
+                                                                "Chat Options",
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: Color(
+                                                                      0xFF386A53),
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          content: Text(
+                                                            "Do you want to delete the chat with $username?",
+                                                            style: TextStyle(
+                                                              color: isDark
+                                                                  ? Colors.white
+                                                                  : Colors
+                                                                      .black87,
+                                                            ),
+                                                          ),
+                                                          actions: [
+                                                            TextButton(
+                                                              style: TextButton
+                                                                  .styleFrom(
+                                                                foregroundColor:
+                                                                    isDark
+                                                                        ? Colors
+                                                                            .white
+                                                                        : Color(
+                                                                            0xFF386A53),
+                                                              ),
+                                                              child: Text(
+                                                                  "Cancel"),
+                                                              onPressed: () =>
+                                                                  Navigator.of(
+                                                                          context)
+                                                                      .pop(),
+                                                            ),
+                                                            ElevatedButton.icon(
+                                                              style:
+                                                                  ElevatedButton
+                                                                      .styleFrom(
+                                                                backgroundColor:
+                                                                    Color(
+                                                                        0xFF386A53),
+                                                                foregroundColor:
+                                                                    Colors
+                                                                        .white,
+                                                                shape:
+                                                                    RoundedRectangleBorder(
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              12),
+                                                                ),
+                                                              ),
+                                                              icon: Icon(
+                                                                  Icons.delete),
+                                                              label: Text(
+                                                                  "Delete Chat"),
+                                                              onPressed:
+                                                                  () async {
+                                                                Navigator.of(
+                                                                        context)
+                                                                    .pop();
+                                                                await _deleteChat(
+                                                                    email);
+                                                              },
+                                                            ),
+                                                          ],
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                ),
+                                                // Avatar
                                                 CircleAvatar(
                                                   radius: 24,
-                                                  backgroundImage:
-                                                      profileUrl != null
-                                                          ? NetworkImage(profileUrl)
-                                                          : null,
-                                                  backgroundColor: Colors.grey[300],
+                                                  backgroundImage: profileUrl !=
+                                                          null
+                                                      ? NetworkImage(profileUrl)
+                                                      : null,
+                                                  backgroundColor:
+                                                      Colors.grey[300],
                                                   child: profileUrl == null
                                                       ? const Icon(Icons.person,
                                                           color: Colors.white)
                                                       : null,
                                                 ),
                                                 const SizedBox(width: 12),
+                                                // Username and last message
                                                 Expanded(
                                                   child: Column(
                                                     crossAxisAlignment:
-                                                        CrossAxisAlignment.start,
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     mainAxisAlignment:
-                                                        MainAxisAlignment.center,
+                                                        MainAxisAlignment
+                                                            .center,
                                                     children: [
                                                       Text(
                                                         username,
@@ -276,8 +417,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                                           color: textColor,
                                                         ),
                                                         maxLines: 1,
-                                                        overflow:
-                                                            TextOverflow.ellipsis,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                       ),
                                                       const SizedBox(height: 2),
                                                       Text(
@@ -285,12 +426,13 @@ class _MessagesPageState extends State<MessagesPage> {
                                                         style: TextStyle(
                                                           color: isDarkMode
                                                               ? Colors.grey[400]
-                                                              : Colors.grey[600],
+                                                              : Colors
+                                                                  .grey[600],
                                                           fontSize: 12,
                                                         ),
                                                         maxLines: 1,
-                                                        overflow:
-                                                            TextOverflow.ellipsis,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                       ),
                                                     ],
                                                   ),
@@ -455,7 +597,9 @@ class _MessagesPageState extends State<MessagesPage> {
 
                                 return Material(
                                   color: isSelected
-                                      ? (isDarkMode ? Colors.grey[800] : Colors.grey[200])
+                                      ? (isDarkMode
+                                          ? Colors.grey[800]
+                                          : Colors.grey[200])
                                       : cardColor,
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(0),
@@ -467,23 +611,130 @@ class _MessagesPageState extends State<MessagesPage> {
                                       });
                                     },
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 8),
                                       child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
+                                          // 3-dot icon
+                                          IconButton(
+                                            icon: Icon(Icons.more_vert,
+                                                color: Color(0xFF386A53)),
+                                            tooltip: "More options",
+                                            onPressed: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (context) {
+                                                  final isDark =
+                                                      Theme.of(context)
+                                                              .brightness ==
+                                                          Brightness.dark;
+                                                  return AlertDialog(
+                                                    backgroundColor: isDark
+                                                        ? Colors.grey[900]
+                                                        : Colors.white,
+                                                    shape:
+                                                        RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              18),
+                                                    ),
+                                                    title: Row(
+                                                      children: [
+                                                        Icon(
+                                                            Icons
+                                                                .warning_amber_rounded,
+                                                            color: Color(
+                                                                0xFF386A53)),
+                                                        const SizedBox(
+                                                            width: 8),
+                                                        Text(
+                                                          "Chat Options",
+                                                          style: TextStyle(
+                                                            color: Color(
+                                                                0xFF386A53),
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    content: Text(
+                                                      "Do you want to delete the chat with $username?",
+                                                      style: TextStyle(
+                                                        color: isDark
+                                                            ? Colors.white
+                                                            : Colors.black87,
+                                                      ),
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        style: TextButton
+                                                            .styleFrom(
+                                                          foregroundColor: isDark
+                                                              ? Colors.white
+                                                              : Color(
+                                                                  0xFF386A53),
+                                                        ),
+                                                        child: Text("Cancel"),
+                                                        onPressed: () =>
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop(),
+                                                      ),
+                                                      ElevatedButton.icon(
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              Color(0xFF386A53),
+                                                          foregroundColor:
+                                                              Colors.white,
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                        ),
+                                                        icon:
+                                                            Icon(Icons.delete),
+                                                        label:
+                                                            Text("Delete Chat"),
+                                                        onPressed: () async {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                          await _deleteChat(
+                                                              email);
+                                                        },
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            },
+                                          ),
+                                          // Avatar
                                           CircleAvatar(
                                             radius: 24,
-                                            backgroundImage: profileUrl != null ? NetworkImage(profileUrl) : null,
+                                            backgroundImage: profileUrl != null
+                                                ? NetworkImage(profileUrl)
+                                                : null,
                                             backgroundColor: Colors.grey[300],
                                             child: profileUrl == null
-                                                ? const Icon(Icons.person, color: Colors.white)
+                                                ? const Icon(Icons.person,
+                                                    color: Colors.white)
                                                 : null,
                                           ),
                                           const SizedBox(width: 12),
+                                          // Username and last message
                                           Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
                                                 Text(
                                                   username,
@@ -493,17 +744,21 @@ class _MessagesPageState extends State<MessagesPage> {
                                                     color: textColor,
                                                   ),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                                 const SizedBox(height: 2),
                                                 Text(
                                                   "$lastSender: $lastMessageText",
                                                   style: TextStyle(
-                                                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                                    color: isDarkMode
+                                                        ? Colors.grey[400]
+                                                        : Colors.grey[600],
                                                     fontSize: 12,
                                                   ),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ),
@@ -512,10 +767,10 @@ class _MessagesPageState extends State<MessagesPage> {
                                       ),
                                     ),
                                   ),
-                                  );
-                                },
-                              );
-                            },
+                                );
+                              },
+                            );
+                          },
                         ),
                       ),
                     ],
@@ -527,7 +782,11 @@ class _MessagesPageState extends State<MessagesPage> {
                       ? Center(
                           child: Text(
                             "Select a conversation",
-                            style: TextStyle(color: isDarkMode ? Colors.grey[400] : Colors.grey[600], fontSize: 18),
+                            style: TextStyle(
+                                color: isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                                fontSize: 18),
                           ),
                         )
                       : Container(
@@ -553,7 +812,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                     _ChatInputWidget(
                                       onSend: (text) {},
                                       receiverEmail: selectedUserEmail!,
-                                      currentUserEmail: _authService.currentUser?.email ?? '',
+                                      currentUserEmail:
+                                          _authService.currentUser?.email ?? '',
                                       messageController: _messageController,
                                       pickAndSendImage: _pickAndSendImage,
                                       sendMessage: _sendMessage,
@@ -882,7 +1142,9 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                     focusNode: focusNode,
                     cursorColor: Colors.green[900],
                     style: TextStyle(
-                      color: isFocused ? Colors.black : Colors.black,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Colors.black,
                     ),
                     decoration: InputDecoration(
                       hintText: "Type a message...",
@@ -898,28 +1160,22 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                           vertical: 20), // Added vertical padding
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
                           width: 2,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
                           width: 2,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
+                        borderSide: const BorderSide(
+                          color: Colors.transparent,
                           width: 2,
                         ),
                       ),

@@ -28,7 +28,6 @@ const List<String> categoriesList = [
   'Errands & Moving',
   'Pet Care',
   'Cleaning',
-  
 ];
 
 class UserProfilePage extends StatefulWidget {
@@ -86,7 +85,8 @@ class ListingTile extends StatelessWidget {
                             height: 200,
                             color: Colors.grey[300],
                             child: const Center(
-                              child: CircularProgressIndicator(color: Colors.white),
+                              child: CircularProgressIndicator(
+                                  color: Colors.white),
                             ),
                           );
                         },
@@ -95,7 +95,8 @@ class ListingTile extends StatelessWidget {
                             width: 200,
                             height: 200,
                             color: Colors.grey[300],
-                            child: const Icon(Icons.error, color: Colors.white, size: 48),
+                            child: const Icon(Icons.error,
+                                color: Colors.white, size: 48),
                           );
                         },
                       ),
@@ -148,7 +149,8 @@ class ListingTile extends StatelessWidget {
                                 width: double.infinity,
                                 height: double.infinity,
                                 color: Colors.grey[200],
-                                child: const Center(child: CircularProgressIndicator()),
+                                child: const Center(
+                                    child: CircularProgressIndicator()),
                               );
                             },
                             errorBuilder: (context, error, stackTrace) {
@@ -156,7 +158,8 @@ class ListingTile extends StatelessWidget {
                                 width: double.infinity,
                                 height: double.infinity,
                                 color: Colors.grey[200],
-                                child: const Icon(Icons.broken_image, size: 56, color: Colors.grey),
+                                child: const Icon(Icons.broken_image,
+                                    size: 56, color: Colors.grey),
                               );
                             },
                           )
@@ -164,7 +167,8 @@ class ListingTile extends StatelessWidget {
                             width: double.infinity,
                             height: double.infinity,
                             color: Colors.grey[200],
-                            child: const Icon(Icons.image, size: 56, color: Colors.grey),
+                            child: const Icon(Icons.image,
+                                size: 56, color: Colors.grey),
                           ),
                   ),
                 ),
@@ -325,28 +329,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
             child: Row(
               children: [
                 Icon(Icons.person,
-                    color: isDarkMode
-                        ? Colors.white
-                        : const Color(0xFF386A53)),
+                    color: isDarkMode ? Colors.white : const Color(0xFF386A53)),
                 const SizedBox(width: 10),
                 Text(
                   "Your Profile",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color: isDarkMode
-                        ? Colors.white
-                        : const Color(0xFF386A53),
+                    color: isDarkMode ? Colors.white : const Color(0xFF386A53),
                     letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Divider(
-                    color: (isDarkMode
-                            ? Colors.white!
-                            : const Color(0xFF386A53))
-                        .withOpacity(0.3),
+                    color:
+                        (isDarkMode ? Colors.white! : const Color(0xFF386A53))
+                            .withOpacity(0.3),
                     thickness: 1,
                   ),
                 ),
@@ -434,7 +433,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                   radius:
                                                       48, // Slightly smaller avatar
                                                   backgroundColor:
-                                                      Colors.green[800],
+                                                      Color(0xFF386A53),
                                                   backgroundImage:
                                                       profileImageUrl != null
                                                           ? NetworkImage(
@@ -453,21 +452,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                 child: Container(
                                                   decoration: BoxDecoration(
                                                     color: isDarkMode
-                                                        ? Colors.grey[700]
+                                                        ? Colors.grey[800]!
                                                         : Colors.white,
                                                     shape: BoxShape.circle,
                                                     boxShadow: [
                                                       BoxShadow(
-                                                        color: Colors.black
-                                                            .withOpacity(0.1),
+                                                        color: isDarkMode
+                                                            ? Colors.grey[700]!
+                                                            : Colors.grey[300]!,
                                                         blurRadius: 2,
                                                       ),
                                                     ],
                                                   ),
                                                   child: Icon(Icons.edit,
                                                       size: 16,
-                                                      color: Colors.green[800]),
+                                                      color: Color(0xFF386A53),
                                                 ),
+                                              ),
                                               ),
                                             ],
                                           ),
@@ -497,28 +498,42 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                           const SizedBox(height: 10),
                                           if (bio != null && bio.isNotEmpty)
                                             Container(
-                                              constraints: const BoxConstraints(maxWidth: 300), // Limit the width
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              constraints: const BoxConstraints(
+                                                  maxWidth:
+                                                      300), // Limit the width
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 10,
+                                                      vertical: 6),
                                               decoration: BoxDecoration(
-                                                color: isDarkMode ? Colors.grey[900] : Colors.green[50],
-                                                borderRadius: BorderRadius.circular(8),
+                                                color: isDarkMode
+                                                    ? Colors.grey[900]
+                                                    : Colors.green[50],
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
                                               ),
                                               child: Text(
                                                 bio,
                                                 style: TextStyle(
                                                   fontSize: 13,
-                                                  color: isDarkMode ? Colors.white : const Color(0xFF386A53),
+                                                  color: isDarkMode
+                                                      ? Colors.white
+                                                      : const Color(0xFF386A53),
                                                 ),
                                                 textAlign: TextAlign.left,
-                                                softWrap: true, // Ensure text wraps
-                                                overflow: TextOverflow.visible, // Prevent clipping
+                                                softWrap:
+                                                    true, // Ensure text wraps
+                                                overflow: TextOverflow
+                                                    .visible, // Prevent clipping
                                               ),
                                             ),
                                           if (bio == null || bio.isEmpty)
                                             Text(
                                               "No bio yet. Add one!",
                                               style: TextStyle(
-                                                color: isDarkMode ? Colors.grey[500] : Colors.grey[500],
+                                                color: isDarkMode
+                                                    ? Colors.grey[500]
+                                                    : Colors.grey[500],
                                                 fontSize: 12,
                                               ),
                                             ),
@@ -532,22 +547,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                     editField("username"),
                                                 icon: Icon(Icons.edit,
                                                     size: 16,
-                                                    color: isDarkMode
-                                                        ? Colors.white
-                                                        : const Color(
-                                                            0xFF386A53)),
+                                                    color: const Color(
+                                                        0xFF386A53)),
                                                 label: Text("Edit Username",
                                                     style: TextStyle(
                                                         fontSize: 13,
-                                                        color: isDarkMode
-                                                            ? Colors.white
-                                                            : const Color(
-                                                                0xFF386A53))),
+                                                        color: const Color(
+                                                            0xFF386A53))),
                                                 style: OutlinedButton.styleFrom(
                                                   side: BorderSide(
-                                                      color: isDarkMode
-                                                          ? Colors.white!
-                                                          : const Color(
+                                                      color: const Color(
                                                               0xFF386A53)),
                                                   shape: RoundedRectangleBorder(
                                                       borderRadius:
@@ -565,22 +574,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                                     editField("bio"),
                                                 icon: Icon(Icons.info_outline,
                                                     size: 16,
-                                                    color: isDarkMode
-                                                        ? Colors.white
-                                                        : const Color(
+                                                    color: const Color(
                                                             0xFF386A53)),
                                                 label: Text("Edit Bio",
                                                     style: TextStyle(
                                                         fontSize: 13,
-                                                        color: isDarkMode
-                                                            ? Colors.white
-                                                            : const Color(
+                                                        color: const Color(
                                                                 0xFF386A53))),
                                                 style: OutlinedButton.styleFrom(
                                                   side: BorderSide(
-                                                      color: isDarkMode
-                                                          ? Colors.white!
-                                                          : const Color(
+                                                      color: const Color(
                                                               0xFF386A53)),
                                                   padding: const EdgeInsets
                                                       .symmetric(
@@ -593,17 +596,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                           const SizedBox(height: 14),
                                           ElevatedButton.icon(
                                             icon: const Icon(Icons.add_business,
-                                                size: 18),
+                                                size: 18,
+                                                color: Colors.white),
                                             label: const Text(
                                                 "Add Product/Service",
                                                 style: TextStyle(fontSize: 14)),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: isDarkMode
-                                                  ? Colors.white
-                                                  : const Color(0xFF386A53),
-                                              foregroundColor: isDarkMode
-                                                  ? Colors.black
-                                                  : Colors.white,
+                                              backgroundColor: const Color(0xFF386A53),
+                                              foregroundColor:Colors.white,
                                               padding:
                                                   const EdgeInsets.symmetric(
                                                       horizontal: 14,
@@ -841,7 +841,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
     await showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: isDarkMode ? Colors.grey[900] : const Color(0xFFF5FBF7),
+        backgroundColor:
+            isDarkMode ? Colors.grey[900] : const Color(0xFFF5FBF7),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         elevation: 8,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24),
@@ -875,7 +876,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   builder: (context, setState) {
                     bool isFocused = false;
                     return Focus(
-                      onFocusChange: (focus) => setState(() => isFocused = focus),
+                      onFocusChange: (focus) =>
+                          setState(() => isFocused = focus),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -887,23 +889,31 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               maxLines: null,
                               cursorColor: const Color(0xFF386A53),
                               style: TextStyle(
-                                color: isDarkMode ? Colors.orange[100] : Colors.black,
+                                color: isDarkMode
+                                    ? Colors.white
+                                    : Colors.black,
                                 fontSize: 15,
                               ),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                                fillColor: isDarkMode
+                                    ? Colors.grey[850]
+                                    : Colors.white,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(
-                                    color: isDarkMode ? Colors.white! : Color(0xFF386A53),
+                                    color: isDarkMode
+                                        ? Colors.white!
+                                        : Color(0xFF386A53),
                                     width: 1.5,
                                   ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                   borderSide: BorderSide(
-                                    color: isDarkMode ? Colors.white! : Color(0xFF386A53),
+                                    color: isDarkMode
+                                        ? Colors.white!
+                                        : Color(0xFF386A53),
                                     width: 1.5,
                                   ),
                                 ),
@@ -914,7 +924,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                     width: 2,
                                   ),
                                 ),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 14),
                                 counterText: '',
                               ),
                             ),
@@ -927,7 +938,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 '${value.text.length}/200',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isDarkMode ? Colors.white : Colors.grey[600],
+                                  color: isDarkMode
+                                      ? Colors.white
+                                      : Colors.grey[600],
                                 ),
                               );
                             },
@@ -944,10 +957,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
-                        foregroundColor: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                        foregroundColor:
+                            isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 18, vertical: 10),
                       ),
-                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.normal)),
+                      child: const Text('Cancel',
+                          style: TextStyle(fontWeight: FontWeight.normal)),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
@@ -1043,7 +1059,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           ),
         ),
       ),
-      );
+    );
   }
 
   Future<void> _showAddProductDialog(BuildContext context) async {
@@ -1061,8 +1077,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) => Dialog(
-            backgroundColor: isDarkMode ? Colors.grey[900] : const Color(0xFFF5FBF7),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            backgroundColor:
+                isDarkMode ? Colors.grey[900] : const Color(0xFFF5FBF7),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             elevation: 8,
             insetPadding: const EdgeInsets.symmetric(horizontal: 24),
             child: Padding(
@@ -1071,14 +1089,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.add_business, size: 44, color: const Color(0xFF386A53)),
+                    Icon(Icons.add_business,
+                        size: 44, color: const Color(0xFF386A53)),
                     const SizedBox(height: 10),
                     Text(
                       'Add Product/Service',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 22,
-                        color: isDarkMode ? Colors.white : const Color(0xFF386A53),
+                        color:
+                            isDarkMode ? Colors.white : const Color(0xFF386A53),
                         letterSpacing: 0.2,
                       ),
                       textAlign: TextAlign.center,
@@ -1093,8 +1113,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     const SizedBox(height: 18),
                     GestureDetector(
                       onTap: () async {
-                        final XFile? image =
-                            await _picker.pickImage(source: ImageSource.gallery);
+                        final XFile? image = await _picker.pickImage(
+                            source: ImageSource.gallery);
                         if (image != null) {
                           setState(() {
                             pickedImage = image;
@@ -1105,10 +1125,12 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         width: 140,
                         height: 140,
                         decoration: BoxDecoration(
-                          color: isDarkMode ? Colors.grey[850] : Colors.grey[200],
+                          color:
+                              isDarkMode ? Colors.grey[850] : Colors.grey[200],
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: isDarkMode ? Colors.white! : Colors.grey[400]!,
+                            color:
+                                isDarkMode ? Colors.white! : Colors.grey[400]!,
                           ),
                         ),
                         child: pickedImage != null
@@ -1116,17 +1138,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                 ? FutureBuilder<Uint8List>(
                                     future: pickedImage!.readAsBytes(),
                                     builder: (context, snapshot) {
-                                      if (snapshot.connectionState == ConnectionState.done &&
+                                      if (snapshot.connectionState ==
+                                              ConnectionState.done &&
                                           snapshot.hasData) {
                                         return ClipRRect(
-                                          borderRadius: BorderRadius.circular(16),
+                                          borderRadius:
+                                              BorderRadius.circular(16),
                                           child: Image.memory(snapshot.data!,
                                               fit: BoxFit.cover,
                                               width: 140,
                                               height: 140),
                                         );
                                       }
-                                      return const Center(child: CircularProgressIndicator());
+                                      return const Center(
+                                          child: CircularProgressIndicator());
                                     },
                                   )
                                 : ClipRRect(
@@ -1146,7 +1171,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       controller: nameController,
                       cursorColor: const Color(0xFF386A53),
                       style: TextStyle(
-                        color: isDarkMode ? Colors.orange[100] : Colors.black,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 15,
                       ),
                       decoration: InputDecoration(
@@ -1159,14 +1184,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
+                            color:
+                                isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
+                            color:
+                                isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
@@ -1178,15 +1205,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ),
                         prefixIcon: Icon(Icons.label,
-                            color: isDarkMode ? Colors.white : Color(0xFF386A53)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                            color:
+                                isDarkMode ? Colors.white : Color(0xFF386A53)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 14),
                       ),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       value: selectedCategory,
                       style: TextStyle(
-                        color: isDarkMode ? Colors.orange[100] : Colors.black,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 15,
                       ),
                       decoration: InputDecoration(
@@ -1199,14 +1228,18 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.white! : const Color(0xFF386A53),
+                            color: isDarkMode
+                                ? Colors.white!
+                                : const Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.white! : const Color(0xFF386A53),
+                            color: isDarkMode
+                                ? Colors.white!
+                                : const Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
@@ -1218,17 +1251,23 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ),
                         prefixIcon: Icon(Icons.category,
-                            color: isDarkMode ? Colors.white : const Color(0xFF386A53)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                            color: isDarkMode
+                                ? Colors.white
+                                : const Color(0xFF386A53)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 14),
                       ),
-                      dropdownColor: isDarkMode ? Colors.grey[850] : Colors.white,
+                      dropdownColor:
+                          isDarkMode ? Colors.grey[850] : Colors.white,
                       items: categoriesList.map((category) {
                         return DropdownMenuItem<String>(
                           value: category,
                           child: Text(
                             category,
                             style: TextStyle(
-                              color: isDarkMode ? Colors.orange[100] : Colors.black,
+                              color: isDarkMode
+                                  ? Colors.white
+                                  : Colors.black,
                             ),
                           ),
                         );
@@ -1244,7 +1283,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       controller: descController,
                       cursorColor: const Color(0xFF386A53),
                       style: TextStyle(
-                        color: isDarkMode ? Colors.orange[100] : Colors.black,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 15,
                       ),
                       decoration: InputDecoration(
@@ -1257,14 +1296,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
+                            color:
+                                isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
+                            color:
+                                isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
@@ -1276,8 +1317,10 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ),
                         prefixIcon: Icon(Icons.description,
-                            color: isDarkMode ? Colors.white : Color(0xFF386A53)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                            color:
+                                isDarkMode ? Colors.white : Color(0xFF386A53)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 14),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -1285,7 +1328,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       controller: priceController,
                       cursorColor: const Color(0xFF386A53),
                       style: TextStyle(
-                        color: isDarkMode ? Colors.orange[100] : Colors.black,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 15,
                       ),
                       decoration: InputDecoration(
@@ -1298,14 +1341,16 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
+                            color:
+                                isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(
-                            color: isDarkMode ? Colors.white! : Color(0xFF386A53),
+                            color:
+                                isDarkMode ? Colors.white! : Color(0xFF386A53),
                             width: 1.5,
                           ),
                         ),
@@ -1317,10 +1362,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           ),
                         ),
                         prefixIcon: Icon(Icons.attach_money,
-                            color: isDarkMode ? Colors.white : Color(0xFF386A53)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                            color:
+                                isDarkMode ? Colors.white : Color(0xFF386A53)),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 14),
                       ),
-                      keyboardType: TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          TextInputType.numberWithOptions(decimal: true),
                     ),
                     const SizedBox(height: 24),
                     Row(
@@ -1329,10 +1377,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
                         TextButton(
                           onPressed: () => Navigator.pop(context),
                           style: TextButton.styleFrom(
-                            foregroundColor: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                            foregroundColor: isDarkMode
+                                ? Colors.grey[400]
+                                : Colors.grey[600],
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 18, vertical: 10),
                           ),
-                          child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.normal)),
+                          child: const Text('Cancel',
+                              style: TextStyle(fontWeight: FontWeight.normal)),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
@@ -1341,13 +1393,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
                               : () async {
                                   final name = nameController.text.trim();
                                   final desc = descController.text.trim();
-                                  final price =
-                                      double.tryParse(priceController.text.trim()) ?? 0.0;
+                                  final price = double.tryParse(
+                                          priceController.text.trim()) ??
+                                      0.0;
 
-                                  if (name.isEmpty || price <= 0 || selectedCategory == null) {
+                                  if (name.isEmpty ||
+                                      price <= 0 ||
+                                      selectedCategory == null) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(
-                                          content: Text('Please enter valid name, price, and select a category')),
+                                          content: Text(
+                                              'Please enter valid name, price, and select a category')),
                                     );
                                     return;
                                   }
@@ -1358,15 +1414,20 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
                                   String? imageUrl;
                                   if (pickedImage != null) {
-                                    final storageRef = FirebaseStorage.instance.ref().child(
-                                        'productImages/${currentUser.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
+                                    final storageRef = FirebaseStorage.instance
+                                        .ref()
+                                        .child(
+                                            'productImages/${currentUser.uid}/${DateTime.now().millisecondsSinceEpoch}_${pickedImage!.name}');
                                     if (kIsWeb) {
-                                      final bytes = await pickedImage!.readAsBytes();
+                                      final bytes =
+                                          await pickedImage!.readAsBytes();
                                       await storageRef.putData(bytes);
                                     } else {
-                                      await storageRef.putFile(File(pickedImage!.path));
+                                      await storageRef
+                                          .putFile(File(pickedImage!.path));
                                     }
-                                    imageUrl = await storageRef.getDownloadURL();
+                                    imageUrl =
+                                        await storageRef.getDownloadURL();
                                   }
                                   // Save imageUrl to Firestore
                                   await usersCollection
@@ -1388,7 +1449,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10)),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 10),
                           ),
                           child: isUploading
                               ? const SizedBox(
@@ -1396,7 +1458,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                                   height: 18,
                                   child: CircularProgressIndicator(
                                       strokeWidth: 2, color: Colors.white))
-                              : const Text('Add', style: TextStyle(fontWeight: FontWeight.bold)),
+                              : const Text('Add',
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
