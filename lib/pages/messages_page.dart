@@ -512,10 +512,10 @@ class _MessagesPageState extends State<MessagesPage> {
                                       ),
                                     ),
                                   ),
-                                );
-                              },
-                            );
-                          },
+                                  );
+                                },
+                              );
+                            },
                         ),
                       ),
                     ],
@@ -594,12 +594,13 @@ class _DateSeparator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 10),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.grey[300],
+          color: isDark ? Colors.grey[800] : Colors.grey[300],
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -607,12 +608,18 @@ class _DateSeparator extends StatelessWidget {
           children: [
             Text(
               _formatDate(date),
-              style: const TextStyle(color: Colors.black87, fontSize: 13),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black87,
+                fontSize: 13,
+              ),
             ),
-            const SizedBox(width: 8), // Add spacing between date and time
+            const SizedBox(width: 8),
             Text(
               _formatTime(date),
-              style: const TextStyle(color: Colors.black54, fontSize: 13),
+              style: TextStyle(
+                color: isDark ? Colors.white : Colors.black54,
+                fontSize: 13,
+              ),
             ),
           ],
         ),
@@ -883,28 +890,36 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                         color: isFocused ? Colors.grey[700] : Colors.grey[600],
                       ),
                       filled: true,
-                      fillColor: isFocused ? Colors.white : Colors.grey[100],
+                      fillColor: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[800]
+                          : (isFocused ? Colors.white : Colors.grey[100]),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 18,
                           vertical: 20), // Added vertical padding
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: BorderSide(
-                          color: Colors.green[100]!,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
                           width: 2,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: BorderSide(
-                          color: Colors.green[100]!,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
                           width: 2,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(28),
                         borderSide: BorderSide(
-                          color: Colors.green[300]!,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
                           width: 2,
                         ),
                       ),
