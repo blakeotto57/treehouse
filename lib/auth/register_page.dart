@@ -168,15 +168,16 @@ class _RegisterPageState extends State<RegisterPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    const SizedBox(height: 16), // Match register page
                     Text(
                       "Welcome to Treehouse",
                       style: TextStyle(
-                        fontSize: 24, // Match register page
+                        fontSize: 30, // Match register page
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF386A53),
+                        color: const Color(0xFF4D8061),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 16),
                     Stack(
                       children: [
                         MyTextField(

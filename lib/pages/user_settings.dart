@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:treehouse/pages/feedback.dart';
 import 'package:treehouse/components/nav_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart'; // <-- NEW
 
 class UserSettingsPage extends StatefulWidget {
   const UserSettingsPage({super.key});
@@ -333,6 +334,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     ),
                   ),
                   const Divider(color: Colors.grey),
+                  // --- KO-FI BUTTON ---
+                  buildKofiButton(context), // <--- Here!
                 ],
               ),
             ),
@@ -414,6 +417,42 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         borderRadius: BorderRadius.circular(8),
       ),
       dense: true,
+    );
+  }
+
+  // --- KO-FI BUTTON FUNCTION ---
+  Widget buildKofiButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      child: Center(
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            const url = 'https://ko-fi.com/treehouseconnect'; 
+            if (await canLaunchUrl(Uri.parse(url))) {
+              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Could not launch Ko-fi!')),
+              );
+            }
+          },
+          icon: Image.network(
+            'https://storage.ko-fi.com/cdn/cup-border.png',
+            height: 24,
+            width: 24,
+          ),
+          label: const Text('Buy me a Ko-fi'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFFF5E5B), // Ko-fi red!
+            foregroundColor: Colors.white,
+            textStyle: const TextStyle(fontWeight: FontWeight.bold),
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

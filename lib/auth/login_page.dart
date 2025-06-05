@@ -171,11 +171,16 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Image.asset(
-                      'assets/treehouse_logo_final.png',
-                      width: 200,
-                      height: 200,
-                    ),
+                    const SizedBox(height: 16), // Match register page
+                    Text(
+                      "Treehouse",
+                      style: TextStyle(
+                        fontSize: 30, // Match register page
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF4D8061),
+                      ),
+                    ),  
+                    const SizedBox(height: 16), // Match register page
 
                     if (errorMessage != null) // <-- Show error message
                       Padding(
