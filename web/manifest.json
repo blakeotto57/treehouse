@@ -1,6 +1,6 @@
 {
-    "name": "workspace",
-    "short_name": "workspace",
+    "name": "Treehouse",
+    "short_name": "Treehouse",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

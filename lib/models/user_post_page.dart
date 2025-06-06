@@ -27,166 +27,188 @@ class UserPostPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
       drawer: customDrawer(context),
-      appBar: const Navbar(),   
-      body: Center(
-        
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Column(
-            children: [
-              
-              const SizedBox(height: 10),
-              
-              post,
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: [
-                    Icon(Icons.comment, color: categoryColor),
-                    const SizedBox(width: 8),
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection("personal_care_posts")
-                          .doc(post.postId)
-                          .collection("comments")
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        final commentsCount =
-                            snapshot.hasData ? snapshot.data!.docs.length : 0;
-                        return Text(
-                          "Comments ($commentsCount)",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: isDark
-                                ? Colors.white
-                                : categoryColor,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(56),
+        child: const Navbar(),
+      ),
+      body: Stack(
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  post,
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.comment, color: categoryColor),
+                        const SizedBox(width: 8),
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection("personal_care_posts")
+                              .doc(post.postId)
+                              .collection("comments")
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            final commentsCount =
+                                snapshot.hasData ? snapshot.data!.docs.length : 0;
+                            return Text(
+                              "Comments ($commentsCount)",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: isDark
+                                    ? Colors.white
+                                    : categoryColor,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Divider(
+                            color: categoryColor.withOpacity(0.2),
+                            thickness: 1,
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Divider(
-                        color: categoryColor.withOpacity(0.2),
-                        thickness: 1,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.grey[900]
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: categoryColor.withOpacity(0.2)),
                   ),
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection("personal_care_posts")
-                        .doc(post.postId)
-                        .collection("comments")
-                        .orderBy("created on", descending: true)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final comments = snapshot.data!.docs;
-                      if (comments.isEmpty) {
-                        return Center(
-                          child: Text(
-                            "No comments yet.",
-                            style: TextStyle(color: categoryColor),
-                          ),
-                        );
-                      }
-                      return ListView.separated(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: comments.length,
-                        separatorBuilder: (context, index) =>
-                            Divider(height: 1, color: categoryColor.withOpacity(0.1)),
-                        itemBuilder: (context, index) {
-                          final commentData = comments[index].data() as Map<String, dynamic>;
-                          final commentText = commentData['comment'] ?? '';
-                          final commentBy = commentData['comment by'] ?? 'Unknown';
-                          final timestamp = commentData['created on'] as Timestamp?;
-                          final date = timestamp != null
-                              ? DateTime.fromMillisecondsSinceEpoch(timestamp.millisecondsSinceEpoch)
-                              : null;
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.grey[900]
+                            : Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: categoryColor.withOpacity(0.2)),
+                      ),
+                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection("personal_care_posts")
+                            .doc(post.postId)
+                            .collection("comments")
+                            .orderBy("created on", descending: true)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          final comments = snapshot.data!.docs;
+                          if (comments.isEmpty) {
+                            return Center(
+                              child: Text(
+                                "No comments yet.",
+                                style: TextStyle(color: categoryColor),
+                              ),
+                            );
+                          }
+                          return ListView.separated(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            itemCount: comments.length,
+                            separatorBuilder: (context, index) =>
+                                Divider(height: 1, color: categoryColor.withOpacity(0.1)),
+                            itemBuilder: (context, index) {
+                              final commentData = comments[index].data() as Map<String, dynamic>;
+                              final commentText = commentData['comment'] ?? '';
+                              final commentBy = commentData['comment by'] ?? 'Unknown';
+                              final timestamp = commentData['created on'] as Timestamp?;
+                              final date = timestamp != null
+                                  ? DateTime.fromMillisecondsSinceEpoch(timestamp.millisecondsSinceEpoch)
+                                  : null;
 
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? categoryColor.withOpacity(0.10)
-                                  : categoryColor.withOpacity(0.04),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  commentText,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: isDark ? Colors.white : Colors.black87,
-                                  ),
+                              return Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? categoryColor.withOpacity(0.10)
+                                      : categoryColor.withOpacity(0.04),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
-                                const SizedBox(height: 6),
-                                Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.person, size: 16, color: categoryColor.withOpacity(0.7)),
-                                    const SizedBox(width: 4),
                                     Text(
-                                      commentBy,
+                                      commentText,
                                       style: TextStyle(
-                                        fontSize: 13,
-                                        color: categoryColor.withOpacity(0.8),
-                                        fontWeight: FontWeight.w500,
+                                        fontSize: 16,
+                                        color: isDark ? Colors.white : Colors.black87,
                                       ),
                                     ),
-                                    const SizedBox(width: 12),
-                                    Icon(Icons.access_time, size: 14, color: categoryColor.withOpacity(0.6)),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      date != null
-                                          ? "${date.month}/${date.day}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}"
-                                          : "",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: categoryColor.withOpacity(0.6),
-                                      ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.person, size: 16, color: categoryColor.withOpacity(0.7)),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          commentBy,
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: categoryColor.withOpacity(0.8),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Icon(Icons.access_time, size: 14, color: categoryColor.withOpacity(0.6)),
+                                        const SizedBox(width: 2),
+                                        Text(
+                                          date != null
+                                              ? "${date.month}/${date.day}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}"
+                                              : "",
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: categoryColor.withOpacity(0.6),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
+                              );
+                            },
                           );
                         },
-                      );
-                    },
+                      ),
+                    ),
                   ),
-                ),
+                  Padding(
+                    padding: const EdgeInsets.only(
+                        bottom: 16, left: 8, right: 8, top: 8),
+                    child: _CommentInput(
+                      postId: post.postId,
+                      accentColor: categoryColor,
+                    ),
+                  ),
+                ],
               ),
-              Padding(
-                padding: const EdgeInsets.only(
-                    bottom: 16, left: 8, right: 8, top: 8),
-                child: _CommentInput(
-                  postId: post.postId,
-                  accentColor: categoryColor,
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+          // Floating back button in the top left
+          Positioned(
+            top: 16,
+            left: 8,
+            child: SafeArea(
+              child: Material(
+                color: Colors.transparent,
+                child: IconButton(
+                  icon: Icon(Icons.arrow_back, color: categoryColor, size: 28),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  tooltip: 'Back',
+                  splashRadius: 24,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
