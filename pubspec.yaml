@@ -35,6 +35,8 @@ dependencies:
   flutter_stripe: ^11.3.0
   google_sign_in: ^6.2.2
   emoji_picker_flutter: ^1.6.1
+  flutter_launcher_icons: ^0.13.1
+
 
 dev_dependencies:
   flutter_test:
