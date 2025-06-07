@@ -48,48 +48,66 @@ class _NavbarState extends State<Navbar> {
           iconTheme: IconThemeData(color: Colors.white),
           backgroundColor: const Color(0xFF386A53),
           title: isWide
-              ? Row(
-                  children: [
-                    const Text(
-                      "Treehouse",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+              ? InkWell(
+                  onTap: () {
+                    Navigator.pushReplacement(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) =>
+                            ExplorePage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(height: 24, width: 1, color: Colors.white54),
-                    const SizedBox(width: 12),
-                    Builder(
-                      builder: (context) {
-                        final userEmail =
-                            FirebaseAuth.instance.currentUser?.email ?? '';
-                        final school = (userEmail.contains('@') &&
-                                userEmail.contains('.edu'))
-                            ? userEmail.split('@')[1].split('.edu')[0]
-                            : '';
-                        return Text(
-                          school,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    // Search bar for wide mode
-                    Expanded(
-                      child: SizedBox(
-                        height: 36,
-                        child:
-                            UserSearch(), // Use your custom search bar widget
+                    );
+                  },
+                  hoverColor: Colors.transparent,
+                  focusColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  splashColor: Colors.transparent,
+                child: Row(
+                    children: [
+                      const Text(
+                        "Treehouse",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
-                )
+                      const SizedBox(width: 12),
+                      Container(height: 24, width: 1, color: Colors.white54),
+                      const SizedBox(width: 12),
+                      Builder(
+                        builder: (context) {
+                          final userEmail =
+                              FirebaseAuth.instance.currentUser?.email ?? '';
+                          final school = (userEmail.contains('@') &&
+                                  userEmail.contains('.edu'))
+                              ? userEmail.split('@')[1].split('.edu')[0]
+                              : '';
+                          return Text(
+                            school,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(width: 12),
+                      // Search bar for wide mode
+                      Expanded(
+                        child: SizedBox(
+                          height: 36,
+                          child:
+                              UserSearch(), // Use your custom search bar widget
+                        ),
+                      ),
+                    ],
+                  ),
+              )
               : Center(
                   child: SizedBox(
                     height: 36,

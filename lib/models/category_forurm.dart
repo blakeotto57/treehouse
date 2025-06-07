@@ -186,6 +186,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                               postId: post["message"],
                               likes: List<String>.from(post["likes"] ?? []),
                               timestamp: post["timestamp"],
+                              category: widget.title,
                             );
                           },
                         );

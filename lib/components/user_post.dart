@@ -20,6 +20,7 @@ class UserPost extends StatefulWidget {
   final String postId;
   final List<String> likes;
   final Timestamp timestamp;
+  final String category; // Add this
 
   const UserPost({
     super.key,
@@ -28,6 +29,7 @@ class UserPost extends StatefulWidget {
     required this.postId,
     required this.likes,
     required this.timestamp,
+    required this.category, // Add this
   });
 
   @override
@@ -107,6 +109,23 @@ class _UserPostState extends State<UserPost> {
                     children: [
                       Row(
                         children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.green[200],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              widget.category,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

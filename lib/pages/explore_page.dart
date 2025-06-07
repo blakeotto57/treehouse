@@ -196,6 +196,10 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
+  void _onSearch() {
+    // Implement search logic
+  }
+
   @override
   Widget build(BuildContext context) {
     final pastelGreen = const Color(0xFFF5FBF7);
@@ -212,59 +216,56 @@ class _ExplorePageState extends State<ExplorePage> {
       appBar: const Navbar(),
       body: Column(
         children: [
+          const SizedBox(height: 10), // Space below the app bar
           // Search bar
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: "Search the bulletin board...",
-                      hintStyle: TextStyle(
-                          color: isDark ? Colors.grey[400] : Colors.grey),
-                      filled: true,
-                      fillColor: isDark ? darkCard : Colors.white,
-                      contentPadding: const EdgeInsets.symmetric(
-                          vertical: 18, horizontal: 18),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                            color: const Color(0xFF386A53), width: 2),
-                      ),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Container(
+              height: 40,
+              width: 300,
+              decoration: BoxDecoration(
+                color: isDark ? darkCard : Colors.white,
+                borderRadius: BorderRadius.circular(24), // Pill shape
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: TextField(
+                controller: _searchController,
+                cursorColor: Colors.black,
+                cursorWidth: 1.2, // Thinner cursor
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontSize: 15,
+                ),
+                textAlign: TextAlign.start,
+                onSubmitted: (_) => _onSearch(),
+                decoration: InputDecoration(
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 4, right: 4),
+                    child: Icon(
+                      Icons.search,
+                      color: isDark ? Colors.white70 : Colors.grey[700],
+                      size: 20,
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                SizedBox(
-                  height: 52,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF386A53),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: () {
-                      // Implement search logic
-                    },
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 2),
-                      child: Text(
-                        "Search",
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white),
-                      ),
-                    ),
+                  prefixIconConstraints: BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 23,
                   ),
+                  hintText: "Search the bulletin board...",
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.grey[400] : Colors.grey,
+                    fontSize: 14,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 0), // Increased for vertical centering
                 ),
-              ],
+              ),
             ),
           ),
           Padding(
@@ -335,7 +336,7 @@ class _ExplorePageState extends State<ExplorePage> {
                         final postWidth = screenWidth / postsPerRow - 16;
 
                         return SizedBox(
-                          width: postWidth,// Fit 5 posts in a row
+                          width: postWidth, // Fit 5 posts in a row
                           child: Card(
                             color: isDark ? darkCard : Colors.white,
                             shape: RoundedRectangleBorder(
