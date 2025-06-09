@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/nav_bar.dart';
 import '../components/user_post.dart';
-import '../components/comment.dart';
 
 class UserPostPage extends StatelessWidget {
   final UserPost post;
@@ -117,9 +116,7 @@ class UserPostPage extends StatelessWidget {
                           final commentText = commentData['comment'] ?? '';
                           final commentBy = commentData['comment by'] ?? 'Unknown';
                           final timestamp = commentData['created on'] as Timestamp?;
-                          final date = timestamp != null
-                              ? DateTime.fromMillisecondsSinceEpoch(timestamp.millisecondsSinceEpoch)
-                              : null;
+                          final date = timestamp != null ? DateTime.fromMillisecondsSinceEpoch(timestamp.millisecondsSinceEpoch) : null;
 
                           return Container(
                             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -213,10 +210,11 @@ class _CommentInputState extends State<_CommentInput> {
         .collection("comments")
         .doc(comment)
         .set({
+
       "comment": comment,
       "comment by": currentUser.email,
       "created on": Timestamp.now(),
-      "likes": [],
+      "likes": count,
     });
   }
 

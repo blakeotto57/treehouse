@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class CommentInput extends StatefulWidget {
+  final String collection;
+  final String postId;
+  final Color accentColor;
+
+  const CommentInput({
+    Key? key,
+    required this.collection,
+    required this.postId,
+    required this.accentColor,
+  }) : super(key: key);
+
+  @override
+  State<CommentInput> createState() => _CommentInputState();
+}
+
+class _CommentInputState extends State<CommentInput> {
+  final _commentTextController = TextEditingController();
+  final currentUser = FirebaseAuth.instance.currentUser!;
+
+  Future<void> addComment(String comment) async {
+    if (comment.trim().isEmpty) return;
+    await FirebaseFirestore.instance
+        .collection(widget.collection)
+        .doc(widget.postId)
+        .collection("comments")
+        .add({
+      "comment": comment,
+      "comment by": currentUser.email,
+      "created on": Timestamp.now(),
+      "likes": [],
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _commentTextController,
+            decoration: InputDecoration(
+              labelText: 'Add a comment',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: widget.accentColor,
+          ),
+          onPressed: () async {
+            await addComment(_commentTextController.text);
+            _commentTextController.clear();
+          },
+          child: const Text('Post'),
+        ),
+      ],
+    );
+  }
+}

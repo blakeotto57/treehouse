@@ -1,18 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:treehouse/components/comment.dart';
-import 'package:treehouse/components/delete_button.dart';
-import 'package:treehouse/components/like_button.dart';
 import 'package:treehouse/models/other_users_profile.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:treehouse/models/user_post_page.dart';
-import 'dart:io';
 
-import '../helper/helper_methods.dart';
 
 class UserPost extends StatefulWidget {
   final String message;
@@ -21,6 +13,7 @@ class UserPost extends StatefulWidget {
   final List<String> likes;
   final Timestamp timestamp;
   final String category; // Add this
+  final Color forumIconColor; // Add this
 
   const UserPost({
     super.key,
@@ -30,6 +23,7 @@ class UserPost extends StatefulWidget {
     required this.likes,
     required this.timestamp,
     required this.category, // Add this
+    required this.forumIconColor, // Add this,
   });
 
   @override
@@ -41,7 +35,7 @@ class _UserPostState extends State<UserPost> {
 
   void toggleLike(List<String> likes, bool isLiked) {
     DocumentReference postRef = FirebaseFirestore.instance
-        .collection("personal_care_posts")
+        .collection(widget.category)
         .doc(widget.postId);
 
     if (isLiked) {
@@ -62,8 +56,8 @@ class _UserPostState extends State<UserPost> {
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
-          .collection("personal_care_posts")
-          .doc(widget.postId)
+          .collection("posts")
+          .doc(widget.category)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || !snapshot.data!.exists) {
@@ -108,24 +102,7 @@ class _UserPostState extends State<UserPost> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: Colors.green[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              widget.category,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
+                        children: [                          
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,9 +263,7 @@ class _UserPostState extends State<UserPost> {
                           ),
                           StreamBuilder<QuerySnapshot>(
                             stream: FirebaseFirestore.instance
-                                .collection("personal_care_posts")
-                                .doc(widget.postId)
-                                .collection("comments")
+                                .collection("posts")
                                 .snapshots(),
                             builder: (context, snapshot) {
                               final count = snapshot.hasData
@@ -309,6 +284,23 @@ class _UserPostState extends State<UserPost> {
                                 ),
                               );
                             },
+                          ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Color.lerp(widget.forumIconColor, Colors.white, 0.5),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              widget.category,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -347,8 +339,9 @@ class _UserPostState extends State<UserPost> {
 }
 
 class _CommentInput extends StatefulWidget {
-  final String postId;
-  const _CommentInput({required this.postId});
+  final String category;
+  final String postTitle;
+  const _CommentInput({required this.category, required this.postTitle});
 
   @override
   State<_CommentInput> createState() => _CommentInputState();
@@ -358,14 +351,14 @@ class _CommentInputState extends State<_CommentInput> {
   final _commentTextController = TextEditingController();
   final currentUser = FirebaseAuth.instance.currentUser!;
 
-  void addComment(String comment) {
+  void addComment(String comment) async {
     if (comment.trim().isEmpty) return;
-    FirebaseFirestore.instance
-        .collection("personal_care_posts")
-        .doc(widget.postId)
-        .collection("comments")
-        .doc(comment)
-        .set({
+
+    final postRef = FirebaseFirestore.instance
+        .collection(widget.category) // e.g., "personal_care_posts"
+        .doc(widget.postTitle);
+
+    await postRef.collection("comments").add({
       "comment": comment,
       "comment by": currentUser.email,
       "created on": Timestamp.now(),
@@ -375,67 +368,22 @@ class _CommentInputState extends State<_CommentInput> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _commentTextController,
-              cursorColor: Colors.black,
-              style: TextStyle(
-                color: isDark ? Colors.white : Colors.black,
-              ),
-              decoration: InputDecoration(
-                hintText: "Add a comment...",
-                hintStyle: TextStyle(color: Colors.grey[500]),
-                border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-              ),
-            ),
-          ),
-          IconButton(
-            icon: Icon(Icons.send,
-                color: isDark ? Colors.white : const Color(0xFF386A53)),
-            onPressed: () {
-              addComment(_commentTextController.text);
-              FocusScope.of(context).unfocus();
-              _commentTextController.clear();
-            },
-          ),
-        ],
-      ),
+    return Column(
+      children: [
+        TextField(
+          controller: _commentTextController,
+          decoration: InputDecoration(labelText: 'Add a comment'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            addComment(_commentTextController.text);
+            _commentTextController.clear();
+          },
+          child: Text('Post Comment'),
+        ),
+      ],
     );
   }
-}
-
-class _VerticalLinePainter extends CustomPainter {
-  final Color color;
-  _VerticalLinePainter({required this.color});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 2.0;
-    canvas.drawLine(
-        Offset(size.width / 2, 0), Offset(size.width / 2, size.height), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 Widget buildUserPost(BuildContext context, bool isPostAndCommentsPage) {
