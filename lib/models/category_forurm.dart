@@ -561,11 +561,21 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                         .snapshots(),
                     builder: (context, snapshot) {
                       if (snapshot.hasData) {
-                        var filteredPosts = snapshot.data!.docs.where((doc) {
-                          Map<String, dynamic> data =
-                              doc.data() as Map<String, dynamic>;
+                        final docs = snapshot.data!.docs;
+                        if (docs.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              "No posts found.",
+                              style: TextStyle(color: Colors.grey, fontSize: 16),
+                            ),
+                          );
+                        }
+
+                        // Filter posts by search query
+                        final filteredPosts = docs.where((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
                           return searchQuery.isEmpty ||
-                              data["message"]
+                              (data["body_text"] ?? "")
                                   .toString()
                                   .toLowerCase()
                                   .contains(searchQuery.toLowerCase());
@@ -575,8 +585,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                           return const Center(
                             child: Text(
                               "No posts found.",
-                              style:
-                                  TextStyle(color: Colors.grey, fontSize: 16),
+                              style: TextStyle(color: Colors.grey, fontSize: 16),
                             ),
                           );
                         }
@@ -584,18 +593,16 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                         return ListView.separated(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           itemCount: filteredPosts.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 8),
+                          separatorBuilder: (context, index) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
-                            final post = filteredPosts[index].data()
-                                as Map<String, dynamic>;
+                            final post = filteredPosts[index].data() as Map<String, dynamic>;
                             return UserPost(
-                              message: post["message"],
-                              user: post["username"],
-                              postId: post["message"],
+                              message: post["body_text"] ?? '',
+                              user: post["username"] ?? '',
+                              postId: post["title"] ?? '',
                               likes: List<String>.from(post["likes"] ?? []),
-                              timestamp: post["timestamp"],
-                              category: widget.title,
+                              timestamp: post["timestamp"] ?? Timestamp.now(),
+                              category: widget.firestoreCollection,
                               forumIconColor: widget.forumIconColor,
                             );
                           },

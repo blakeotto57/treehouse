@@ -5,59 +5,35 @@ import 'package:intl/intl.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/models/user_post_page.dart';
 
-
-class UserPost extends StatefulWidget {
+class UserPost extends StatelessWidget {
   final String message;
-  final String user;
+  final String user; // username
   final String postId;
   final List<String> likes;
   final Timestamp timestamp;
-  final String category; // Add this
-  final Color forumIconColor; // Add this
+  final String category;
+  final Color forumIconColor;
 
   const UserPost({
-    super.key,
+    Key? key,
     required this.message,
     required this.user,
     required this.postId,
     required this.likes,
     required this.timestamp,
-    required this.category, // Add this
-    required this.forumIconColor, // Add this,
-  });
-
-  @override
-  State<UserPost> createState() => _UserPostState();
-}
-
-class _UserPostState extends State<UserPost> {
-  final currentUser = FirebaseAuth.instance.currentUser!;
-
-  void toggleLike(List<String> likes, bool isLiked) {
-    DocumentReference postRef = FirebaseFirestore.instance
-        .collection(widget.category)
-        .doc(widget.postId);
-
-    if (isLiked) {
-      postRef.update({
-        "likes": FieldValue.arrayRemove([currentUser.email]),
-      });
-    } else {
-      postRef.update({
-        "likes": FieldValue.arrayUnion([currentUser.email]),
-      });
-    }
-  }
+    required this.category,
+    required this.forumIconColor,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final currentUsername = currentUser.email?.split('@').first ?? '';
-    final isOwner = currentUsername == widget.user;
+    final currentUser = FirebaseAuth.instance.currentUser!;
+    final isOwner = currentUser.email == user;
 
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
-          .collection("posts")
-          .doc(widget.category)
+          .collection(category)
+          .doc(postId)
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || !snapshot.data!.exists) {
@@ -69,18 +45,30 @@ class _UserPostState extends State<UserPost> {
         final comments =
             List<Map<String, dynamic>>.from(data['comments'] ?? []);
 
+        // Format date and time
+        final postDate = timestamp.toDate();
+        final now = DateTime.now();
+        String dateTimeString;
+        if (postDate.year == now.year &&
+            postDate.month == now.month &&
+            postDate.day == now.day) {
+          dateTimeString = DateFormat('h:mm a').format(postDate);
+        } else {
+          dateTimeString = DateFormat('MMM d, y').format(postDate);
+        }
+
         return Stack(
           children: [
             InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               onTap: () {
                 Navigator.push(
                   context,
                   PageRouteBuilder(
                     pageBuilder: (context, animation1, animation2) =>
                         UserPostPage(
-                      post: widget,
-                      categoryColor: const Color(0xFF386A53),
+                      post: this,
+                      categoryColor: forumIconColor,
                     ),
                     transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
@@ -91,152 +79,110 @@ class _UserPostState extends State<UserPost> {
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[900]
                     : Colors.white,
-                margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 elevation: 2,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(16)),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Top row: avatar, username, dot, timestamp
                       Row(
-                        children: [                          
+                        children: [
+                          // Profile picture with fallback to initial
+                          FutureBuilder<QuerySnapshot>(
+                            future: FirebaseFirestore.instance
+                                .collection('users')
+                                .where('username', isEqualTo: user)
+                                .limit(1)
+                                .get(),
+                            builder: (context, userSnapshot) {
+                              String? photoUrl;
+                              if (userSnapshot.hasData && userSnapshot.data!.docs.isNotEmpty) {
+                                final userData = userSnapshot.data!.docs.first.data() as Map<String, dynamic>;
+                                photoUrl = userData['profileImageUrl'] as String?;
+                              }
+                              return CircleAvatar(
+                                backgroundColor: forumIconColor.withOpacity(0.15),
+                                radius: 18,
+                                backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                                    ? NetworkImage(photoUrl)
+                                    : null,
+                                child: (photoUrl == null || photoUrl.isEmpty)
+                                    ? Text(
+                                        user.isNotEmpty ? user[0].toUpperCase() : '?',
+                                        style: TextStyle(
+                                          color: forumIconColor,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      )
+                                    : null,
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 10),
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Row(
                               children: [
-                                StreamBuilder<DocumentSnapshot>(
-                                  stream: FirebaseFirestore.instance
-                                      .collection('users')
-                                      .doc(widget.user)
-                                      .snapshots(),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData &&
-                                        snapshot.data!.data() != null) {
-                                      final userData = snapshot.data!.data()
-                                          as Map<String, dynamic>;
-                                      final username = userData['username'] ??
-                                          widget.user.split('@').first;
-                                      final isDarkMode =
-                                          Theme.of(context).brightness ==
-                                              Brightness.dark;
-
-                                      // Format date and time
-                                      final dateTimeString = widget.timestamp !=
-                                              null
-                                          ? DateFormat('MMM d, h:mm a')
-                                              .format(widget.timestamp.toDate())
-                                          : '';
-
-                                      return Row(
-                                        children: [
-                                          GestureDetector(
-                                            onTap: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      OtherUsersProfilePage(
-                                                          username: username),
-                                                ),
-                                              );
-                                            },
-                                            child: Row(
-                                              children: [
-                                                CircleAvatar(
-                                                  backgroundImage: NetworkImage(
-                                                      userData[
-                                                              'profileImageUrl'] ??
-                                                          ''),
-                                                ),
-                                                const SizedBox(width: 10),
-                                                Text(
-                                                  username,
-                                                  style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.normal,
-                                                    color: isDarkMode
-                                                        ? Colors.white
-                                                        : Colors.black,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          if (dateTimeString.isNotEmpty) ...[
-                                            const SizedBox(width: 8),
-                                            const Text('•',
-                                                style: TextStyle(
-                                                    fontSize: 14,
-                                                    fontStyle: FontStyle.italic,
-                                                    color: Colors.grey)),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              dateTimeString,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.normal,
-                                                fontSize: 12,
-                                                color: isDarkMode
-                                                    ? Colors.grey[500]
-                                                    : Colors.black,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
-                                      );
-                                    } else {
-                                      return const SizedBox.shrink();
-                                    }
-                                  },
+                                Text(
+                                  user,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15,
+                                    color: Theme.of(context).brightness == Brightness.dark
+                                        ? Colors.white
+                                        : Colors.black,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                // Dot divider
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[500],
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  dateTimeString,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.normal,
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 12),
+                      // Message body
                       Text(
-                        widget.message.split('\n').first,
+                        message,
                         style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.normal,
+                          fontSize: 16,
                           color: Theme.of(context).brightness == Brightness.dark
                               ? Colors.white
                               : Colors.black,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (widget.message.contains('\n'))
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: Text(
-                            widget.message.split('\n').skip(1).join('\n'),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Colors.grey[800],
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
+                      // Like and comment row
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          // Heart Icon with Like Count
                           GestureDetector(
                             onTap: () => toggleLike(likes, isLiked),
                             child: Row(
                               children: [
                                 Icon(
-                                  isLiked
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color:
-                                      isLiked ? Colors.redAccent : Colors.grey,
+                                  isLiked ? Icons.favorite : Icons.favorite_border,
+                                  color: isLiked ? Colors.redAccent : Colors.grey,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 4),
@@ -244,57 +190,42 @@ class _UserPostState extends State<UserPost> {
                                   likes.length.toString(),
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
+                                    color: Theme.of(context).brightness == Brightness.dark
                                         ? Colors.white
                                         : Colors.black,
-                                    fontWeight: FontWeight.normal,
                                   ),
                                 ),
                               ],
                             ),
                           ),
                           const SizedBox(width: 20),
-                          // Comment Icon with Comment Count
-                          const Icon(
+                          Icon(
                             Icons.mode_comment_outlined,
                             color: Colors.grey,
                             size: 18,
                           ),
-                          StreamBuilder<QuerySnapshot>(
-                            stream: FirebaseFirestore.instance
-                                .collection("posts")
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              final count = snapshot.hasData
-                                  ? snapshot.data!.docs.length
-                                  : 0;
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.only(left: 4, right: 0),
-                                child: Text(
-                                  count.toString(),
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black,
-                                  ),
-                                ),
-                              );
-                            },
+                          const SizedBox(width: 4),
+                          // Show comment count if available, else 0
+                          Text(
+                            comments.length.toString(),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
                           ),
-                          const Spacer(),
+                          // Category flair moved here
+                          const SizedBox(width: 10),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Color.lerp(widget.forumIconColor, Colors.white, 0.5),
+                              color: Color.lerp(forumIconColor, Colors.white, 0.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              widget.category,
+                              category,
                               style: const TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
@@ -302,6 +233,7 @@ class _UserPostState extends State<UserPost> {
                               ),
                             ),
                           ),
+                          const Spacer(),
                         ],
                       ),
                     ],
@@ -324,6 +256,22 @@ class _UserPostState extends State<UserPost> {
         );
       },
     );
+  }
+
+  void toggleLike(List<String> likes, bool isLiked) {
+    DocumentReference postRef = FirebaseFirestore.instance
+        .collection(category)
+        .doc(postId);
+
+    if (isLiked) {
+      postRef.update({
+        "likes": FieldValue.arrayRemove([FirebaseAuth.instance.currentUser!.email]),
+      });
+    } else {
+      postRef.update({
+        "likes": FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.email]),
+      });
+    }
   }
 
   String timeAgo(DateTime date) {
