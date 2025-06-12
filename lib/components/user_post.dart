@@ -8,21 +8,21 @@ import 'package:treehouse/models/user_post_page.dart';
 class UserPost extends StatelessWidget {
   final String message;
   final String user; // username
-  final String postId;
   final List<String> likes;
   final Timestamp timestamp;
   final String category;
   final Color forumIconColor;
+  final String title; // Added title property
 
   const UserPost({
     Key? key,
     required this.message,
     required this.user,
-    required this.postId,
     required this.likes,
     required this.timestamp,
     required this.category,
     required this.forumIconColor,
+    required this.title, // Added title property
   }) : super(key: key);
 
   @override
@@ -33,7 +33,7 @@ class UserPost extends StatelessWidget {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection(category)
-          .doc(postId)
+          .doc(title) // Use title as the document ID
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || !snapshot.data!.exists) {
@@ -68,13 +68,17 @@ class UserPost extends StatelessWidget {
                     pageBuilder: (context, animation1, animation2) =>
                         UserPostPage(
                       post: this,
-                      categoryColor: forumIconColor,
+                      categoryColor: forumIconColor, 
+                      firestoreCollection: category, 
                     ),
                     transitionDuration: Duration.zero,
                     reverseTransitionDuration: Duration.zero,
                   ),
                 );
               },
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              hoverColor: Colors.transparent,
               child: Card(
                 color: Theme.of(context).brightness == Brightness.dark
                     ? Colors.grey[900]
@@ -84,84 +88,122 @@ class UserPost extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16)),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Top row: avatar, username, dot, timestamp
                       Row(
                         children: [
-                          // Profile picture with fallback to initial
-                          FutureBuilder<QuerySnapshot>(
-                            future: FirebaseFirestore.instance
-                                .collection('users')
-                                .where('username', isEqualTo: user)
-                                .limit(1)
-                                .get(),
-                            builder: (context, userSnapshot) {
-                              String? photoUrl;
-                              if (userSnapshot.hasData && userSnapshot.data!.docs.isNotEmpty) {
-                                final userData = userSnapshot.data!.docs.first.data() as Map<String, dynamic>;
-                                photoUrl = userData['profileImageUrl'] as String?;
-                              }
-                              return CircleAvatar(
-                                backgroundColor: forumIconColor.withOpacity(0.15),
-                                radius: 18,
-                                backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                                    ? NetworkImage(photoUrl)
-                                    : null,
-                                child: (photoUrl == null || photoUrl.isEmpty)
-                                    ? Text(
-                                        user.isNotEmpty ? user[0].toUpperCase() : '?',
-                                        style: TextStyle(
-                                          color: forumIconColor,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      )
-                                    : null,
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                PageRouteBuilder(
+                                  pageBuilder:
+                                      (context, animation1, animation2) =>
+                                          OtherUsersProfilePage(
+                                    username: user,
+                                  ),
+                                  transitionDuration: Duration.zero,
+                                  reverseTransitionDuration: Duration.zero,
+                                ),
                               );
                             },
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
+                            hoverColor: Colors.transparent,
                             child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
+                                // Profile picture with fallback to initial
+                                FutureBuilder<QuerySnapshot>(
+                                  future: FirebaseFirestore.instance
+                                      .collection('users')
+                                      .where('username', isEqualTo: user)
+                                      .limit(1)
+                                      .get(),
+                                  builder: (context, userSnapshot) {
+                                    String? photoUrl;
+                                    if (userSnapshot.hasData &&
+                                        userSnapshot.data!.docs.isNotEmpty) {
+                                      final userData =
+                                          userSnapshot.data!.docs.first.data()
+                                              as Map<String, dynamic>;
+                                      photoUrl = userData['profileImageUrl']
+                                          as String?;
+                                    }
+                                    return CircleAvatar(
+                                      backgroundColor:
+                                          forumIconColor.withOpacity(0.15),
+                                      radius: 18,
+                                      backgroundImage: photoUrl != null &&
+                                              photoUrl.isNotEmpty
+                                          ? NetworkImage(photoUrl)
+                                          : null,
+                                      child:
+                                          (photoUrl == null || photoUrl.isEmpty)
+                                              ? Text(
+                                                  user.isNotEmpty
+                                                      ? user[0].toUpperCase()
+                                                      : '?',
+                                                  style: TextStyle(
+                                                    color: forumIconColor,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18,
+                                                  ),
+                                                )
+                                              : null,
+                                    ); 
+                                  },
+                                ),
+                                const SizedBox(width: 10),
                                 Text(
                                   user,
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15,
-                                    color: Theme.of(context).brightness == Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                // Dot divider
-                                Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[500],
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Text(
-                                  dateTimeString,
-                                  style: TextStyle(
                                     fontWeight: FontWeight.normal,
                                     fontSize: 12,
-                                    color: Colors.grey[600],
+                                    color: Colors.grey[800],
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          const SizedBox(width: 6),
+                          // Dot divider
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[600],
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            dateTimeString,
+                            style: TextStyle(
+                              fontWeight: FontWeight.normal,
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 12),
+                      // Post title
+                      Text(
+                        title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 8), // Spacing between title and body
                       // Message body
                       Text(
                         message,
@@ -181,8 +223,11 @@ class UserPost extends StatelessWidget {
                             child: Row(
                               children: [
                                 Icon(
-                                  isLiked ? Icons.favorite : Icons.favorite_border,
-                                  color: isLiked ? Colors.redAccent : Colors.grey,
+                                  isLiked
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color:
+                                      isLiked ? Colors.redAccent : Colors.grey,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 4),
@@ -190,7 +235,8 @@ class UserPost extends StatelessWidget {
                                   likes.length.toString(),
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: Theme.of(context).brightness == Brightness.dark
+                                    color: Theme.of(context).brightness ==
+                                            Brightness.dark
                                         ? Colors.white
                                         : Colors.black,
                                   ),
@@ -198,7 +244,7 @@ class UserPost extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(width: 20),
+                          const SizedBox(width: 15),
                           Icon(
                             Icons.mode_comment_outlined,
                             color: Colors.grey,
@@ -210,18 +256,20 @@ class UserPost extends StatelessWidget {
                             comments.length.toString(),
                             style: TextStyle(
                               fontSize: 13,
-                              color: Theme.of(context).brightness == Brightness.dark
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
                                   ? Colors.white
                                   : Colors.black,
                             ),
                           ),
                           // Category flair moved here
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 15),
                           Container(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Color.lerp(forumIconColor, Colors.white, 0.5),
+                              color:
+                                  Color.lerp(forumIconColor, Colors.white, 0.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -259,17 +307,18 @@ class UserPost extends StatelessWidget {
   }
 
   void toggleLike(List<String> likes, bool isLiked) {
-    DocumentReference postRef = FirebaseFirestore.instance
-        .collection(category)
-        .doc(postId);
+    DocumentReference postRef =
+        FirebaseFirestore.instance.collection(category).doc(title);
 
     if (isLiked) {
       postRef.update({
-        "likes": FieldValue.arrayRemove([FirebaseAuth.instance.currentUser!.email]),
+        "likes":
+            FieldValue.arrayRemove([FirebaseAuth.instance.currentUser!.email]),
       });
     } else {
       postRef.update({
-        "likes": FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.email]),
+        "likes":
+            FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.email]),
       });
     }
   }
@@ -332,16 +381,4 @@ class _CommentInputState extends State<_CommentInput> {
       ],
     );
   }
-}
-
-Widget buildUserPost(BuildContext context, bool isPostAndCommentsPage) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white.withOpacity(0.15),
-      ),
-    ),
-  );
 }

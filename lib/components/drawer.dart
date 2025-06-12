@@ -22,7 +22,7 @@ Widget customDrawer(BuildContext context) {
         children: [
           Container(
             decoration: BoxDecoration(
-              color: Color(0xFF386A53),
+              color: Color(0xFF2E573A), // Darker green for better contrast
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(24),
               ),
@@ -32,7 +32,7 @@ Widget customDrawer(BuildContext context) {
               child: const Text(
                 "Discussion Categories",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.white, // High contrast with the background
                   fontWeight: FontWeight.w800,
                   fontSize: 26,
                 ),

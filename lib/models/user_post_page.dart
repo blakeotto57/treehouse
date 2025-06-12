@@ -8,46 +8,44 @@ import '../components/user_post.dart';
 class UserPostPage extends StatelessWidget {
   final UserPost post;
   final Color categoryColor;
+  final String firestoreCollection;
 
   const UserPostPage({
     super.key,
     required this.post,
     required this.categoryColor,
+    required this.firestoreCollection,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final pastelGreen = const Color(0xFFF5FBF7);
-    final darkCard = const Color(0xFF232323);
     final darkBackground = const Color(0xFF181818);
-   
+
+    // Stub search query variable (adjust if dynamic search is needed)
+    final searchQuery = '';
 
     return Scaffold(
       backgroundColor: isDark ? darkBackground : pastelGreen,
       drawer: customDrawer(context),
-      appBar: const Navbar(),   
+      appBar: const Navbar(),
       body: Center(
-        
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
           child: Column(
             children: [
-              
               const SizedBox(height: 10),
-              
               post,
               const SizedBox(height: 8),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Row(
                   children: [
-                    Icon(Icons.comment, color: categoryColor),
-                    const SizedBox(width: 8),
                     StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
-                          .collection("personal_care_posts")
-                          .doc(post.postId)
+                          .collection(firestoreCollection)
+                          .doc(post.title)
                           .collection("comments")
                           .snapshots(),
                       builder: (context, snapshot) {
@@ -58,9 +56,7 @@ class UserPostPage extends StatelessWidget {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,
-                            color: isDark
-                                ? Colors.white
-                                : categoryColor,
+                            color: isDark ? Colors.white : categoryColor,
                           ),
                         );
                       },
@@ -79,105 +75,71 @@ class UserPostPage extends StatelessWidget {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: isDark
-                        ? Colors.grey[900]
-                        : Colors.white,
+                    color: isDark ? Colors.grey[900] : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: categoryColor.withOpacity(0.2)),
                   ),
-                  margin: const EdgeInsets.symmetric(horizontal: 8),
                   child: StreamBuilder<QuerySnapshot>(
                     stream: FirebaseFirestore.instance
-                        .collection("personal_care_posts")
-                        .doc(post.postId)
-                        .collection("comments")
-                        .orderBy("created on", descending: true)
+                        .collection(firestoreCollection)
+                        .orderBy("timestamp", descending: true)
                         .snapshots(),
                     builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      final comments = snapshot.data!.docs;
-                      if (comments.isEmpty) {
-                        return Center(
-                          child: Text(
-                            "No comments yet.",
-                            style: TextStyle(color: categoryColor),
-                          ),
-                        );
-                      }
-                      return ListView.separated(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        itemCount: comments.length,
-                        separatorBuilder: (context, index) =>
-                            Divider(height: 1, color: categoryColor.withOpacity(0.1)),
-                        itemBuilder: (context, index) {
-                          final commentData = comments[index].data() as Map<String, dynamic>;
-                          final commentText = commentData['comment'] ?? '';
-                          final commentBy = commentData['comment by'] ?? 'Unknown';
-                          final timestamp = commentData['created on'] as Timestamp?;
-                          final date = timestamp != null ? DateTime.fromMillisecondsSinceEpoch(timestamp.millisecondsSinceEpoch) : null;
+                      if (snapshot.hasData) {
+                        final docs = snapshot.data!.docs;
+                        final filteredPosts = docs.where((doc) {
+                          final data = doc.data() as Map<String, dynamic>;
+                          return searchQuery.isEmpty ||
+                              (data["body_text"] ?? "")
+                                  .toString()
+                                  .toLowerCase()
+                                  .contains(searchQuery.toLowerCase());
+                        }).toList();
 
-                          return Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? categoryColor.withOpacity(0.10)
-                                  : categoryColor.withOpacity(0.04),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  commentText,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    color: isDark ? Colors.white : Colors.black87,
-                                  ),
-                                ),
-                                const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Icon(Icons.person, size: 16, color: categoryColor.withOpacity(0.7)),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      commentBy,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: categoryColor.withOpacity(0.8),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Icon(Icons.access_time, size: 14, color: categoryColor.withOpacity(0.6)),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      date != null
-                                          ? "${date.month}/${date.day}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}"
-                                          : "",
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: categoryColor.withOpacity(0.6),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                        if (filteredPosts.isEmpty) {
+                          return const Center(
+                            child: Text(
+                              "No posts found.",
+                              style: TextStyle(color: Colors.grey, fontSize: 16),
                             ),
                           );
-                        },
-                      );
+                        }
+
+                        return ListView.separated(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: filteredPosts.length,
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final postData =
+                                filteredPosts[index].data() as Map<String, dynamic>;
+                            return UserPost(
+                              message: postData["body_text"] ?? '',
+                              user: postData["username"] ?? '',
+                              title: postData["title"] ?? '',
+                              likes: List<String>.from(postData["likes"] ?? []),
+                              timestamp: postData["timestamp"] ?? Timestamp.now(),
+                              category: firestoreCollection,
+                              forumIconColor: categoryColor,
+                            );
+                          },
+                        );
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Text("Error: ${snapshot.error}"),
+                        );
+                      }
+                      return const Center(child: CircularProgressIndicator());
                     },
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(
-                    bottom: 16, left: 8, right: 8, top: 8),
+                padding:
+                    const EdgeInsets.only(bottom: 16, left: 8, right: 8, top: 8),
                 child: _CommentInput(
-                  postId: post.postId,
+                  postId: post.title,
+                  firestoreCollection: firestoreCollection,
                   accentColor: categoryColor,
                 ),
               ),
@@ -191,8 +153,14 @@ class UserPostPage extends StatelessWidget {
 
 class _CommentInput extends StatefulWidget {
   final String postId;
+  final String firestoreCollection;
   final Color accentColor;
-  const _CommentInput({required this.postId, required this.accentColor});
+
+  const _CommentInput({
+    required this.postId,
+    required this.firestoreCollection,
+    required this.accentColor,
+  });
 
   @override
   State<_CommentInput> createState() => _CommentInputState();
@@ -205,16 +173,14 @@ class _CommentInputState extends State<_CommentInput> {
   void addComment(String comment) {
     if (comment.trim().isEmpty) return;
     FirebaseFirestore.instance
-        .collection("personal_care_posts")
+        .collection(widget.firestoreCollection)
         .doc(widget.postId)
         .collection("comments")
-        .doc(comment)
-        .set({
-
+        .add({
       "comment": comment,
       "comment by": currentUser.email,
       "created on": Timestamp.now(),
-      "likes": count,
+      "likes": [],
     });
   }
 
@@ -245,10 +211,11 @@ class _CommentInputState extends State<_CommentInput> {
               ),
               decoration: InputDecoration(
                 hintText: "Add a comment...",
-                hintStyle: TextStyle(color: widget.accentColor.withOpacity(0.7)),
+                hintStyle:
+                    TextStyle(color: widget.accentColor.withOpacity(0.7)),
                 border: InputBorder.none,
-                contentPadding:
-                    const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14, horizontal: 20),
               ),
             ),
           ),

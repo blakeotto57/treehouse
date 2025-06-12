@@ -599,7 +599,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                             return UserPost(
                               message: post["body_text"] ?? '',
                               user: post["username"] ?? '',
-                              postId: post["title"] ?? '',
+                              title: post["title"] ?? '',
                               likes: List<String>.from(post["likes"] ?? []),
                               timestamp: post["timestamp"] ?? Timestamp.now(),
                               category: widget.firestoreCollection,
