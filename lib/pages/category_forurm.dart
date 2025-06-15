@@ -9,6 +9,7 @@ import 'package:treehouse/components/nav_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
+import 'package:intl/intl.dart';
 
 class CategoryForumPage extends StatefulWidget {
   final String title;
@@ -81,9 +82,6 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
     });
   }
 
-  void _onTextChanged() {
-    setState(() {}); // Triggers rebuild to update button state
-  }
 
   @override
   void dispose() {
@@ -124,11 +122,6 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
     }
   }
 
-  Function() _titleListener(void Function(void Function()) setState) {
-    return () {
-      setState(() {}); // triggers a rebuild when the title changes
-    };
-  }
 
   void _showCreatePostDialog() async {
     bool posting = false;
@@ -560,93 +553,105 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
                   Expanded(
                     child: StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
                           .collection(widget.firestoreCollection)
-                          .orderBy("timestamp", descending: true)
+                          .orderBy('timestamp', descending: true)
                           .snapshots(),
                       builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          final docs = snapshot.data!.docs;
-                          if (docs.isEmpty) {
-                            return const Center(
-                              child: Text(
-                                "No posts found.",
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 16),
-                              ),
-                            );
-                          }
-
-                          // Filter posts by search query
-                          final filteredPosts = docs.where((doc) {
-                            final data = doc.data() as Map<String, dynamic>;
-                            return searchQuery.isEmpty ||
-                                (data["body_text"] ?? "")
-                                    .toString()
-                                    .toLowerCase()
-                                    .contains(searchQuery.toLowerCase());
-                          }).toList();
-
-                          if (filteredPosts.isEmpty) {
-                            return const Center(
-                              child: Text(
-                                "No posts found.",
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 16),
-                              ),
-                            );
-                          }
-
-                          return ListView.separated(
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            itemCount: filteredPosts.length,
-                            separatorBuilder: (context, index) =>
-                                const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              final post = filteredPosts[index].data()
-                                  as Map<String, dynamic>;
-                              return UserPost(
-                                message: post["body_text"] ?? '',
-                                user: post["username"] ?? '',
-                                title: post["title"] ?? '',
-                                likes: List<String>.from(post["likes"] ?? []),
-                                timestamp: post["timestamp"] ?? Timestamp.now(),
-                                category: widget.firestoreCollection,
-                                forumIconColor: widget.forumIconColor,
-                              );
-                            },
-                          );
-                        } else if (snapshot.hasError) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
                           return Center(
-                            child: Text("Error: ${snapshot.error}"),
+                              child: CircularProgressIndicator(
+                                  color: widget.forumIconColor));
+                        }
+
+                        if (snapshot.hasError) {
+                          return Center(child: Text('Something went wrong'));
+                        }
+
+                        var docs = snapshot.data?.docs ?? [];
+                        if (docs.isEmpty) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24.0),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.forum_outlined,
+                                    size: 64,
+                                    color: widget.forumIconColor.withOpacity(0.5),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No posts yet in ${widget.title}',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      color: Colors.grey[600],
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Be the first to start a conversation!',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           );
                         }
-                        return const Center(child: CircularProgressIndicator());
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.only(top: 8),
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          itemCount: docs.length,
+                          itemBuilder: (context, index) {
+                            final document = docs[index].data() as Map<String, dynamic>;
+
+                            // Add section headers for date grouping if needed
+                            Widget? dateHeader;
+                            if (index == 0 ||
+                                _shouldShowDateHeader(docs[index], docs[index - 1])) {
+                              final timestamp = document['timestamp'] as Timestamp;
+                              dateHeader = _buildDateHeader(timestamp.toDate());
+                            }
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (dateHeader != null) dateHeader,
+                                UserPost(
+                                  message: document['message'] ?? '',
+                                  user: document['user'] ?? '',
+                                  timestamp: document['timestamp'] ?? Timestamp.now(),
+                                  likes: List<String>.from(document['likes'] ?? []),
+                                  title: document['title'] ?? '',
+                                  category: widget.firestoreCollection,
+                                  forumIconColor: widget.forumIconColor,
+                                ),
+                                // Very subtle divider between posts
+                                Container(
+                                  height: 6,
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.black.withOpacity(0.3)
+                                      : Colors.grey.withOpacity(0.05),
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       },
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.only(
-                        bottom: 16, left: 8, right: 8, top: 8),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.grey[900] : Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 16.0),
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
@@ -678,6 +683,55 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  bool _shouldShowDateHeader(DocumentSnapshot current, DocumentSnapshot previous) {
+    final currentData = current.data() as Map<String, dynamic>;
+    final previousData = previous.data() as Map<String, dynamic>;
+
+    final currentDate = (currentData['timestamp'] as Timestamp).toDate();
+    final previousDate = (previousData['timestamp'] as Timestamp).toDate();
+
+    return currentDate.day != previousDate.day ||
+        currentDate.month != previousDate.month ||
+        currentDate.year != previousDate.year;
+  }
+
+  Widget _buildDateHeader(DateTime date) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final headerDate = DateTime(date.year, date.month, date.day);
+
+    String headerText;
+    if (headerDate == today) {
+      headerText = 'Today';
+    } else if (headerDate == yesterday) {
+      headerText = 'Yesterday';
+    } else {
+      headerText = DateFormat('EEEE, MMMM d').format(date);
+    }
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      color: Colors.transparent,
+      child: Row(
+        children: [
+          Text(
+            headerText,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Divider(height: 1, thickness: 1, color: Colors.grey.withOpacity(0.2)),
+          ),
+        ],
       ),
     );
   }

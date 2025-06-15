@@ -60,7 +60,6 @@ class UserPost extends StatelessWidget {
         return Stack(
           children: [
             InkWell(
-              borderRadius: BorderRadius.circular(16),
               onTap: () {
                 Navigator.push(
                   context,
@@ -79,23 +78,93 @@ class UserPost extends StatelessWidget {
               splashColor: Colors.transparent,
               highlightColor: Colors.transparent,
               hoverColor: Colors.transparent,
-              child: Card(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[900]
-                    : Colors.white,
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Top row: avatar, username, dot, timestamp
-                      Row(
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[900]
+                      : Colors.white,
+                  border: Border(
+                    bottom: BorderSide(color: Colors.grey.withOpacity(0.3), width: 1),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Forum header with category indicator
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: forumIconColor.withOpacity(0.08),
+                        border: Border(
+                          bottom: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                      ),
+                      child: Row(
                         children: [
+                          // Title area with better typography
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black87,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          
+                          // Post metadata badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: forumIconColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              dateTimeString,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: forumIconColor.withOpacity(0.8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    
+                    // Message content
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Text(
+                        message,
+                        maxLines: 4,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.4,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.grey[300]
+                              : Colors.grey[800],
+                        ),
+                      ),
+                    ),
+                    
+                    // Post footer with user info and interaction stats
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: Colors.grey.withOpacity(0.2)),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          // User info section
                           InkWell(
                             onTap: () {
                               Navigator.push(
@@ -111,13 +180,9 @@ class UserPost extends StatelessWidget {
                                 ),
                               );
                             },
-                            splashColor: Colors.transparent,
-                            highlightColor: Colors.transparent,
-                            hoverColor: Colors.transparent,
                             child: Row(
-                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                // Profile picture with fallback to initial
+                                // Profile picture
                                 FutureBuilder<QuerySnapshot>(
                                   future: FirebaseFirestore.instance
                                       .collection('users')
@@ -134,158 +199,117 @@ class UserPost extends StatelessWidget {
                                       photoUrl = userData['profileImageUrl']
                                           as String?;
                                     }
-                                    return CircleAvatar(
-                                      backgroundColor:
-                                          forumIconColor.withOpacity(0.15),
-                                      radius: 18,
-                                      backgroundImage: photoUrl != null &&
-                                              photoUrl.isNotEmpty
-                                          ? NetworkImage(photoUrl)
-                                          : null,
-                                      child:
-                                          (photoUrl == null || photoUrl.isEmpty)
-                                              ? Text(
-                                                  user.isNotEmpty
-                                                      ? user[0].toUpperCase()
-                                                      : '?',
-                                                  style: TextStyle(
-                                                    color: forumIconColor,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 18,
-                                                  ),
-                                                )
-                                              : null,
-                                    ); 
+                                    return Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: forumIconColor.withOpacity(0.2),
+                                        border: Border.all(
+                                          color: forumIconColor.withOpacity(0.5),
+                                          width: 1.5,
+                                        ),
+                                      ),
+                                      child: ClipOval(
+                                        child: photoUrl != null
+                                            ? Image.network(
+                                                photoUrl,
+                                                fit: BoxFit.cover,
+                                                width: 32,
+                                                height: 32,
+                                              )
+                                            : Icon(
+                                                Icons.person,
+                                                color: forumIconColor.withOpacity(0.7),
+                                                size: 18,
+                                              ),
+                                      ),
+                                    );
                                   },
                                 ),
-                                const SizedBox(width: 10),
+                                const SizedBox(width: 8),
                                 Text(
                                   user,
                                   style: TextStyle(
-                                    fontWeight: FontWeight.normal,
-                                    fontSize: 12,
-                                    color: Colors.grey[800],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          // Dot divider
-                          Container(
-                            width: 4,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[600],
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            dateTimeString,
-                            style: TextStyle(
-                              fontWeight: FontWeight.normal,
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      // Post title
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 8), // Spacing between title and body
-                      // Message body
-                      Text(
-                        message,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      // Like and comment row
-                      Row(
-                        children: [
-                          GestureDetector(
-                            onTap: () => toggleLike(likes, isLiked),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  isLiked
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color:
-                                      isLiked ? Colors.redAccent : Colors.grey,
-                                  size: 20,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  likes.length.toString(),
-                                  style: TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: forumIconColor,
                                     fontSize: 14,
-                                    color: Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.white
-                                        : Colors.black,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(width: 15),
-                          Icon(
-                            Icons.mode_comment_outlined,
-                            color: Colors.grey,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 4),
-                          // Show comment count if available, else 0
-                          Text(
-                            comments.length.toString(),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black,
-                            ),
-                          ),
-                          // Category flair moved here
-                          const SizedBox(width: 15),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color:
-                                  Color.lerp(forumIconColor, Colors.white, 0.5),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              category,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
+                          
                           const Spacer(),
+                          
+                          // Post stats and actions
+                          Row(
+                            children: [
+                              // Comments count
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.comment_outlined,
+                                    size: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    comments.length.toString(),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              
+                              const SizedBox(width: 16),
+                              
+                              // Like button and count
+                              GestureDetector(
+                                onTap: () async {
+                                  String postId = title;
+                                  DocumentReference docRef = FirebaseFirestore.instance
+                                      .collection(category)
+                                      .doc(postId);
+                                  
+                                  if (isLiked) {
+                                    await docRef.update({
+                                      'likes': FieldValue.arrayRemove([currentUser.email])
+                                    });
+                                  } else {
+                                    await docRef.update({
+                                      'likes': FieldValue.arrayUnion([currentUser.email])
+                                    });
+                                  }
+                                },
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      isLiked ? Icons.favorite : Icons.favorite_border,
+                                      color: isLiked ? Colors.redAccent : Colors.grey[600],
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      likes.length.toString(),
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                        color: isLiked ? Colors.redAccent : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),

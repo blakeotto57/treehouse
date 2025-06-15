@@ -316,9 +316,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final pastelGreen = const Color(0xFFF5FBF7);
     final darkBackground = const Color(0xFF181818);
 
-    final GlobalKey<SlidingDrawerState> _drawerKey =
-        GlobalKey<SlidingDrawerState>();
-
+    final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
+    
     return SlidingDrawer(
       key: _drawerKey,
       drawer: customDrawer(context), // Use customDrawerContent from drawer.dart

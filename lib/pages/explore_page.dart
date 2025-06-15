@@ -223,7 +223,7 @@ class _ExplorePageState extends State<ExplorePage> {
         appBar: Navbar(drawerKey: _drawerKey),
         body: Column(
           children: [
-            const SizedBox(height: 10), // Space below the app bar
+            const SizedBox(height: 20), // Space below the app bar
             // Search bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -264,7 +264,7 @@ class _ExplorePageState extends State<ExplorePage> {
                       minWidth: 32,
                       minHeight: 23,
                     ),
-                    hintText: "Search the bulletin board...",
+                    hintText: "Search the explore page...",
                     hintStyle: TextStyle(
                       color: isDark ? Colors.grey[400] : Colors.grey,
                       fontSize: 14,
@@ -280,19 +280,6 @@ class _ExplorePageState extends State<ExplorePage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: Row(
                 children: [
-                  Icon(Icons.campaign,
-                      color: isDark ? Colors.white : const Color(0xFF386A53)),
-                  const SizedBox(width: 10),
-                  Text(
-                    "See what's new on the bulletin board",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: isDark ? Colors.white : const Color(0xFF386A53),
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
                     child: Divider(
                       color: (isDark ? Colors.white! : const Color(0xFF386A53))
@@ -321,7 +308,7 @@ class _ExplorePageState extends State<ExplorePage> {
                     }
                     if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                       return const Center(
-                          child: Text("No posts on the bulletin board."));
+                          child: Text("No posts on the explore page."));
                     }
                     final posts = snapshot.data!.docs;
 
