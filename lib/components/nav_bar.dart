@@ -4,13 +4,15 @@ import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/components/user_search.dart';
+import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Navbar extends StatefulWidget implements PreferredSizeWidget {
   final String? title;
   final List<Widget>? actions;
+  final GlobalKey<SlidingDrawerState>? drawerKey;
 
-  const Navbar({super.key, this.title, this.actions});
+  const Navbar({super.key, this.title, this.actions, this.drawerKey});
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
@@ -45,6 +47,15 @@ class _NavbarState extends State<Navbar> {
         final isWide = constraints.maxWidth > 700;
 
         return AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () {
+              // Toggle the sliding drawer when menu icon is pressed
+              if (widget.drawerKey?.currentState != null) {
+                widget.drawerKey!.currentState!.toggle();
+              }
+            },
+          ),
           iconTheme: IconThemeData(color: Colors.white),
           backgroundColor: const Color(0xFF386A53),
           title: isWide

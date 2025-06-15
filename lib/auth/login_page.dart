@@ -223,7 +223,7 @@ class _LoginPageState extends State<LoginPage> {
                           "New User?",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF4D8061),
+                            color: Color(0xFF386A53),
                             fontSize: 14, // Match register page
                           ),
                         ),

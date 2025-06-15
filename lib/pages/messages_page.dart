@@ -12,6 +12,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:treehouse/components/slidingdrawer.dart';
 
 class MessagesPage extends StatefulWidget {
   final String? initialSelectedUserEmail; // Add this
@@ -160,10 +161,16 @@ class _MessagesPageState extends State<MessagesPage> {
 
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
+    final GlobalKey<SlidingDrawerState> _drawerKey =
+        GlobalKey<SlidingDrawerState>();
+
+    return SlidingDrawer(
+      key: _drawerKey,
+      drawer: customDrawer(context), // Use customDrawerContent from drawer.dart
+      child: Scaffold(
       backgroundColor: backgroundColor,
       drawer: customDrawer(context),
-      appBar: const Navbar(),
+      appBar: Navbar(drawerKey: _drawerKey),
       body: screenWidth < 600 // Adjust layout for phone screens
           ? selectedUserEmail == null
               ? Column(
@@ -827,6 +834,7 @@ class _MessagesPageState extends State<MessagesPage> {
                 ),
               ],
             ),
+      ),
     );
   }
 }

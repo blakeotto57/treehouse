@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/nav_bar.dart';
-import 'package:treehouse/models/reviews_page.dart';
 import 'package:treehouse/pages/messages_page.dart';
 
 class OtherUsersProfilePage extends StatefulWidget {

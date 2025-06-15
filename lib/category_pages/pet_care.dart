@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:treehouse/models/category_forurm.dart';
+import 'package:treehouse/pages/category_forurm.dart';
 
 class PetCareSellersPage extends StatelessWidget {
   const PetCareSellersPage({Key? key}) : super(key: key);

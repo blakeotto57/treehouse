@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/login_page.dart';
 import 'package:treehouse/components/drawer.dart';
+import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/pages/user_profile.dart';
@@ -225,10 +226,16 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     final pastelGreen = const Color(0xFFF5FBF7);
     final darkBackground = const Color(0xFF181818);
 
-    return Scaffold(
-      backgroundColor: isDark ? darkBackground : pastelGreen,
+    final GlobalKey<SlidingDrawerState> _drawerKey =
+        GlobalKey<SlidingDrawerState>();
+
+    return SlidingDrawer(
+      key: _drawerKey,
+      drawer: customDrawer(context), // Use customDrawerContent from drawer.dart
+      child: Scaffold(
       drawer: customDrawer(context),
-      appBar: const Navbar(),
+      appBar: Navbar(drawerKey: _drawerKey),
+      backgroundColor: isDark ? darkBackground : pastelGreen,
       body: Column(
         children: [
           // Section header
@@ -341,6 +348,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

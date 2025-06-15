@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/nav_bar.dart';
+import 'package:treehouse/components/slidingdrawer.dart';
 import '../components/user_post.dart';
 
 class UserPostPage extends StatelessWidget {
@@ -23,13 +24,21 @@ class UserPostPage extends StatelessWidget {
     final pastelGreen = const Color(0xFFF5FBF7);
     final darkBackground = const Color(0xFF181818);
 
+    final backgroundColor = isDark ? darkBackground : pastelGreen;
+
     // Stub search query variable (adjust if dynamic search is needed)
     final searchQuery = '';
 
-    return Scaffold(
-      backgroundColor: isDark ? darkBackground : pastelGreen,
+    final GlobalKey<SlidingDrawerState> _drawerKey =
+        GlobalKey<SlidingDrawerState>();
+
+    return SlidingDrawer(
+      key: _drawerKey,
+      drawer: customDrawer(context), // Use customDrawerContent from drawer.dart
+      child: Scaffold(
+      backgroundColor: backgroundColor,
       drawer: customDrawer(context),
-      appBar: const Navbar(),
+      appBar: Navbar(drawerKey: _drawerKey),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -146,6 +155,7 @@ class UserPostPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }
