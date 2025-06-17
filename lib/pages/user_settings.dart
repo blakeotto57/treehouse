@@ -261,27 +261,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     thickness: 1,
                   ),
                 ),
-                const SizedBox(width: 10),
-                // Sign out button at the end of the header row
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Center(
-                    child: ElevatedButton.icon(
-                      onPressed: signOut,
-                      icon: const Icon(Icons.logout, color: Colors.white),
-                      label: const Text("Sign Out",
-                          style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red[700],
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 32, vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                
               ],
             ),
           ),

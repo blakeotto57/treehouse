@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/pages/explore_page.dart';

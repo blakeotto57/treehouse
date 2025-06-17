@@ -24,8 +24,6 @@ class UserPostPage extends StatelessWidget {
     final pastelGreen = const Color(0xFFF5FBF7);
     final darkBackground = const Color(0xFF181818);
 
-    final backgroundColor = isDark ? darkBackground : pastelGreen;
-
     // Stub search query variable (adjust if dynamic search is needed)
     final searchQuery = '';
 
@@ -36,126 +34,172 @@ class UserPostPage extends StatelessWidget {
       key: _drawerKey,
       drawer: customDrawer(context), // Use customDrawerContent from drawer.dart
       child: Scaffold(
-      backgroundColor: backgroundColor,
-      drawer: customDrawer(context),
-      appBar: Navbar(drawerKey: _drawerKey),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 600),
-          child: Column(
-            children: [
-              const SizedBox(height: 10),
-              post,
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  children: [
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection(firestoreCollection)
-                          .doc(post.title)
-                          .collection("comments")
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        final commentsCount =
-                            snapshot.hasData ? snapshot.data!.docs.length : 0;
-                        return Text(
-                          "Comments ($commentsCount)",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            color: isDark ? Colors.white : categoryColor,
+        backgroundColor: isDark ? darkBackground : pastelGreen,
+        drawer: customDrawer(context),
+        appBar: Navbar(drawerKey: _drawerKey),
+        body: Stack(
+          children: [
+            // Back button positioned in the top left
+            Positioned(
+              top: 10,
+              left: 10,
+              child: SafeArea(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.of(context).pop(),
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isDark
+                            ? Colors.black.withOpacity(0.3)
+                            : Colors.white.withOpacity(0.7),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 5,
+                            spreadRadius: 1,
                           ),
-                        );
-                      },
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: Color(0xFF386A53),
+                        size: 28,
+                      ),
                     ),
-                    const SizedBox(width: 8),
+                  ),
+                ),
+              ),
+            ),
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    post,
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Row(
+                        children: [
+                          StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection(firestoreCollection)
+                                .doc(post.title)
+                                .collection("comments")
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              final commentsCount = snapshot.hasData
+                                  ? snapshot.data!.docs.length
+                                  : 0;
+                              return Text(
+                                "Comments ($commentsCount)",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: isDark ? Colors.white : categoryColor,
+                                ),
+                              );
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Divider(
+                              color: categoryColor.withOpacity(0.2),
+                              thickness: 1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     Expanded(
-                      child: Divider(
-                        color: categoryColor.withOpacity(0.2),
-                        thickness: 1,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[900] : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border:
+                              Border.all(color: categoryColor.withOpacity(0.2)),
+                        ),
+                        child: StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection(firestoreCollection)
+                              .orderBy("timestamp", descending: true)
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              final docs = snapshot.data!.docs;
+                              final filteredPosts = docs.where((doc) {
+                                final data = doc.data() as Map<String, dynamic>;
+                                return searchQuery.isEmpty ||
+                                    (data["body_text"] ?? "")
+                                        .toString()
+                                        .toLowerCase()
+                                        .contains(searchQuery.toLowerCase());
+                              }).toList();
+
+                              if (filteredPosts.isEmpty) {
+                                return const Center(
+                                  child: Text(
+                                    "No posts found.",
+                                    style: TextStyle(
+                                        color: Colors.grey, fontSize: 16),
+                                  ),
+                                );
+                              }
+
+                              return ListView.separated(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                itemCount: filteredPosts.length,
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(height: 8),
+                                itemBuilder: (context, index) {
+                                  final postData = filteredPosts[index].data()
+                                      as Map<String, dynamic>;
+                                  return UserPost(
+                                    message: postData["body_text"] ?? '',
+                                    user: postData["username"] ?? '',
+                                    title: postData["title"] ?? '',
+                                    likes: List<String>.from(
+                                        postData["likes"] ?? []),
+                                    timestamp: postData["timestamp"] ??
+                                        Timestamp.now(),
+                                    category: firestoreCollection,
+                                    forumIconColor: categoryColor,
+                                  );
+                                },
+                              );
+                            } else if (snapshot.hasError) {
+                              return Center(
+                                child: Text("Error: ${snapshot.error}"),
+                              );
+                            }
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          },
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          bottom: 16, left: 8, right: 8, top: 8),
+                      child: _CommentInput(
+                        postId: post.title,
+                        firestoreCollection: firestoreCollection,
+                        accentColor: categoryColor,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? Colors.grey[900] : Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: categoryColor.withOpacity(0.2)),
-                  ),
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection(firestoreCollection)
-                        .orderBy("timestamp", descending: true)
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.hasData) {
-                        final docs = snapshot.data!.docs;
-                        final filteredPosts = docs.where((doc) {
-                          final data = doc.data() as Map<String, dynamic>;
-                          return searchQuery.isEmpty ||
-                              (data["body_text"] ?? "")
-                                  .toString()
-                                  .toLowerCase()
-                                  .contains(searchQuery.toLowerCase());
-                        }).toList();
-
-                        if (filteredPosts.isEmpty) {
-                          return const Center(
-                            child: Text(
-                              "No posts found.",
-                              style: TextStyle(color: Colors.grey, fontSize: 16),
-                            ),
-                          );
-                        }
-
-                        return ListView.separated(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: filteredPosts.length,
-                          separatorBuilder: (context, index) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final postData =
-                                filteredPosts[index].data() as Map<String, dynamic>;
-                            return UserPost(
-                              message: postData["body_text"] ?? '',
-                              user: postData["username"] ?? '',
-                              title: postData["title"] ?? '',
-                              likes: List<String>.from(postData["likes"] ?? []),
-                              timestamp: postData["timestamp"] ?? Timestamp.now(),
-                              category: firestoreCollection,
-                              forumIconColor: categoryColor,
-                            );
-                          },
-                        );
-                      } else if (snapshot.hasError) {
-                        return Center(
-                          child: Text("Error: ${snapshot.error}"),
-                        );
-                      }
-                      return const Center(child: CircularProgressIndicator());
-                    },
-                  ),
-                ),
-              ),
-              Padding(
-                padding:
-                    const EdgeInsets.only(bottom: 16, left: 8, right: 8, top: 8),
-                child: _CommentInput(
-                  postId: post.title,
-                  firestoreCollection: firestoreCollection,
-                  accentColor: categoryColor,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
       ),
     );
   }
@@ -224,8 +268,8 @@ class _CommentInputState extends State<_CommentInput> {
                 hintStyle:
                     TextStyle(color: widget.accentColor.withOpacity(0.7)),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                    vertical: 14, horizontal: 20),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
               ),
             ),
           ),
