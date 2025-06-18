@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/models/user_post_page.dart';
@@ -96,7 +97,7 @@ class UserPost extends StatelessWidget {
                   children: [
                     // Post content
                     Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 0, 16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -104,72 +105,99 @@ class UserPost extends StatelessWidget {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              // User profile picture
-                              FutureBuilder<QuerySnapshot>(
-                                future: FirebaseFirestore.instance
-                                    .collection('users')
-                                    .where('username', isEqualTo: user)
-                                    .limit(1)
-                                    .get(),
-                                builder: (context, userSnapshot) {
-                                  String? photoUrl;
-                                  if (userSnapshot.hasData &&
-                                      userSnapshot.data!.docs.isNotEmpty) {
-                                    final userData =
-                                        userSnapshot.data!.docs.first.data()
-                                            as Map<String, dynamic>;
-                                    photoUrl = userData['profileImageUrl']
-                                        as String?;
-                                  }
-                                  return CircleAvatar(
-                                    backgroundColor:
-                                        forumIconColor.withOpacity(0.2),
-                                    radius: 18,
-                                    backgroundImage: photoUrl != null &&
-                                            photoUrl.isNotEmpty
-                                        ? NetworkImage(photoUrl)
-                                        : null,
-                                    child: (photoUrl == null ||
-                                            photoUrl.isEmpty)
-                                        ? Text(
-                                            user.isNotEmpty
-                                                ? user[0].toUpperCase()
-                                                : '?',
-                                            style: TextStyle(
-                                              color: forumIconColor,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )
-                                        : null,
+                              // User profile picture and username wrapped in InkWell
+                              InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          OtherUsersProfilePage(username: user),
+                                    ),
                                   );
                                 },
-                              ),
-                              SizedBox(width: 12),
-                              // Username and timestamp
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    user,
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 15,
-                                      color: Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Colors.white
-                                          : Colors.black87,
+                                hoverColor: Colors.transparent,
+                                focusColor: Colors.transparent,
+                                highlightColor: Colors.transparent,
+                                splashColor: Colors.transparent,
+                                child: Row(
+                                  children: [
+                                    // User profile picture
+                                    FutureBuilder<QuerySnapshot>(
+                                      future: FirebaseFirestore.instance
+                                          .collection('users')
+                                          .where('username', isEqualTo: user)
+                                          .limit(1)
+                                          .get(),
+                                      builder: (context, userSnapshot) {
+                                        String? photoUrl;
+                                        if (userSnapshot.hasData &&
+                                            userSnapshot
+                                                .data!.docs.isNotEmpty) {
+                                          final userData = userSnapshot
+                                              .data!.docs.first
+                                              .data() as Map<String, dynamic>;
+                                          photoUrl = userData['profileImageUrl']
+                                              as String?;
+                                        }
+                                        return CircleAvatar(
+                                          backgroundColor:
+                                              forumIconColor.withOpacity(0.2),
+                                          radius: 12,
+                                          backgroundImage: photoUrl != null &&
+                                                  photoUrl.isNotEmpty
+                                              ? NetworkImage(photoUrl)
+                                              : null,
+                                          child: (photoUrl == null ||
+                                                  photoUrl.isEmpty)
+                                              ? Text(
+                                                  user.isNotEmpty
+                                                      ? user[0].toUpperCase()
+                                                      : '?',
+                                                  style: TextStyle(
+                                                    color: forumIconColor,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                )
+                                              : null,
+                                        );
+                                      },
                                     ),
-                                  ),
-                                  Text(
-                                    dateTimeString,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
+                                    const SizedBox(width: 10),
+                                    // Username and timestamp
+                                    Row(
+                                      children: [
+                                        Text(
+                                          user, // Username
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                            color: Theme.of(context).brightness == Brightness.dark
+                                                ? Colors.white
+                                                : Colors.black87,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        const Text(
+                                          "•",
+                                          style: TextStyle(
+                                            color: Colors.grey,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          timeAgo(postDate), // Format the timestamp
+                                          style: const TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                              Spacer(),
+                              const Spacer(), // Push the following items to the right side
                               // Category badge
                               Container(
                                 padding: EdgeInsets.symmetric(
@@ -190,6 +218,77 @@ class UserPost extends StatelessWidget {
                                     color: forumIconColor,
                                   ),
                                 ),
+                              ),
+                              // Replace the IconButton with PopupMenuButton
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.more_vert),
+                                padding: EdgeInsets.zero,
+                                onSelected: (value) {
+                                  switch (value) {
+                                    case 'send':
+                                      // Handle send to user
+                                      break;
+                                    case 'delete':
+                                      // Handle delete post
+                                      break;
+                                    case 'report':
+                                      // Handle report post
+                                      break;
+                                    case 'save':
+                                      // Handle save post
+                                      break;
+                                  }
+                                },
+                                itemBuilder: (context) {
+                                  final List<PopupMenuEntry<String>> options = [
+                                    const PopupMenuItem<String>(
+                                      value: 'send',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.send, size: 20),
+                                          SizedBox(width: 8),
+                                          Text('Send to User'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem<String>(
+                                      value: 'report',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.flag_outlined, size: 20),
+                                          SizedBox(width: 8),
+                                          Text('Report'),
+                                        ],
+                                      ),
+                                    ),
+                                    const PopupMenuItem<String>(
+                                      value: 'save',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.bookmark_border, size: 20),
+                                          SizedBox(width: 8),
+                                          Text('Save'),
+                                        ],
+                                      ),
+                                    ),
+                                  ];
+
+                                  // Add delete option only if current user is the post owner
+                                  if (FirebaseAuth.instance.currentUser?.email == user) {
+                                    options.insert(1, const PopupMenuItem<String>(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          Icon(Icons.delete, color: Colors.red, size: 20),
+                                          SizedBox(width: 8),
+                                          Text('Delete', style: TextStyle(color: Colors.red)),
+                                        ],
+                                      ),
+                                    ));
+                                  }
+
+                                  return options;
+                                },
                               ),
                             ],
                           ),
@@ -227,7 +326,7 @@ class UserPost extends StatelessWidget {
                                 onTap: () => toggleLike(likes, isLiked),
                                 borderRadius: BorderRadius.circular(20),
                                 child: Padding(
-                                  padding: EdgeInsets.all(4),
+                                  padding: EdgeInsets.all(0),
                                   child: Row(
                                     children: [
                                       Icon(
@@ -235,13 +334,16 @@ class UserPost extends StatelessWidget {
                                             ? Icons.favorite
                                             : Icons.favorite_border,
                                         size: 18,
-                                        color: isLiked ? Colors.red : Colors.grey,
+                                        color:
+                                            isLiked ? Colors.red : Colors.grey,
                                       ),
                                       SizedBox(width: 4),
                                       Text(
                                         '${likes.length}',
                                         style: TextStyle(
-                                          color: isLiked ? Colors.red : Colors.grey,
+                                          color: isLiked
+                                              ? Colors.red
+                                              : Colors.grey,
                                           fontWeight: isLiked
                                               ? FontWeight.bold
                                               : FontWeight.normal,
@@ -316,6 +418,88 @@ class UserPost extends StatelessWidget {
     if (diff.inDays < 7)
       return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
     return '${date.month}/${date.day}/${date.year}';
+  }
+
+  void _showOptionsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Options'),
+          content: Text('Options menu content goes here.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showShareLinkDialog(BuildContext context) {
+    // Create a link for this specific post using postId instead of title
+    final String postLink = "https://treehouse.app/post/$title";
+    
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Share Post',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                const Text('Copy this link to share:'),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).brightness == Brightness.dark 
+                        ? Colors.grey[800] 
+                        : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: SelectableText(
+                    postLink,
+                    style: const TextStyle(fontFamily: 'monospace'),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.copy),
+                  label: const Text('Copy Link'),
+                  onPressed: () {
+                    Clipboard.setData(ClipboardData(text: postLink));
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Link copied to clipboard'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  },
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

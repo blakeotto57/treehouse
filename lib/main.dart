@@ -9,10 +9,15 @@ import 'package:treehouse/pages/user_settings.dart';
 import 'firebase_options.dart'; // Firebase options (you need to configure this from Firebase console)
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 void main() async {
   WidgetsFlutterBinding
       .ensureInitialized(); // Ensures widget binding is initialized
+
+  // Use path URL strategy for cleaner URLs
+  setUrlStrategy(PathUrlStrategy());
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions
         .currentPlatform, // Initialize Firebase with options
