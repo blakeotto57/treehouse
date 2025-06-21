@@ -422,8 +422,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                               userDoc.data()?['username'] ?? 'Unknown';
                           await FirebaseFirestore.instance
                               .collection(widget.firestoreCollection)
-                              .doc(postTitle)
-                              .set({
+                              .add({
                             "username": username,
                             "title": postTitle,
                             "body_text": postBody,
@@ -605,6 +604,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                                 timestamp: post["timestamp"] ?? Timestamp.now(),
                                 category: widget.firestoreCollection,
                                 forumIconColor: widget.forumIconColor,
+                                documentId: filteredPosts[index].id,
                               );
                             },
                           );

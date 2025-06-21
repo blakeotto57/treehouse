@@ -14,6 +14,7 @@ class UserPost extends StatelessWidget {
   final String category;
   final Color forumIconColor;
   final String title; // Added title property
+  final String documentId; // Added document ID property
 
   const UserPost({
     Key? key,
@@ -24,6 +25,7 @@ class UserPost extends StatelessWidget {
     required this.category,
     required this.forumIconColor,
     required this.title, // Added title property
+    required this.documentId, // Added document ID property
   }) : super(key: key);
 
   @override
@@ -34,7 +36,7 @@ class UserPost extends StatelessWidget {
     return StreamBuilder<DocumentSnapshot>(
       stream: FirebaseFirestore.instance
           .collection(category)
-          .doc(title) // Use title as the document ID
+          .doc(documentId) // Use documentId instead of title
           .snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData || !snapshot.data!.exists) {
@@ -62,18 +64,13 @@ class UserPost extends StatelessWidget {
           children: [
             InkWell(
               onTap: () {
-                Navigator.push(
+                Navigator.pushNamed(
                   context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        UserPostPage(
-                      post: this,
-                      categoryColor: forumIconColor,
-                      firestoreCollection: category,
-                    ),
-                    transitionDuration: Duration.zero,
-                    reverseTransitionDuration: Duration.zero,
-                  ),
+                  '/post/${documentId}',
+                  arguments: {
+                    'categoryColor': forumIconColor,
+                    'firestoreCollection': category,
+                  },
                 );
               },
               splashColor: Colors.transparent,
@@ -394,7 +391,7 @@ class UserPost extends StatelessWidget {
 
   void toggleLike(List<String> likes, bool isLiked) {
     DocumentReference postRef =
-        FirebaseFirestore.instance.collection(category).doc(title);
+        FirebaseFirestore.instance.collection(category).doc(documentId);
 
     if (isLiked) {
       postRef.update({
@@ -441,8 +438,8 @@ class UserPost extends StatelessWidget {
   }
 
   void _showShareLinkDialog(BuildContext context) {
-    // Create a link for this specific post using postId instead of title
-    final String postLink = "https://treehouse.app/post/$title";
+    // Create a link for this specific post using documentId instead of title
+    final String postLink = "https://treehouse.app/post/$documentId";
     
     showDialog(
       context: context,

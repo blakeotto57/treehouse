@@ -61,16 +61,7 @@ class _NavbarState extends State<Navbar> {
           title: isWide
               ? InkWell(
                   onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation1, animation2) =>
-                            ExplorePage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-
-                      ),
-                    );
+                    Navigator.pushReplacementNamed(context, '/explore');
                   },
                   hoverColor: Colors.transparent,
                   focusColor: Colors.transparent,
@@ -130,60 +121,28 @@ class _NavbarState extends State<Navbar> {
                 icon: Icons.explore,
                 label: "Explore",
                 onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation1, animation2) =>
-                          ExplorePage(),
-                      transitionDuration: Duration.zero,
-                      reverseTransitionDuration: Duration.zero,
-                    ),
-                  );
+                  Navigator.pushReplacementNamed(context, '/explore');
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.message,
                 label: "Messages",
                 onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation1, animation2) =>
-                          MessagesPage(),
-                      transitionDuration: Duration.zero,
-                      reverseTransitionDuration: Duration.zero,
-                    ),
-                  );
+                  Navigator.pushReplacementNamed(context, '/messages');
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.person,
                 label: "Profile",
                 onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation1, animation2) =>
-                          UserProfilePage(),
-                      transitionDuration: Duration.zero,
-                      reverseTransitionDuration: Duration.zero,
-                    ),
-                  );
+                  Navigator.pushReplacementNamed(context, '/profile');
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.settings,
                 label: "Settings",
                 onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    PageRouteBuilder(
-                      pageBuilder: (context, animation1, animation2) =>
-                          UserSettingsPage(),
-                      transitionDuration: Duration.zero,
-                      reverseTransitionDuration: Duration.zero,
-                    ),
-                  );
+                  Navigator.pushReplacementNamed(context, '/settings');
                 },
                 isWide: isWide),
             ...?widget.actions,

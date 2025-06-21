@@ -7,13 +7,13 @@ import 'package:treehouse/components/slidingdrawer.dart';
 import '../components/user_post.dart';
 
 class UserPostPage extends StatelessWidget {
-  final UserPost post;
+  final String postId;
   final Color categoryColor;
   final String firestoreCollection;
 
   const UserPostPage({
     super.key,
-    required this.post,
+    required this.postId,
     required this.categoryColor,
     required this.firestoreCollection,
   });
@@ -24,63 +24,42 @@ class UserPostPage extends StatelessWidget {
     final pastelGreen = const Color(0xFFF5FBF7);
     final darkBackground = const Color(0xFF181818);
 
-    // Stub search query variable (adjust if dynamic search is needed)
-    final searchQuery = '';
-
     final GlobalKey<SlidingDrawerState> _drawerKey =
         GlobalKey<SlidingDrawerState>();
 
     return SlidingDrawer(
       key: _drawerKey,
-      drawer: customDrawer(context), // Use customDrawerContent from drawer.dart
+      drawer: customDrawer(context),
       child: Scaffold(
         backgroundColor: isDark ? darkBackground : pastelGreen,
         drawer: customDrawer(context),
         appBar: Navbar(drawerKey: _drawerKey),
-        body: Stack(
-          children: [
-            // Back button positioned in the top left
-            Positioned(
-              top: 10,
-              left: 10,
-              child: SafeArea(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => Navigator.of(context).pop(),
-                    borderRadius: BorderRadius.circular(30),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: isDark
-                            ? Colors.black.withOpacity(0.3)
-                            : Colors.white.withOpacity(0.7),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 5,
-                            spreadRadius: 1,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back,
-                        color: Color(0xFF386A53),
-                        size: 28,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            Center(
+        body: FutureBuilder<DocumentSnapshot>(
+          future: _getPostDocument(postId, firestoreCollection),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (!snapshot.hasData || !snapshot.data!.exists) {
+              return const Center(child: Text('Post not found.'));
+            }
+            final postData = snapshot.data!.data() as Map<String, dynamic>;
+            return Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 600),
                 child: Column(
                   children: [
                     const SizedBox(height: 10),
-                    post,
+                    UserPost(
+                      message: postData["body_text"] ?? '',
+                      user: postData["username"] ?? '',
+                      title: postData["title"] ?? '',
+                      likes: List<String>.from(postData["likes"] ?? []),
+                      timestamp: postData["timestamp"] ?? Timestamp.now(),
+                      category: firestoreCollection,
+                      forumIconColor: categoryColor,
+                      documentId: postId,
+                    ),
                     const SizedBox(height: 8),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -89,7 +68,7 @@ class UserPostPage extends StatelessWidget {
                           StreamBuilder<QuerySnapshot>(
                             stream: FirebaseFirestore.instance
                                 .collection(firestoreCollection)
-                                .doc(post.title)
+                                .doc(postId)
                                 .collection("comments")
                                 .snapshots(),
                             builder: (context, snapshot) {
@@ -128,49 +107,34 @@ class UserPostPage extends StatelessWidget {
                         child: StreamBuilder<QuerySnapshot>(
                           stream: FirebaseFirestore.instance
                               .collection(firestoreCollection)
-                              .orderBy("timestamp", descending: true)
+                              .doc(postId)
+                              .collection("comments")
+                              .orderBy("created on", descending: true)
                               .snapshots(),
                           builder: (context, snapshot) {
                             if (snapshot.hasData) {
                               final docs = snapshot.data!.docs;
-                              final filteredPosts = docs.where((doc) {
-                                final data = doc.data() as Map<String, dynamic>;
-                                return searchQuery.isEmpty ||
-                                    (data["body_text"] ?? "")
-                                        .toString()
-                                        .toLowerCase()
-                                        .contains(searchQuery.toLowerCase());
-                              }).toList();
-
-                              if (filteredPosts.isEmpty) {
+                              if (docs.isEmpty) {
                                 return const Center(
                                   child: Text(
-                                    "No posts found.",
+                                    "No comments yet.",
                                     style: TextStyle(
                                         color: Colors.grey, fontSize: 16),
                                   ),
                                 );
                               }
-
                               return ListView.separated(
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 8),
-                                itemCount: filteredPosts.length,
+                                itemCount: docs.length,
                                 separatorBuilder: (context, index) =>
                                     const SizedBox(height: 8),
                                 itemBuilder: (context, index) {
-                                  final postData = filteredPosts[index].data()
+                                  final commentData = docs[index].data()
                                       as Map<String, dynamic>;
-                                  return UserPost(
-                                    message: postData["body_text"] ?? '',
-                                    user: postData["username"] ?? '',
-                                    title: postData["title"] ?? '',
-                                    likes: List<String>.from(
-                                        postData["likes"] ?? []),
-                                    timestamp: postData["timestamp"] ??
-                                        Timestamp.now(),
-                                    category: firestoreCollection,
-                                    forumIconColor: categoryColor,
+                                  return ListTile(
+                                    title: Text(commentData["comment"] ?? ''),
+                                    subtitle: Text(commentData["comment by"] ?? ''),
                                   );
                                 },
                               );
@@ -189,7 +153,7 @@ class UserPostPage extends StatelessWidget {
                       padding: const EdgeInsets.only(
                           bottom: 16, left: 8, right: 8, top: 8),
                       child: _CommentInput(
-                        postId: post.title,
+                        postId: postId,
                         firestoreCollection: firestoreCollection,
                         accentColor: categoryColor,
                       ),
@@ -197,8 +161,8 @@ class UserPostPage extends StatelessWidget {
                   ],
                 ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );
@@ -285,4 +249,32 @@ class _CommentInputState extends State<_CommentInput> {
       ),
     );
   }
+}
+
+Future<DocumentSnapshot> _getPostDocument(String postId, String firestoreCollection) async {
+  // First try to get the document by ID (for new posts)
+  final docSnapshot = await FirebaseFirestore.instance
+      .collection(firestoreCollection)
+      .doc(postId)
+      .get();
+  
+  if (docSnapshot.exists) {
+    return docSnapshot;
+  }
+  
+  // If not found by ID, try to find by title (for old posts)
+  // For posts with duplicate titles, we'll get the most recent one
+  final querySnapshot = await FirebaseFirestore.instance
+      .collection(firestoreCollection)
+      .where('title', isEqualTo: postId)
+      .orderBy('timestamp', descending: true)
+      .limit(1)
+      .get();
+  
+  if (querySnapshot.docs.isNotEmpty) {
+    return querySnapshot.docs.first;
+  }
+  
+  // If still not found, return the original empty snapshot
+  return docSnapshot;
 }
