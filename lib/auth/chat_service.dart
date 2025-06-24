@@ -191,4 +191,115 @@ class ChatService {
       .orderBy("timestamp", descending: false)
       .snapshots();
   }
+
+  // Send a message request (if not accepted yet)
+  Future<void> sendMessageRequest(String receiverEmail, String message, {String? imageUrl}) async {
+    final currentUserEmail = _firebaseAuth.currentUser!.email!;
+    final timestamp = Timestamp.now();
+    Message newMessage = Message(
+      senderID: currentUserEmail,
+      senderEmail: currentUserEmail,
+      receiverID: receiverEmail,
+      message: message,
+      timestamp: timestamp,
+      imageUrl: imageUrl,
+    );
+    await _fireStore
+      .collection('message_requests')
+      .doc(receiverEmail)
+      .collection('users')
+      .doc(currentUserEmail)
+      .collection('messages')
+      .add(newMessage.toMap());
+  }
+
+  // Stream all message requests for the current user
+  Stream<List<Map<String, dynamic>>> getMessageRequestsStream() {
+    final currentUserEmail = _firebaseAuth.currentUser!.email!;
+    return _fireStore
+      .collection('message_requests')
+      .doc(currentUserEmail)
+      .collection('users')
+      .snapshots()
+      .asyncMap((usersSnapshot) async {
+        List<Map<String, dynamic>> requests = [];
+        for (var userDoc in usersSnapshot.docs) {
+          final senderEmail = userDoc.id;
+          final messagesSnapshot = await _fireStore
+            .collection('message_requests')
+            .doc(currentUserEmail)
+            .collection('users')
+            .doc(senderEmail)
+            .collection('messages')
+            .orderBy('timestamp', descending: false)
+            .get();
+          final userInfoSnap = await _fireStore
+            .collection('users')
+            .where('email', isEqualTo: senderEmail)
+            .get();
+          final userInfo = userInfoSnap.docs.isNotEmpty ? userInfoSnap.docs.first.data() : {"email": senderEmail};
+          requests.add({
+            'email': senderEmail,
+            'userInfo': userInfo,
+            'messages': messagesSnapshot.docs.map((m) => m.data()).toList(),
+          });
+        }
+        return requests;
+      });
+  }
+
+  // Accept a message request: move messages to chat and add to accepted_chats
+  Future<void> acceptMessageRequest(String senderEmail) async {
+    final currentUserEmail = _firebaseAuth.currentUser!.email!;
+    final batch = _fireStore.batch();
+    final chatId = [currentUserEmail, senderEmail]..sort();
+    final chatIdStr = chatId.join('_');
+    final messagesRef = _fireStore
+      .collection('message_requests')
+      .doc(currentUserEmail)
+      .collection('users')
+      .doc(senderEmail)
+      .collection('messages');
+    final messagesSnapshot = await messagesRef.get();
+    // Move each message to chats
+    for (var doc in messagesSnapshot.docs) {
+      batch.set(
+        _fireStore.collection('chats').doc(chatIdStr).collection('messages').doc(),
+        doc.data(),
+      );
+    }
+    // Add both users to accepted_chats
+    batch.set(
+      _fireStore.collection('accepted_chats').doc(currentUserEmail).collection('users').doc(senderEmail),
+      {'email': senderEmail, 'timestamp': Timestamp.now()},
+    );
+    batch.set(
+      _fireStore.collection('accepted_chats').doc(senderEmail).collection('users').doc(currentUserEmail),
+      {'email': currentUserEmail, 'timestamp': Timestamp.now()},
+    );
+    // Delete the message request
+    for (var doc in messagesSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    batch.delete(_fireStore.collection('message_requests').doc(currentUserEmail).collection('users').doc(senderEmail));
+    await batch.commit();
+  }
+
+  // Reject a message request: remove all pending messages and the user
+  Future<void> rejectMessageRequest(String senderEmail) async {
+    final currentUserEmail = _firebaseAuth.currentUser!.email!;
+    final batch = _fireStore.batch();
+    final messagesRef = _fireStore
+      .collection('message_requests')
+      .doc(currentUserEmail)
+      .collection('users')
+      .doc(senderEmail)
+      .collection('messages');
+    final messagesSnapshot = await messagesRef.get();
+    for (var doc in messagesSnapshot.docs) {
+      batch.delete(doc.reference);
+    }
+    batch.delete(_fireStore.collection('message_requests').doc(currentUserEmail).collection('users').doc(senderEmail));
+    await batch.commit();
+  }
 }

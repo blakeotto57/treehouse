@@ -34,10 +34,14 @@ class _MessagesPageState extends State<MessagesPage> {
   ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
 
+  int _messageRequestCount = 0;
+  List<Map<String, dynamic>> _messageRequests = [];
+
   @override
   void initState() {
     super.initState();
     _loadLastSelectedChat();
+    _listenToMessageRequests();
   }
 
   Future<void> _loadLastSelectedChat() async {
@@ -50,6 +54,126 @@ class _MessagesPageState extends State<MessagesPage> {
         selectedUserEmail = lastChat;
       });
     }
+  }
+
+  void _listenToMessageRequests() {
+    _chatService.getMessageRequestsStream().listen((requests) {
+      setState(() {
+        _messageRequests = requests;
+        _messageRequestCount = requests.length;
+      });
+    });
+  }
+
+  Future<void> _acceptMessageRequest(String senderEmail) async {
+    await _chatService.acceptMessageRequest(senderEmail);
+  }
+
+  Future<void> _rejectMessageRequest(String senderEmail) async {
+    await _chatService.rejectMessageRequest(senderEmail);
+  }
+
+  void _showMessageRequestsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return AlertDialog(
+          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+          title: Row(
+            children: [
+              Icon(Icons.mail, color: Color(0xFF386A53)),
+              SizedBox(width: 8),
+              Text("Message Requests", style: TextStyle(color: Color(0xFF386A53), fontWeight: FontWeight.bold)),
+            ],
+          ),
+          content: SizedBox(
+            width: 350,
+            child: _messageRequests.isEmpty
+                ? Text("No new requests", style: TextStyle(color: isDark ? Colors.white : Colors.black87))
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: _messageRequests.length,
+                    itemBuilder: (context, index) {
+                      final req = _messageRequests[index];
+                      final user = req['userInfo'] ?? {};
+                      final messages = req['messages'] as List<dynamic>;
+                      return Card(
+                        color: isDark ? Colors.grey[800] : Colors.grey[100],
+                        margin: EdgeInsets.symmetric(vertical: 6),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundImage: user['profileImageUrl'] != null ? NetworkImage(user['profileImageUrl']) : null,
+                                    backgroundColor: Colors.grey[400],
+                                    child: user['profileImageUrl'] == null ? Icon(Icons.person, color: Colors.white) : null,
+                                  ),
+                                  SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(user['username'] ?? user['name'] ?? user['email'] ?? req['email'],
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black)),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.check, color: Colors.green),
+                                    tooltip: "Accept",
+                                    onPressed: () async {
+                                      await _acceptMessageRequest(req['email']);
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.close, color: Colors.red),
+                                    tooltip: "Reject",
+                                    onPressed: () async {
+                                      await _rejectMessageRequest(req['email']);
+                                      Navigator.of(context).pop();
+                                    },
+                                  ),
+                                ],
+                              ),
+                              ...messages.map<Widget>((msg) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 8.0, top: 4, bottom: 4),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      if (msg['imageUrl'] != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(right: 8.0),
+                                          child: Image.network(msg['imageUrl'], width: 60, height: 60, fit: BoxFit.cover),
+                                        ),
+                                      Expanded(
+                                        child: Text(
+                                          msg['message'] ?? msg['text'] ?? '',
+                                          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+          ),
+          actions: [
+            TextButton(
+              child: Text("Close", style: TextStyle(color: Color(0xFF386A53))),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -170,7 +294,10 @@ class _MessagesPageState extends State<MessagesPage> {
       child: Scaffold(
       backgroundColor: backgroundColor,
       drawer: customDrawer(context),
-      appBar: Navbar(drawerKey: _drawerKey),
+      appBar: Navbar(
+        drawerKey: _drawerKey,
+        title: 'Messages',
+      ),
       body: screenWidth < 600 // Adjust layout for phone screens
           ? selectedUserEmail == null
               ? Column(
@@ -182,15 +309,46 @@ class _MessagesPageState extends State<MessagesPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            const Padding(
+                            // Messages title row with notification icon
+                            Padding(
                               padding: EdgeInsets.all(10),
-                              child: Text(
-                                "Messages",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 22,
-                                  color: Color(0xFF222222),
-                                ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Messages",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22,
+                                      color: Color(0xFF222222),
+                                    ),
+                                  ),
+                                  SizedBox(width: 20),
+                                  GestureDetector(
+                                    onTap: _showMessageRequestsDialog,
+                                    child: Stack(
+                                      children: [
+                                        Icon(Icons.mail_outline, color: Color(0xFF386A53)),
+                                        if (_messageRequestCount > 0)
+                                          Positioned(
+                                            right: 0,
+                                            top: 0,
+                                            child: Container(
+                                              padding: EdgeInsets.all(4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Text(
+                                                '$_messageRequestCount',
+                                                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             Divider(
@@ -536,15 +694,46 @@ class _MessagesPageState extends State<MessagesPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Padding(
+                      // Messages title row with notification icon
+                      Padding(
                         padding: EdgeInsets.all(10),
-                        child: Text(
-                          "Messages",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 22,
-                            color: Color(0xFF222222),
-                          ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Messages",
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 22,
+                                color: Color(0xFF222222),
+                              ),
+                            ),
+                            SizedBox(width: 20),
+                            GestureDetector(
+                              onTap: _showMessageRequestsDialog,
+                              child: Stack(
+                                children: [
+                                  Icon(Icons.mail_outline, color: Color(0xFF386A53)),
+                                  if (_messageRequestCount > 0)
+                                    Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      child: Container(
+                                        padding: EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Text(
+                                          '$_messageRequestCount',
+                                          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                       Divider(

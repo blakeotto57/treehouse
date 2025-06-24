@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/models/user_post_page.dart';
+import 'package:treehouse/auth/chat_service.dart';
 
 class UserPost extends StatelessWidget {
   final String message;
@@ -223,7 +224,7 @@ class UserPost extends StatelessWidget {
                                 onSelected: (value) {
                                   switch (value) {
                                     case 'send':
-                                      // Handle send to user
+                                      _showSendToUserDialog(context);
                                       break;
                                     case 'delete':
                                       // Handle delete post
@@ -497,6 +498,359 @@ class UserPost extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _showSendToUserDialog(BuildContext context) {
+    final postUrl = "https://treehouse.app/post/$documentId";
+    final postTitle = title;
+    final theme = Theme.of(context);
+    final Color accent = forumIconColor;
+    TextEditingController searchController = TextEditingController();
+    ValueNotifier<List<Map<String, dynamic>>> searchResults = ValueNotifier([]);
+    ValueNotifier<bool> loading = ValueNotifier(false);
+
+    Future<void> searchUsers(String query) async {
+      if (query.isEmpty) {
+        searchResults.value = [];
+        return;
+      }
+      loading.value = true;
+      final usersByUsername = await FirebaseFirestore.instance
+          .collection('users')
+          .where('username', isGreaterThanOrEqualTo: query)
+          .where('username', isLessThanOrEqualTo: query + '\uf8ff')
+          .limit(10)
+          .get();
+      final usersByEmail = await FirebaseFirestore.instance
+          .collection('users')
+          .where('email', isGreaterThanOrEqualTo: query)
+          .where('email', isLessThanOrEqualTo: query + '\uf8ff')
+          .limit(10)
+          .get();
+      // Merge and deduplicate
+      final allUsers = <String, Map<String, dynamic>>{};
+      for (var doc in usersByUsername.docs) {
+        allUsers[doc['email']] = doc.data();
+      }
+      for (var doc in usersByEmail.docs) {
+        allUsers[doc['email']] = doc.data();
+      }
+      searchResults.value = allUsers.values.toList();
+      loading.value = false;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Container(
+            width: 400,
+            height: 500,
+            padding: const EdgeInsets.all(0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+                  decoration: BoxDecoration(
+                    color: accent.withOpacity(0.12),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.send, color: accent),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Send Post to User',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: accent,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.pop(context),
+                        splashRadius: 20,
+                        color: Colors.grey[600],
+                      ),
+                    ],
+                  ),
+                ),
+                // Post title preview
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  child: Text(
+                    '"$postTitle"',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontStyle: FontStyle.italic,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ),
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: TextField(
+                    controller: searchController,
+                    cursorColor: Colors.black,
+                    decoration: InputDecoration(
+                      hintText: 'Search users by username or email...',
+                      prefixIcon: Icon(Icons.search, color: accent, size: 20),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: accent.withOpacity(0.2)),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: accent.withOpacity(0.2)),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: accent, width: 1.5),
+                      ),
+                    ),
+                    onChanged: (val) => searchUsers(val.trim()),
+                  ),
+                ),
+                // User list
+                Expanded(
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: loading,
+                    builder: (context, isLoading, _) {
+                      if (isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      return ValueListenableBuilder<List<Map<String, dynamic>>>(
+                        valueListenable: searchResults,
+                        builder: (context, users, _) {
+                          if (searchController.text.isEmpty) {
+                            // Show recent chat users if search is empty
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(20, 8, 0, 4),
+                                  child: Text(
+                                    'Recent Chats',
+                                    style: theme.textTheme.labelLarge?.copyWith(
+                                      color: Colors.grey[700],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: StreamBuilder<List<Map<String, dynamic>>>(
+                                    stream: ChatService().getAcceptedChatsStream(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState == ConnectionState.waiting) {
+                                        return const Center(child: CircularProgressIndicator());
+                                      }
+                                      if (snapshot.hasError) {
+                                        return Center(
+                                          child: Text(
+                                            'Error loading users: \\${snapshot.error}',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        );
+                                      }
+                                      final recentUsers = snapshot.data ?? [];
+                                      if (recentUsers.isEmpty) {
+                                        return Center(
+                                          child: Text(
+                                            'No users to send to.\\nStart a conversation or search for any user!',
+                                            textAlign: TextAlign.center,
+                                            style: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return ListView.separated(
+                                        padding: const EdgeInsets.symmetric(vertical: 4),
+                                        itemCount: recentUsers.length,
+                                        separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+                                        itemBuilder: (context, index) {
+                                          final user = recentUsers[index];
+                                          final userEmail = user['email'] as String;
+                                          final username = user['username'] as String? ?? userEmail;
+                                          final profileImageUrl = user['profileImageUrl'] as String?;
+                                          return ListTile(
+                                            leading: CircleAvatar(
+                                              backgroundColor: accent.withOpacity(0.15),
+                                              backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
+                                                  ? NetworkImage(profileImageUrl)
+                                                  : null,
+                                              child: profileImageUrl == null || profileImageUrl.isEmpty
+                                                  ? Text(
+                                                      username.isNotEmpty ? username[0].toUpperCase() : '?',
+                                                      style: TextStyle(
+                                                        color: accent,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    )
+                                                  : null,
+                                            ),
+                                            title: Text(
+                                              username,
+                                              style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                            ),
+                                            subtitle: Text(
+                                              userEmail,
+                                              style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                                            ),
+                                            onTap: () async {
+                                              Navigator.pop(context);
+                                              _sendPostToUser(context, userEmail, postUrl, postTitle);
+                                            },
+                                            hoverColor: accent.withOpacity(0.08),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
+                          if (users.isEmpty) {
+                            return Center(
+                              child: Text(
+                                'No users found.',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            );
+                          }
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 8, 0, 4),
+                                child: Text(
+                                  'Search Results',
+                                  style: theme.textTheme.labelLarge?.copyWith(
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: ListView.separated(
+                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  itemCount: users.length,
+                                  separatorBuilder: (_, __) => Divider(height: 1, color: Colors.grey[200]),
+                                  itemBuilder: (context, index) {
+                                    final user = users[index];
+                                    final userEmail = user['email'] as String;
+                                    final username = user['username'] as String? ?? userEmail;
+                                    final profileImageUrl = user['profileImageUrl'] as String?;
+                                    return ListTile(
+                                      leading: CircleAvatar(
+                                        backgroundColor: accent.withOpacity(0.15),
+                                        backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
+                                            ? NetworkImage(profileImageUrl)
+                                            : null,
+                                        child: profileImageUrl == null || profileImageUrl.isEmpty
+                                            ? Text(
+                                                username.isNotEmpty ? username[0].toUpperCase() : '?',
+                                                style: TextStyle(
+                                                  color: accent,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              )
+                                            : null,
+                                      ),
+                                      title: Text(
+                                        username,
+                                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                      ),
+                                      subtitle: Text(
+                                        userEmail,
+                                        style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                                      ),
+                                      onTap: () async {
+                                        Navigator.pop(context);
+                                        _sendPostToUser(context, userEmail, postUrl, postTitle);
+                                      },
+                                      hoverColor: accent.withOpacity(0.08),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                // Cancel button
+                Padding(
+                  padding: const EdgeInsets.only(right: 12, bottom: 10, top: 2),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _sendPostToUser(BuildContext context, String userEmail, String postUrl, String postTitle) async {
+    try {
+      final currentUserEmail = FirebaseAuth.instance.currentUser!.email!;
+      // Create chat ID
+      List<String> ids = [currentUserEmail, userEmail]..sort();
+      String chatId = ids.join('_');
+      // Create the message with post information
+      final messageData = {
+        'text': 'Check out this post: "$postTitle"\n\n$postUrl',
+        'sender': currentUserEmail,
+        'timestamp': FieldValue.serverTimestamp(),
+        'isPostShare': true, // Flag to identify this as a shared post
+        'postUrl': postUrl,
+        'postTitle': postTitle,
+        'postId': documentId,
+        'category': category,
+      };
+      // Send the message
+      await FirebaseFirestore.instance
+          .collection('chats')
+          .doc(chatId)
+          .collection('messages')
+          .add(messageData);
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Post sent to ${userEmail.split('@')[0]}!'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to send post: $e'),
+          backgroundColor: Colors.red,
+          duration: Duration(seconds: 3),
+        ),
+      );
+    }
   }
 }
 
