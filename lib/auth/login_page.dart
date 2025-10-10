@@ -79,7 +79,14 @@ class _LoginPageState extends State<LoginPage> {
       if (freshUser != null && freshUser.emailVerified) {
         emailTextController.clear();
         passwordTextController.clear();
-        Navigator.pushReplacementNamed(context, '/explore');
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation1, animation2) => ExplorePage(),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+          ),
+        );
       } else {
         /*
 
@@ -223,7 +230,14 @@ class _LoginPageState extends State<LoginPage> {
                         const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () {
-                            Navigator.pushNamed(context, '/register');
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (context, animation1, animation2) => RegisterPage(onTap: () {}),
+                                transitionDuration: Duration.zero,
+                                reverseTransitionDuration: Duration.zero,
+                              ),
+                            );
                           },
                           child: const Text(
                             "Register now",

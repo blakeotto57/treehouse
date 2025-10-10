@@ -37,7 +37,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation1, animation2) => LoginPage(),
+        pageBuilder: (context, animation1, animation2) => LoginPage(onTap: () {}),
         transitionDuration: Duration.zero,
         reverseTransitionDuration: Duration.zero,
       ),

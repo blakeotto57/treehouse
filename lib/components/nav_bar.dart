@@ -61,7 +61,14 @@ class _NavbarState extends State<Navbar> {
           title: isWide
               ? InkWell(
                   onTap: () {
-                    Navigator.pushReplacementNamed(context, '/explore');
+                    Navigator.pushReplacement(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) => ExplorePage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
+                    );
                   },
                   hoverColor: Colors.transparent,
                   focusColor: Colors.transparent,
@@ -121,28 +128,56 @@ class _NavbarState extends State<Navbar> {
                 icon: Icons.explore,
                 label: "Explore",
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, '/explore');
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) => ExplorePage(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.message,
                 label: "Messages",
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, '/messages');
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) => MessagesPage(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.person,
                 label: "Profile",
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, '/profile');
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) => UserProfilePage(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
                 },
                 isWide: isWide),
             _buildNavButton(
                 icon: Icons.settings,
                 label: "Settings",
                 onTap: () {
-                  Navigator.pushReplacementNamed(context, '/settings');
+                  Navigator.pushReplacement(
+                    context,
+                    PageRouteBuilder(
+                      pageBuilder: (context, animation1, animation2) => const UserSettingsPage(),
+                      transitionDuration: Duration.zero,
+                      reverseTransitionDuration: Duration.zero,
+                    ),
+                  );
                 },
                 isWide: isWide),
             ...?widget.actions,

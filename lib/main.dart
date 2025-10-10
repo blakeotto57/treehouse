@@ -65,6 +65,15 @@ class MyApp extends StatelessWidget {
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: const AuthPage(),
       title: 'Treehouse',
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: NoTransitionsBuilder(),
+          TargetPlatform.iOS: NoTransitionsBuilder(),
+          TargetPlatform.macOS: NoTransitionsBuilder(),
+          TargetPlatform.windows: NoTransitionsBuilder(),
+          TargetPlatform.linux: NoTransitionsBuilder(),
+        },
+      ),
       // Define comprehensive routes for page-specific URLs
       routes: {
         // Auth routes
@@ -93,12 +102,14 @@ class MyApp extends StatelessWidget {
           final postId = settings.name!.substring('/post/'.length);
           final args = settings.arguments as Map<String, dynamic>?;
           if (args != null && args['categoryColor'] != null && args['firestoreCollection'] != null) {
-            return MaterialPageRoute(
-              builder: (context) => UserPostPage(
+            return PageRouteBuilder(
+              pageBuilder: (context, animation1, animation2) => UserPostPage(
                 postId: postId,
                 categoryColor: args['categoryColor'],
                 firestoreCollection: args['firestoreCollection'],
               ),
+              transitionDuration: Duration.zero,
+              reverseTransitionDuration: Duration.zero,
               settings: settings,
             );
           }
@@ -108,5 +119,20 @@ class MyApp extends StatelessWidget {
       // Optional: define initial route
       initialRoute: '/',
     );
+  }
+}
+
+class NoTransitionsBuilder extends PageTransitionsBuilder {
+  const NoTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T extends Object?>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    return child;
   }
 }

@@ -2,6 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/models/category_model.dart';
+import 'package:treehouse/auth/login_page.dart';
+import 'package:treehouse/pages/explore_page.dart';
+import 'package:treehouse/pages/messages_page.dart';
+import 'package:treehouse/pages/user_profile.dart';
+import 'package:treehouse/pages/user_settings.dart';
 
 Widget customDrawer(BuildContext context) {
   return Drawer(
@@ -206,7 +211,14 @@ Widget customDrawerContent(BuildContext context) {
             ),
             onTap: () {
               FirebaseAuth.instance.signOut();
-              Navigator.pushReplacementNamed(context, '/login');
+              Navigator.pushReplacement(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation1, animation2) => LoginPage(onTap: () {}),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
+                ),
+              );
             },
           ),
         ),

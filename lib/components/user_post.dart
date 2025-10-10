@@ -65,13 +65,17 @@ class UserPost extends StatelessWidget {
           children: [
             InkWell(
               onTap: () {
-                Navigator.pushNamed(
+                Navigator.push(
                   context,
-                  '/post/${documentId}',
-                  arguments: {
-                    'categoryColor': forumIconColor,
-                    'firestoreCollection': category,
-                  },
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) => UserPostPage(
+                      postId: documentId,
+                      categoryColor: forumIconColor,
+                      firestoreCollection: category,
+                    ),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
                 );
               },
               splashColor: Colors.transparent,
@@ -108,9 +112,11 @@ class UserPost extends StatelessWidget {
                                 onTap: () {
                                   Navigator.push(
                                     context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
+                                    PageRouteBuilder(
+                                      pageBuilder: (context, animation1, animation2) =>
                                           OtherUsersProfilePage(username: user),
+                                      transitionDuration: Duration.zero,
+                                      reverseTransitionDuration: Duration.zero,
                                     ),
                                   );
                                 },

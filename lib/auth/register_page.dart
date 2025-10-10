@@ -116,7 +116,14 @@ class _RegisterPageState extends State<RegisterPage> {
                   await user.reload();
                   if (FirebaseAuth.instance.currentUser!.emailVerified) {
                     if (!mounted) return;
-                    Navigator.pushReplacementNamed(context, '/explore');
+                    Navigator.pushReplacement(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation1, animation2) => ExplorePage(),
+                        transitionDuration: Duration.zero,
+                        reverseTransitionDuration: Duration.zero,
+                      ),
+                    );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Email not verified yet.')),
