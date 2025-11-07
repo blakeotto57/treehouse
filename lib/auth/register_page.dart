@@ -8,6 +8,7 @@ import '../components/button.dart';
 import '../pages/explore_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:treehouse/theme/theme.dart';
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -151,32 +152,45 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF386A53),
+      backgroundColor: isDark ? AppColors.primaryGreenDark : AppColors.primaryGreen,
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
+            constraints: const BoxConstraints(maxWidth: 420),
             child: Card(
               elevation: 8,
+              shadowColor: Colors.black.withOpacity(0.2),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(24)),
-              color: Colors.white,
+              color: isDark ? AppColors.cardDark : AppColors.cardLight,
               child: Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(32.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(height: 16), // Match register page
+                    const SizedBox(height: 8),
                     Text(
                       "Welcome to Treehouse",
                       style: TextStyle(
-                        fontSize: 30, // Match register page
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF4D8061),
+                        color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                        letterSpacing: -1,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Create your account",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
                     Stack(
                       children: [
                         MyTextField(
@@ -188,8 +202,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           right: 6,
                           top: 2,
                           child: IconButton(
-                            icon: const Icon(Icons.info_outline,
-                                color: Colors.grey, size: 20),
+                            icon: Icon(Icons.info_outline,
+                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, size: 20),
                             onPressed: () {
                               showDialog(
                                 context: context,
@@ -198,19 +212,19 @@ class _RegisterPageState extends State<RegisterPage> {
                                       borderRadius: BorderRadius.circular(16)),
                                   content: Column(
                                     mainAxisSize: MainAxisSize.min,
-                                    children: const [
+                                    children: [
                                       Icon(Icons.info_outline,
-                                          color: Color(0xFF4D8061), size: 32),
-                                      SizedBox(height: 10),
+                                          color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen, size: 32),
+                                      const SizedBox(height: 10),
                                       Text(
                                         'College Email Required',
                                         style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 18,
-                                            color: const Color(0xFF386A53)),
+                                            color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
                                         textAlign: TextAlign.center,
                                       ),
-                                      SizedBox(height: 10),
+                                      const SizedBox(height: 10),
                                       Text(
                                         'We require a college email to ensure our community consists of verified college students.',
                                         style: TextStyle(fontSize: 14),
@@ -231,46 +245,20 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     MyTextField(
                       controller: passwordTextController,
                       hintText: "Password",
                       obscureText: true,
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 16),
                     MyTextField(
                       controller: confirmPasswordTextController,
                       hintText: "Confirm Password",
                       obscureText: true,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
-                    /*
-                    SizedBox(
-                      child: ElevatedButton(
-                        onPressed: signInWithGoogle,
-                        style: ElevatedButton.styleFrom(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SvgPicture.asset(
-                              '/icons/google_sign_in_logo.svg',
-                              height: 40,
-                            ),
-                            const SizedBox(width: 8),
-                          ],
-                        ),
-                      ),
-                    ),
-
-                    */
-                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: MyButton(
@@ -278,15 +266,15 @@ class _RegisterPageState extends State<RegisterPage> {
                         text: "Sign Up",
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "Already have an account?",
                           style: TextStyle(
-                            color: const Color(0xFF386A53),
-                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                            fontWeight: FontWeight.w500,
                             fontSize: 14,
                           ),
                         ),
@@ -304,11 +292,11 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             "Login now",
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
                               fontSize: 14,
                             ),
                           ),

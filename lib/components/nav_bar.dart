@@ -6,6 +6,7 @@ import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/components/user_search.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class Navbar extends StatefulWidget implements PreferredSizeWidget {
   final String? title;
@@ -31,33 +32,50 @@ class _NavbarState extends State<Navbar> {
     return isWide
         ? TextButton.icon(
             onPressed: onTap,
-            icon: Icon(icon, color: Colors.white),
-            label: Text(label, style: const TextStyle(color: Colors.white)),
+            icon: Icon(icon, color: Colors.white, size: 20),
+            label: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0.2,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
           )
         : IconButton(
             icon: Icon(icon, color: Colors.white, size: 22),
             onPressed: onTap,
+            tooltip: label,
           );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return LayoutBuilder(
       builder: (context, constraints) {
         final isWide = constraints.maxWidth > 700;
 
         return AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.menu, color: Colors.white),
+            icon: const Icon(Icons.menu, color: Colors.white, size: 24),
             onPressed: () {
-              // Toggle the sliding drawer when menu icon is pressed
               if (widget.drawerKey?.currentState != null) {
                 widget.drawerKey!.currentState!.toggle();
               }
             },
           ),
-          iconTheme: IconThemeData(color: Colors.white),
-          backgroundColor: const Color(0xFF386A53),
+          iconTheme: const IconThemeData(color: Colors.white),
+          backgroundColor: isDark ? AppColors.primaryGreenDark : AppColors.primaryGreen,
+          elevation: 0,
           title: isWide
               ? InkWell(
                   onTap: () {
@@ -74,18 +92,19 @@ class _NavbarState extends State<Navbar> {
                   focusColor: Colors.transparent,
                   highlightColor: Colors.transparent,
                   splashColor: Colors.transparent,
-                child: Row(
+                  child: Row(
                     children: [
                       const Text(
                         "Treehouse",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Container(height: 24, width: 1, color: Colors.white54),
+                      Container(height: 24, width: 1, color: Colors.white.withOpacity(0.3)),
                       const SizedBox(width: 12),
                       Builder(
                         builder: (context) {
@@ -97,21 +116,20 @@ class _NavbarState extends State<Navbar> {
                               : '';
                           return Text(
                             school,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 18,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 16,
                               fontWeight: FontWeight.w500,
+                              letterSpacing: 0.2,
                             ),
                           );
                         },
                       ),
                       const SizedBox(width: 12),
-                      // Search bar for wide mode
                       Expanded(
                         child: SizedBox(
                           height: 36,
-                          child:
-                              UserSearch(), // Use your custom search bar widget
+                          child: UserSearch(),
                         ),
                       ),
                     ],
@@ -120,7 +138,7 @@ class _NavbarState extends State<Navbar> {
               : Center(
                   child: SizedBox(
                     height: 36,
-                    child: UserSearch(), // Only the search bar in compact mode
+                    child: UserSearch(),
                   ),
                 ),
           actions: [

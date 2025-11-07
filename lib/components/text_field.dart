@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class MyTextField extends StatelessWidget {
   final TextEditingController controller;
@@ -15,27 +16,55 @@ class MyTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return TextField(
       controller: controller,
       obscureText: obscureText,
-      cursorColor: Colors.black,
-      decoration: InputDecoration(
-          enabledBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.grey),
-          ),
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.black),
-          ),
-          fillColor: Colors.white,
-          filled: true,
-          hintText: hintText,
-          hintStyle: TextStyle(
-            color: Colors.grey,
-          )),
-      style: const TextStyle(
-        color: Colors.black,
+      cursorColor: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+      style: TextStyle(
+        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+        fontSize: 16,
         fontWeight: FontWeight.normal,
-      ), // Set a fixed text color
+      ),
+      decoration: InputDecoration(
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isDark ? AppColors.borderDark : AppColors.borderLight,
+            width: 1.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+            width: 2,
+          ),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColors.errorRed,
+            width: 1.5,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: AppColors.errorRed,
+            width: 2,
+          ),
+        ),
+        fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+        filled: true,
+        hintText: hintText,
+        hintStyle: TextStyle(
+          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+          fontSize: 16,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
     );
   }
 }

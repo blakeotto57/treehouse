@@ -4,6 +4,7 @@ import 'package:treehouse/auth/register_page.dart';
 import 'package:treehouse/components/button.dart';
 import 'package:treehouse/components/text_field.dart';
 import 'package:treehouse/pages/explore_page.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class LoginPage extends StatefulWidget {
   final Function()? onTap;
@@ -152,45 +153,73 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
-      backgroundColor: const Color(0xFF386A53),
+      backgroundColor: isDark ? AppColors.primaryGreenDark : AppColors.primaryGreen,
       body: Center(
         child: SingleChildScrollView(
           child: ConstrainedBox(
             constraints: const BoxConstraints(
-              maxWidth: 400,
+              maxWidth: 420,
             ),
             child: Card(
               elevation: 8,
+              shadowColor: Colors.black.withOpacity(0.2),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
-              color: Colors.white,
+              color: isDark ? AppColors.cardDark : AppColors.cardLight,
               child: Padding(
-                padding: const EdgeInsets.all(16.0), // Match register page
+                padding: const EdgeInsets.all(32.0),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const SizedBox(height: 16), // Match register page
+                    const SizedBox(height: 8),
                     Text(
                       "Treehouse",
                       style: TextStyle(
-                        fontSize: 30, // Match register page
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF4D8061),
+                        color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                        letterSpacing: -1,
                       ),
-                    ),  
-                    const SizedBox(height: 16), // Match register page
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Welcome back",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                        fontWeight: FontWeight.normal,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
 
-                    if (errorMessage != null) // <-- Show error message
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Text(
-                          errorMessage!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
+                    if (errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.errorRed.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: AppColors.errorRed.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error_outline, color: AppColors.errorRed, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                errorMessage!,
+                                style: TextStyle(
+                                  color: AppColors.errorRed,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     MyTextField(
@@ -198,14 +227,14 @@ class _LoginPageState extends State<LoginPage> {
                       hintText: "College Email",
                       obscureText: false,
                     ),
-                    const SizedBox(height: 10), // Match register page
+                    const SizedBox(height: 16),
 
                     MyTextField(
                       controller: passwordTextController,
                       hintText: "Password",
                       obscureText: true,
                     ),
-                    const SizedBox(height: 16), // Match register page
+                    const SizedBox(height: 24),
 
                     SizedBox(
                       width: double.infinity,
@@ -214,17 +243,17 @@ class _LoginPageState extends State<LoginPage> {
                         text: "Sign In",
                       ),
                     ),
-                    const SizedBox(height: 16), // Match register page
+                    const SizedBox(height: 24),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
+                        Text(
                           "New User?",
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF386A53),
-                            fontSize: 14, // Match register page
+                            fontWeight: FontWeight.w500,
+                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                            fontSize: 14,
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -239,12 +268,12 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             );
                           },
-                          child: const Text(
+                          child: Text(
                             "Register now",
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue,
-                              fontSize: 14, // Match register page
+                              fontWeight: FontWeight.w600,
+                              color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                              fontSize: 14,
                             ),
                           ),
                         ),

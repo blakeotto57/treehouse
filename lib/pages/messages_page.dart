@@ -13,6 +13,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class MessagesPage extends StatefulWidget {
   final String? initialSelectedUserEmail; // Add this
@@ -79,19 +80,19 @@ class _MessagesPageState extends State<MessagesPage> {
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return AlertDialog(
-          backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+          backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
           title: Row(
             children: [
-              Icon(Icons.mail, color: Color(0xFF386A53)),
+              Icon(Icons.mail, color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
               SizedBox(width: 8),
-              Text("Message Requests", style: TextStyle(color: Color(0xFF386A53), fontWeight: FontWeight.bold)),
+              Text("Message Requests", style: TextStyle(color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen, fontWeight: FontWeight.bold)),
             ],
           ),
           content: SizedBox(
             width: 350,
             child: _messageRequests.isEmpty
-                ? Text("No new requests", style: TextStyle(color: isDark ? Colors.white : Colors.black87))
+                ? Text("No new requests", style: TextStyle(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight))
                 : ListView.builder(
                     shrinkWrap: true,
                     itemCount: _messageRequests.length,
@@ -277,11 +278,10 @@ class _MessagesPageState extends State<MessagesPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-        isDarkMode ? const Color(0xFF181818) : Colors.green[50];
-    final cardColor = isDarkMode ? const Color(0xFF232323) : Colors.white;
-    final dividerColor = isDarkMode ? Colors.grey[700] : Colors.grey[300];
-    final textColor = isDarkMode ? Colors.white : const Color(0xFF222222);
+    final backgroundColor = isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final cardColor = isDarkMode ? AppColors.cardDark : AppColors.cardLight;
+    final dividerColor = isDarkMode ? AppColors.borderDark : AppColors.borderLight;
+    final textColor = isDarkMode ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
 
     final screenWidth = MediaQuery.of(context).size.width;
 

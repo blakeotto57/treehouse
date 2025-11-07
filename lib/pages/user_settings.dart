@@ -12,7 +12,8 @@ import 'package:provider/provider.dart';
 import 'package:treehouse/pages/feedback.dart';
 import 'package:treehouse/components/nav_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart'; // <-- NEW
+import 'package:url_launcher/url_launcher.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class UserSettingsPage extends StatefulWidget {
   const UserSettingsPage({super.key});
@@ -63,19 +64,18 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
         child: SingleChildScrollView(
           child: AlertDialog(
             backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF232323) // Dark mode background
-                : const Color(0xFFFFFFFF), // Light mode background
+                ? AppColors.cardDark
+                : AppColors.cardLight,
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(12), // Rounded corners for cleaner UI
+              borderRadius: BorderRadius.circular(16),
             ),
             title: Row(
               children: [
                 Icon(
                   Icons.lock,
                   color: Theme.of(context).brightness == Brightness.dark
-                      ? const Color(0xFF386A53) // Dark mode icon color
-                      : const Color(0xFF386A53), // Light mode icon color
+                      ? AppColors.primaryGreenLight
+                      : AppColors.primaryGreen,
                 ),
                 const SizedBox(width: 10),
                 Text(
@@ -84,8 +84,8 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white // Dark mode text color
-                        : Colors.black, // Light mode text color
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimaryLight,
                   ),
                 ),
               ],
@@ -111,8 +111,16 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF386A53) // Dark mode border color
-                            : const Color(0xFF386A53), // Light mode border color
+                            ? AppColors.primaryGreenLight
+                            : AppColors.primaryGreen,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.primaryGreenLight
+                            : AppColors.primaryGreen,
                       ),
                     ),
                   ),
@@ -140,8 +148,16 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF386A53)
-                            : const Color(0xFF386A53),
+                            ? AppColors.primaryGreenLight
+                            : AppColors.primaryGreen,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.primaryGreenLight
+                            : AppColors.primaryGreen,
                       ),
                     ),
                   ),
@@ -169,8 +185,16 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
                         color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF386A53)
-                            : const Color(0xFF386A53),
+                            ? AppColors.primaryGreenLight
+                            : AppColors.primaryGreen,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.primaryGreenLight
+                            : AppColors.primaryGreen,
                       ),
                     ),
                   ),
@@ -201,9 +225,11 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
                   // Add your change password logic here
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF386A53),
+                  backgroundColor: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.primaryGreenLight
+                      : AppColors.primaryGreen,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: const Text(
@@ -221,10 +247,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final textColor = isDarkMode ? Colors.white : Colors.black;
+    final textColor = isDarkMode ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pastelGreen = const Color(0xFFF5FBF7);
-    final darkBackground = const Color(0xFF181818);
+    final backgroundColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
 
     final GlobalKey<SlidingDrawerState> _drawerKey =
         GlobalKey<SlidingDrawerState>();
@@ -235,7 +260,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       child: Scaffold(
       drawer: customDrawer(context),
       appBar: Navbar(drawerKey: _drawerKey),
-      backgroundColor: isDark ? darkBackground : pastelGreen,
+      backgroundColor: backgroundColor,
       body: Column(
         children: [
           // Section header
@@ -243,21 +268,21 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
               children: [
-                const Icon(Icons.settings, color: Color(0xFF386A53)),
+                Icon(Icons.settings, color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
                 const SizedBox(width: 10),
-                const Text(
+                Text(
                   "User Settings",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
-                    color: Color(0xFF386A53),
+                    color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
                     letterSpacing: 0.5,
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Divider(
-                    color: Color(0xFF386A53).withOpacity(0.3),
+                    color: (isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen).withOpacity(0.3),
                     thickness: 1,
                   ),
                 ),
@@ -369,10 +394,12 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       padding: const EdgeInsets.symmetric(vertical: 12.0),
       child: Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.normal,
-          color: Color(0xFF386A53),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.primaryGreenLight
+              : AppColors.primaryGreen,
         ),
       ),
     );
@@ -395,7 +422,9 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       trailing: icon != null
           ? Icon(
               icon,
-              color: const Color(0xFF386A53),
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.primaryGreenLight
+                  : AppColors.primaryGreen,
             )
           : null,
       onTap: onTap,

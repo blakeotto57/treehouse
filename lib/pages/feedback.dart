@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:treehouse/theme/theme.dart';
 
 String? globalUserName;
 
@@ -100,9 +101,9 @@ class _FeedbackPageState extends State<FeedbackPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
-    final cardColor = isDark ? const Color(0xFF232323) : Colors.white;
-    final accent = isDark ? Colors.white! : const Color(0xFF386A53);
+    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
+    final accent = isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen;
 
     return Scaffold(
       backgroundColor: background,
@@ -117,7 +118,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
         ),
         backgroundColor: accent,
         centerTitle: true,
-        elevation: 2,
+        elevation: 0,
       ),
       body: Center(
         child: SingleChildScrollView(
