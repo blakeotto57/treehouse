@@ -65,15 +65,6 @@ class MyApp extends StatelessWidget {
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: const AuthPage(),
       title: 'Treehouse',
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {
-          TargetPlatform.android: NoTransitionsBuilder(),
-          TargetPlatform.iOS: NoTransitionsBuilder(),
-          TargetPlatform.macOS: NoTransitionsBuilder(),
-          TargetPlatform.windows: NoTransitionsBuilder(),
-          TargetPlatform.linux: NoTransitionsBuilder(),
-        },
-      ),
       onGenerateRoute: (settings) {
         // Handle /post/ routes
         if (settings.name != null && settings.name!.startsWith('/post/')) {
@@ -157,20 +148,5 @@ class MyApp extends StatelessWidget {
       // Optional: define initial route
       initialRoute: '/',
     );
-  }
-}
-
-class NoTransitionsBuilder extends PageTransitionsBuilder {
-  const NoTransitionsBuilder();
-
-  @override
-  Widget buildTransitions<T extends Object?>(
-    PageRoute<T> route,
-    BuildContext context,
-    Animation<double> animation,
-    Animation<double> secondaryAnimation,
-    Widget child,
-  ) {
-    return child;
   }
 }
