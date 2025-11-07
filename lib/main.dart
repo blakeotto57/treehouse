@@ -74,30 +74,8 @@ class MyApp extends StatelessWidget {
           TargetPlatform.linux: NoTransitionsBuilder(),
         },
       ),
-      // Define comprehensive routes for page-specific URLs
-      routes: {
-        // Auth routes
-        '/login': (context) => LoginPage(onTap: () {}),
-        '/register': (context) => RegisterPage(onTap: () {}),
-        
-        // Main app routes
-        '/explore': (context) => ExplorePage(),
-        '/messages': (context) => MessagesPage(),
-        '/profile': (context) => UserProfilePage(),
-        '/settings': (context) => const UserSettingsPage(),
-        '/feedback': (context) => FeedbackPage(),
-        
-        // Category routes
-        '/category/personal-care': (context) => PersonalCarePage(),
-        '/category/academics': (context) => AcademicsSellersPage(),
-        '/category/cleaning': (context) => CleaningSellersPage(),
-        '/category/errands-moving': (context) => ErrandsMovingSellersPage(),
-        '/category/food': (context) => FoodSellersPage(),
-        '/category/pet-care': (context) => PetCareSellersPage(),
-        '/category/photography': (context) => PhotographySellersPage(),
-        '/category/technical-services': (context) => TechnicalServicesSellersPage(),
-      },
       onGenerateRoute: (settings) {
+        // Handle /post/ routes
         if (settings.name != null && settings.name!.startsWith('/post/')) {
           final postId = settings.name!.substring('/post/'.length);
           final args = settings.arguments as Map<String, dynamic>?;
@@ -114,6 +92,66 @@ class MyApp extends StatelessWidget {
             );
           }
         }
+        
+        // Handle all other routes with zero-duration transitions
+        Widget? page;
+        switch (settings.name) {
+          case '/login':
+            page = LoginPage(onTap: () {});
+            break;
+          case '/register':
+            page = RegisterPage(onTap: () {});
+            break;
+          case '/explore':
+            page = ExplorePage();
+            break;
+          case '/messages':
+            page = MessagesPage();
+            break;
+          case '/profile':
+            page = UserProfilePage();
+            break;
+          case '/settings':
+            page = const UserSettingsPage();
+            break;
+          case '/feedback':
+            page = FeedbackPage();
+            break;
+          case '/category/personal-care':
+            page = PersonalCarePage();
+            break;
+          case '/category/academics':
+            page = AcademicsSellersPage();
+            break;
+          case '/category/cleaning':
+            page = CleaningSellersPage();
+            break;
+          case '/category/errands-moving':
+            page = ErrandsMovingSellersPage();
+            break;
+          case '/category/food':
+            page = FoodSellersPage();
+            break;
+          case '/category/pet-care':
+            page = PetCareSellersPage();
+            break;
+          case '/category/photography':
+            page = PhotographySellersPage();
+            break;
+          case '/category/technical-services':
+            page = TechnicalServicesSellersPage();
+            break;
+        }
+        
+        if (page != null) {
+          return PageRouteBuilder(
+            pageBuilder: (context, animation1, animation2) => page!,
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+            settings: settings,
+          );
+        }
+        
         return null;
       },
       // Optional: define initial route
