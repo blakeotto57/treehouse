@@ -60,11 +60,11 @@ class MyApp extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: lightMode(fontFamily: "Helvetica"),
-      darkTheme: darkMode(fontFamily: "Helvetica"),
+      theme: lightMode(fontFamily: "Roboto"),
+      darkTheme: darkMode(fontFamily: "Roboto"),
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
       home: const AuthPage(),
-      title: 'Treehouse',
+      title: 'Treehouse • UCSC Marketplace',
       onGenerateRoute: (settings) {
         // Handle /post/ routes
         if (settings.name != null && settings.name!.startsWith('/post/')) {

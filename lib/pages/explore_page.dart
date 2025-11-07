@@ -5,12 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
-import 'package:treehouse/models/category_model.dart';
-import 'package:treehouse/models/other_users_profile.dart';
-import 'package:treehouse/pages/messages_page.dart';
-import 'package:treehouse/pages/user_profile.dart';
-import 'package:treehouse/pages/user_settings.dart';
-import 'package:treehouse/components/nav_bar.dart';
+import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/theme/theme.dart';
 
 class ExplorePage extends StatefulWidget {
@@ -26,12 +21,25 @@ class _ExplorePageState extends State<ExplorePage> {
   bool _isPosting = false;
   bool _canPost = true;
   String _sortBy = 'Newest';
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _deleteOldPosts();
     _checkCanPost();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _messageController.dispose();
+    super.dispose();
   }
 
   Future<void> _deleteOldPosts() async {
@@ -88,7 +96,8 @@ class _ExplorePageState extends State<ExplorePage> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
             title: Row(
               children: [
-                Icon(Icons.edit_note, color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
+                Icon(Icons.edit_note,
+                    color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
                 const SizedBox(width: 8),
                 Text(
                   "New Bulletin Post",
@@ -113,18 +122,21 @@ class _ExplorePageState extends State<ExplorePage> {
                     maxLengthEnforcement: MaxLengthEnforcement.enforced,
                     decoration: InputDecoration(
                       hintText: "What are you offering today?",
-                      hintStyle: TextStyle(color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
+                      hintStyle: TextStyle(
+                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                       filled: true,
                       fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                            color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen, width: 1.5),
+                            color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                            width: 1.5),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(
-                            color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen, width: 2),
+                            color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                            width: 2),
                       ),
                       contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
                       errorText: errorText,
@@ -181,6 +193,7 @@ class _ExplorePageState extends State<ExplorePage> {
                           'message': message,
                           'timestamp': Timestamp.now(),
                           'userEmail': user.email,
+                          'imageUrl': null, // Can be added later with image upload
                         });
                         setState(() => _isPosting = false);
                         Navigator.pop(context);
@@ -201,17 +214,19 @@ class _ExplorePageState extends State<ExplorePage> {
     );
   }
 
-  void _onSearch() {
-    // Implement search logic
-  }
-
   String _getCategoryFromMessage(String message) {
     final lowerMessage = message.toLowerCase();
-    if (lowerMessage.contains('sell') || lowerMessage.contains('buy') || lowerMessage.contains('textbook')) {
+    if (lowerMessage.contains('sell') ||
+        lowerMessage.contains('buy') ||
+        lowerMessage.contains('textbook')) {
       return 'For Sale';
-    } else if (lowerMessage.contains('room') || lowerMessage.contains('apartment') || lowerMessage.contains('housing')) {
+    } else if (lowerMessage.contains('room') ||
+        lowerMessage.contains('apartment') ||
+        lowerMessage.contains('housing')) {
       return 'Housing';
-    } else if (lowerMessage.contains('tutor') || lowerMessage.contains('service') || lowerMessage.contains('help')) {
+    } else if (lowerMessage.contains('tutor') ||
+        lowerMessage.contains('service') ||
+        lowerMessage.contains('help')) {
       return 'Services';
     } else if (lowerMessage.contains('food') || lowerMessage.contains('meal')) {
       return 'Food';
@@ -219,348 +234,224 @@ class _ExplorePageState extends State<ExplorePage> {
     return 'General';
   }
 
+  List<QueryDocumentSnapshot> _filterAndSortPosts(List<QueryDocumentSnapshot> posts) {
+    // Filter by search query
+    List<QueryDocumentSnapshot> filtered = posts;
+    if (_searchQuery.isNotEmpty) {
+      filtered = posts.where((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        final message = (data['message'] ?? '').toLowerCase();
+        final category = _getCategoryFromMessage(message).toLowerCase();
+        return message.contains(_searchQuery) || category.contains(_searchQuery);
+      }).toList();
+    }
+
+    // Sort posts
+    filtered.sort((a, b) {
+      final aData = a.data() as Map<String, dynamic>;
+      final bData = b.data() as Map<String, dynamic>;
+      final aTimestamp = (aData['timestamp'] as Timestamp).toDate();
+      final bTimestamp = (bData['timestamp'] as Timestamp).toDate();
+
+      if (_sortBy == 'Newest') {
+        return bTimestamp.compareTo(aTimestamp);
+      } else if (_sortBy == 'Oldest') {
+        return aTimestamp.compareTo(bTimestamp);
+      } else {
+        // Most Popular - can be based on views or likes if added later
+        return bTimestamp.compareTo(aTimestamp);
+      }
+    });
+
+    return filtered;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
-    final cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
-
-    final now = DateTime.now();
-    final cutoff = Timestamp.fromDate(now.subtract(const Duration(hours: 24)));
-
     final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
 
     return SlidingDrawer(
       key: _drawerKey,
       drawer: customDrawer(context),
       child: Scaffold(
-        backgroundColor: backgroundColor,
-        drawer: customDrawer(context),
-        appBar: Navbar(drawerKey: _drawerKey),
-        body: Column(
-          children: [
-            // Main content area
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+        backgroundColor: AppColors.backgroundLight,
+        appBar: ProfessionalNavbar(drawerKey: _drawerKey),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // "Today's Posts" heading
+                const Text(
+                  "Today's Posts",
+                  style: TextStyle(
+                    fontSize: 36,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black87,
+                    fontFamily: 'Roboto',
+                    letterSpacing: -1,
+                  ),
+                ),
+                const SizedBox(height: 18),
+
+                // Search + Sort row
+                Row(
                   children: [
-                    // "Today's Posts" heading
-                    Text(
-                      "Today's Posts",
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        letterSpacing: -0.5,
+                    Expanded(
+                      child: Container(
+                        constraints: const BoxConstraints(maxWidth: 720),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search listings...',
+                            prefixIcon: const Icon(Icons.search),
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade200),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(color: Colors.grey.shade200),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Search bar and filter row
-                    Row(
-                      children: [
-                        // Search bar
-                        Expanded(
-                          child: Container(
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: cardColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                                width: 1.5,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: TextField(
-                              controller: _searchController,
-                              cursorColor: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
-                              style: TextStyle(
-                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                                fontSize: 15,
-                              ),
-                              onSubmitted: (_) => _onSearch(),
-                              decoration: InputDecoration(
-                                prefixIcon: Icon(
-                                  Icons.search,
-                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                  size: 20,
-                                ),
-                                hintText: "Search listings...",
-                                hintStyle: TextStyle(
-                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                  fontSize: 15,
-                                ),
-                                border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                              ),
-                            ),
-                          ),
+                    const SizedBox(width: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade200),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _sortBy,
+                          items: ['Newest', 'Oldest', 'Most Popular']
+                              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                              .toList(),
+                          onChanged: (v) => setState(() => _sortBy = v ?? 'Newest'),
                         ),
-                        const SizedBox(width: 12),
-
-                        // Sort/Filter dropdown
-                        Container(
-                          height: 48,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isDark ? AppColors.borderDark : AppColors.borderLight,
-                              width: 1.5,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: DropdownButton<String>(
-                            value: _sortBy,
-                            isDense: true,
-                            underline: const SizedBox(),
-                            icon: Icon(
-                              Icons.keyboard_arrow_down,
-                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                            ),
-                            style: TextStyle(
-                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                              fontSize: 15,
-                            ),
-                            items: ['Newest', 'Oldest', 'Most Popular'].map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: (String? newValue) {
-                              if (newValue != null) {
-                                setState(() {
-                                  _sortBy = newValue;
-                                });
-                              }
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Posts grid
-                    StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('bulletin_posts')
-                          .where('timestamp', isGreaterThan: cutoff)
-                          .orderBy('timestamp', descending: true)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(child: CircularProgressIndicator());
-                        }
-                        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(48.0),
-                              child: Text(
-                                "No posts available today.",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-                        final posts = snapshot.data!.docs;
-
-                        return LayoutBuilder(
-                          builder: (context, constraints) {
-                            final screenWidth = constraints.maxWidth;
-                            final crossAxisCount = screenWidth > 1200 ? 3 : (screenWidth > 800 ? 2 : 1);
-                            final spacing = 16.0;
-
-                            return GridView.builder(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: crossAxisCount,
-                                crossAxisSpacing: spacing,
-                                mainAxisSpacing: spacing,
-                                childAspectRatio: 0.75,
-                              ),
-                              itemCount: posts.length,
-                              itemBuilder: (context, index) {
-                                final postDoc = posts[index];
-                                final post = postDoc.data() as Map<String, dynamic>;
-                                final timestamp = (post['timestamp'] as Timestamp).toDate();
-                                final formattedTime = DateFormat('MMM d, h:mm a').format(timestamp);
-                                final message = post['message'] ?? '';
-                                final category = _getCategoryFromMessage(message);
-
-                                // Extract title and description from message
-                                final lines = message.split('\n');
-                                final title = lines.isNotEmpty ? lines[0] : (message.length > 30 ? message.substring(0, 30) + '...' : message);
-                                final description = lines.length > 1
-                                    ? lines.sublist(1).join(' ')
-                                    : (message.length > 30 ? message.substring(30) : '');
-
-                                return Card(
-                                  elevation: 2,
-                                  shadowColor: Colors.black.withOpacity(0.1),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  color: cardColor,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(16),
-                                    onTap: () {
-                                      // Navigate to post details if needed
-                                    },
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // Image placeholder or actual image
-                                        Expanded(
-                                          flex: 3,
-                                          child: Container(
-                                            width: double.infinity,
-                                            decoration: BoxDecoration(
-                                              borderRadius: const BorderRadius.only(
-                                                topLeft: Radius.circular(16),
-                                                topRight: Radius.circular(16),
-                                              ),
-                                              color: isDark ? AppColors.surfaceDark : AppColors.borderLight,
-                                            ),
-                                            child: post['imageUrl'] != null
-                                                ? ClipRRect(
-                                                    borderRadius: const BorderRadius.only(
-                                                      topLeft: Radius.circular(16),
-                                                      topRight: Radius.circular(16),
-                                                    ),
-                                                    child: Image.network(
-                                                      post['imageUrl'],
-                                                      fit: BoxFit.cover,
-                                                      errorBuilder: (context, error, stackTrace) {
-                                                        return Container(
-                                                          color: isDark ? AppColors.surfaceDark : AppColors.borderLight,
-                                                          child: Icon(
-                                                            Icons.image,
-                                                            size: 48,
-                                                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                                  )
-                                                : Container(
-                                                    color: isDark ? AppColors.surfaceDark : AppColors.borderLight,
-                                                    child: Icon(
-                                                      Icons.image,
-                                                      size: 48,
-                                                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                                    ),
-                                                  ),
-                                          ),
-                                        ),
-
-                                        // Content section
-                                        Expanded(
-                                          flex: 2,
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(16),
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                // Title
-                                                Text(
-                                                  title,
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 6),
-
-                                                // Description
-                                                if (description.isNotEmpty)
-                                                  Expanded(
-                                                    child: Text(
-                                                      description,
-                                                      style: TextStyle(
-                                                        fontSize: 14,
-                                                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                                      ),
-                                                      maxLines: 2,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-
-                                                const Spacer(),
-
-                                                // Date and Category row
-                                                Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                      formattedTime,
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                      decoration: BoxDecoration(
-                                                        color: (isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen).withOpacity(0.1),
-                                                        borderRadius: BorderRadius.circular(6),
-                                                      ),
-                                                      child: Text(
-                                                        category,
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight: FontWeight.w500,
-                                                          color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            );
-                          },
-                        );
-                      },
+                      ),
                     ),
                   ],
                 ),
-              ),
+
+                const SizedBox(height: 22),
+
+                // Cards grid
+                Expanded(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('bulletin_posts')
+                        .where('timestamp',
+                            isGreaterThan: Timestamp.fromDate(
+                                DateTime.now().subtract(const Duration(hours: 24))))
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(48.0),
+                            child: Text(
+                              "No posts available today.",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                                fontFamily: 'Roboto',
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      final allPosts = snapshot.data!.docs;
+                      final filteredPosts = _filterAndSortPosts(allPosts);
+
+                      if (filteredPosts.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(48.0),
+                            child: Text(
+                              "No posts match your search.",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[600],
+                                fontFamily: 'Roboto',
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+
+                      return LayoutBuilder(
+                        builder: (context, constraints) {
+                          int crossAxisCount = 1;
+                          double width = constraints.maxWidth;
+                          if (width >= 1100) {
+                            crossAxisCount = 3;
+                          } else if (width >= 700) {
+                            crossAxisCount = 2;
+                          } else {
+                            crossAxisCount = 1;
+                          }
+
+                          return GridView.builder(
+                            itemCount: filteredPosts.length,
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: crossAxisCount,
+                              crossAxisSpacing: 20,
+                              mainAxisSpacing: 20,
+                              childAspectRatio: 3 / 4,
+                            ),
+                            itemBuilder: (context, idx) {
+                              final postDoc = filteredPosts[idx];
+                              final post = postDoc.data() as Map<String, dynamic>;
+                              final timestamp = (post['timestamp'] as Timestamp).toDate();
+                              final message = post['message'] ?? '';
+                              final category = _getCategoryFromMessage(message);
+                              final imageUrl = post['imageUrl'] as String?;
+
+                              // Extract title and description from message
+                              final lines = message.split('\n');
+                              final title = lines.isNotEmpty
+                                  ? lines[0]
+                                  : (message.length > 30 ? message.substring(0, 30) + '...' : message);
+                              final description = lines.length > 1
+                                  ? lines.sublist(1).join(' ')
+                                  : (message.length > 30 ? message.substring(30) : '');
+
+                              return PostCard(
+                                title: title,
+                                description: description.isEmpty ? message : description,
+                                imageUrl: imageUrl,
+                                date: timestamp,
+                                category: category,
+                              );
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          backgroundColor: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
           onPressed: () async {
             final user = FirebaseAuth.instance.currentUser;
             if (user == null) return;
@@ -582,27 +473,22 @@ class _ExplorePageState extends State<ExplorePage> {
                 showDialog(
                   context: context,
                   builder: (context) {
-                    final isDark = Theme.of(context).brightness == Brightness.dark;
                     return AlertDialog(
-                      backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
-                      title: Text(
+                      backgroundColor: AppColors.cardLight,
+                      title: const Text(
                         "Already Posted",
-                        style: TextStyle(
-                          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                        ),
+                        style: TextStyle(color: AppColors.textPrimaryLight),
                       ),
                       content: Text(
                         "You already posted today.\nYou have ${hours}h ${minutes}m remaining before you can post again.",
-                        style: TextStyle(
-                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                        ),
+                        style: const TextStyle(color: AppColors.textSecondaryLight),
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text(
+                          child: const Text(
                             "OK",
-                            style: TextStyle(color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
+                            style: TextStyle(color: AppColors.primaryGreen),
                           ),
                         ),
                       ],
@@ -614,11 +500,146 @@ class _ExplorePageState extends State<ExplorePage> {
             }
             _showPostDialog();
           },
-          icon: const Icon(Icons.add, color: Colors.white),
           label: const Text(
-            "New Post",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+            'New Post',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              fontFamily: 'Roboto',
+            ),
           ),
+          icon: const Icon(Icons.add, color: Colors.white),
+          backgroundColor: AppColors.buttonGreen,
+        ),
+      ),
+    );
+  }
+}
+
+class PostCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final String? imageUrl;
+  final DateTime date;
+  final String category;
+
+  const PostCard({
+    Key? key,
+    required this.title,
+    required this.description,
+    this.imageUrl,
+    required this.date,
+    required this.category,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final dateStr = DateFormat('MMM d, h:mm a').format(date);
+
+    return Material(
+      borderRadius: BorderRadius.circular(16),
+      elevation: 4,
+      shadowColor: Colors.black12,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: imageUrl != null && imageUrl!.isNotEmpty
+                    ? Image.network(
+                        imageUrl!,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(child: CircularProgressIndicator());
+                        },
+                        errorBuilder: (c, e, s) => Container(
+                          color: Colors.grey[200],
+                          child: Center(
+                            child: Icon(Icons.image, size: 48, color: Colors.grey[400]),
+                          ),
+                        ),
+                      )
+                    : Container(
+                        color: Colors.grey[200],
+                        child: Center(
+                          child: Icon(Icons.image, size: 48, color: Colors.grey[400]),
+                        ),
+                      ),
+              ),
+            ),
+
+            // Content
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black87,
+                      fontFamily: 'Roboto',
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.black54,
+                      fontFamily: 'Roboto',
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        dateStr,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontFamily: 'Roboto',
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          category,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.green[800],
+                            fontWeight: FontWeight.w600,
+                            fontFamily: 'Roboto',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 
-// Modern Professional Color Palette
+// Modern Professional Color Palette - Matching Image Design
 class AppColors {
-  // Primary Brand Colors
-  static const Color primaryGreen = Color(0xFF2D8659); // Deep professional green
-  static const Color primaryGreenLight = Color(0xFF3FA372); // Lighter green for accents
-  static const Color primaryGreenDark = Color(0xFF1F5C3F); // Darker green for depth
+  // Primary Brand Colors - Exact colors from image
+  static const Color headerGreen = Color(0xFF154E36); // Deep green header from image
+  static const Color buttonGreen = Color(0xFF3F8B5A); // New Post button green from image
+  static const Color primaryGreen = Color(0xFF154E36); // Deep professional green
+  static const Color primaryGreenLight = Color(0xFF3F8B5A); // Lighter green for accents
+  static const Color primaryGreenDark = Color(0xFF0F3D28); // Darker green for depth
   
-  // Neutral Colors
-  static const Color backgroundLight = Color(0xFFFAFBFC); // Soft off-white
+  // Neutral Colors - Matching image
+  static const Color backgroundLight = Color(0xFFFAFBF9); // Light off-white from image
   static const Color backgroundDark = Color(0xFF121212); // True dark mode
   static const Color surfaceLight = Color(0xFFFFFFFF);
   static const Color surfaceDark = Color(0xFF1E1E1E);
@@ -40,7 +42,7 @@ class AppColors {
 ThemeData lightMode({String? fontFamily}) {
   return ThemeData(
     brightness: Brightness.light,
-    fontFamily: fontFamily ?? "Helvetica",
+    fontFamily: fontFamily ?? "Roboto",
     useMaterial3: true,
     colorScheme: ColorScheme.light(
       primary: AppColors.primaryGreen,
@@ -66,13 +68,14 @@ ThemeData lightMode({String? fontFamily}) {
     appBarTheme: AppBarTheme(
       elevation: 0,
       centerTitle: false,
-      backgroundColor: AppColors.primaryGreen,
+      backgroundColor: AppColors.headerGreen,
       foregroundColor: Colors.white,
+      toolbarHeight: 72,
       titleTextStyle: TextStyle(
         color: Colors.white,
         fontSize: 20,
         fontWeight: FontWeight.w600,
-        fontFamily: fontFamily ?? "Helvetica",
+        fontFamily: fontFamily ?? "Roboto",
         letterSpacing: -0.5,
       ),
     ),
