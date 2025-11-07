@@ -55,7 +55,7 @@ ThemeData lightMode({String? fontFamily}) {
       onError: Colors.white,
     ),
     scaffoldBackgroundColor: AppColors.backgroundLight,
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -170,7 +170,7 @@ ThemeData darkMode({String? fontFamily}) {
       onError: Colors.white,
     ),
     scaffoldBackgroundColor: AppColors.backgroundDark,
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
