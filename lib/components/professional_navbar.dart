@@ -526,7 +526,13 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
             ],
           ),
         ),
-        const Divider(height: 1),
+        Divider(
+          height: 1,
+          thickness: 0.5,
+          color: widget.isDark 
+              ? Colors.grey.withOpacity(0.2)
+              : Colors.grey.withOpacity(0.3),
+        ),
         // Menu Items
         _MenuItem(
           icon: Icons.person_outline,
@@ -611,19 +617,13 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
             ),
           ],
         ),
-        _MenuItem(
-          icon: Icons.swap_horiz,
-          label: 'Switch account',
-          isDark: widget.isDark,
-          onTap: () {
-            Navigator.of(context).pop();
-            // TODO: Add account switching functionality
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Switch account coming soon')),
-            );
-          },
+        Divider(
+          height: 1,
+          thickness: 0.5,
+          color: widget.isDark 
+              ? Colors.grey.withOpacity(0.2)
+              : Colors.grey.withOpacity(0.3),
         ),
-        const Divider(height: 1),
         _MenuItem(
           icon: Icons.logout,
           label: 'Log out',
