@@ -555,55 +555,43 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               const SizedBox(height: 24),
 
-                              // Google Sign In Button
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: _isLoading ? null : _signInWithGoogle,
-                                  icon: kIsWeb
-                                      ? Image.network(
-                                          'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-                                          height: 20,
-                                          width: 20,
-                                          errorBuilder: (context, error, stackTrace) {
-                                            return const Text(
-                                              'G',
+                              // Google Sign In Button - Using official Google Identity Services asset
+                              // Reference: https://developers.google.com/identity/branding-guidelines
+                              Center(
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    onTap: _isLoading ? null : _signInWithGoogle,
+                                    borderRadius: BorderRadius.circular(20), // Matching SVG border radius (rx="20")
+                                    child: Container(
+                                      width: 175, // Matching SVG width (175x40)
+                                      height: 40,
+                                      alignment: Alignment.center,
+                                      child: SvgPicture.asset(
+                                        'assets/icons/google_sign_in_logo.svg',
+                                        width: 175,
+                                        height: 40,
+                                        fit: BoxFit.contain,
+                                        placeholderBuilder: (context) => Container(
+                                          width: 175,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFF2F2F2), // Neutral background from SVG
+                                            borderRadius: BorderRadius.circular(20),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              'Sign up with Google',
                                               style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue,
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color: const Color(0xFF1F1F1F),
                                               ),
-                                            );
-                                          },
-                                        )
-                                      : const Icon(
-                                          Icons.login,
-                                          size: 20,
+                                            ),
+                                          ),
                                         ),
-                                  label: Text(
-                                    'Sign up with Google',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: isDark 
-                                          ? AppColors.textPrimaryDark 
-                                          : AppColors.textPrimaryLight,
+                                      ),
                                     ),
-                                  ),
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    side: BorderSide(
-                                      color: isDark 
-                                          ? AppColors.borderDark.withOpacity(0.3)
-                                          : AppColors.borderLight.withOpacity(0.5),
-                                      width: 1.5,
-                                    ),
-                                    backgroundColor: isDark 
-                                        ? AppColors.cardDark 
-                                        : Colors.white,
                                   ),
                                 ),
                               ),
@@ -637,7 +625,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                       "Login now",
                                       style: TextStyle(
                                         fontWeight: FontWeight.w600,
-                                        color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                                        color: isDark ? AppColors.accentBlueLight : AppColors.accentBlue,
                                         fontSize: 14,
                                         decoration: TextDecoration.underline
                                       ),

@@ -70,8 +70,8 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 32,
-        vertical: 12,
+        horizontal: isMobile ? 20 : 20,
+        vertical: 8,
       ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -263,7 +263,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 4),
                 // Profile Section
                 _buildProfileSection(context, isDark),
               ],
@@ -328,66 +328,27 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
             cursor: SystemMouseCursors.click,
             child: Container(
               key: _profileKey,
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isDark 
-                      ? AppColors.borderDark.withOpacity(0.3)
-                      : AppColors.borderLight.withOpacity(0.3),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: isDark 
-                            ? AppColors.primaryGreenLight.withOpacity(0.3)
-                            : AppColors.primaryGreen.withOpacity(0.3),
-                        width: 2,
-                      ),
-                    ),
-                    child: CircleAvatar(
-                      radius: 18,
-                      backgroundColor: isDark 
-                          ? AppColors.cardDark 
-                          : AppColors.backgroundLight,
-                      backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                          ? NetworkImage(photoUrl)
-                          : null,
-                      child: (photoUrl == null || photoUrl.isEmpty)
-                          ? Text(
-                              initials.isNotEmpty ? initials : '?',
-                              style: TextStyle(
-                                color: isDark 
-                                    ? AppColors.primaryGreenLight 
-                                    : AppColors.primaryGreen,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            )
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    displayName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: isDark 
-                          ? AppColors.textPrimaryDark 
-                          : AppColors.textPrimaryLight,
-                      fontFamily: 'Roboto',
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+              padding: EdgeInsets.zero,
+              child: CircleAvatar(
+                radius: 18, // Reduced to match New Post button height (~36px diameter)
+                backgroundColor: isDark 
+                    ? AppColors.cardDark 
+                    : AppColors.backgroundLight,
+                backgroundImage: photoUrl != null && photoUrl.isNotEmpty
+                    ? NetworkImage(photoUrl)
+                    : null,
+                child: (photoUrl == null || photoUrl.isEmpty)
+                    ? Text(
+                        initials.isNotEmpty ? initials : '?',
+                        style: TextStyle(
+                          color: isDark 
+                              ? AppColors.primaryGreenLight 
+                              : AppColors.primaryGreen,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14, // Reduced to match smaller avatar
+                        ),
+                      )
+                    : null,
               ),
             ),
           ),
@@ -512,7 +473,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
           child: Row(
             children: [
               CircleAvatar(
-                radius: 24,
+                radius: 18, // Reduced to match New Post button height (~36px diameter)
                 backgroundColor: widget.isDark 
                     ? AppColors.cardDark 
                     : AppColors.backgroundLight,
@@ -527,7 +488,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
                               ? AppColors.primaryGreenLight 
                               : AppColors.primaryGreen,
                           fontWeight: FontWeight.bold,
-                          fontSize: 20,
+                          fontSize: 18, // Reduced to match smaller avatar
                         ),
                       )
                     : null,
