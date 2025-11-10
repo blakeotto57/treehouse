@@ -11,6 +11,11 @@ import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/feedback.dart';
+import 'package:treehouse/pages/landing_page.dart';
+import 'package:treehouse/pages/initial_page.dart';
+import 'package:treehouse/pages/about_page.dart';
+import 'package:treehouse/pages/help_page.dart';
+import 'package:treehouse/pages/terms_page.dart';
 import 'package:treehouse/category_pages/personal_care.dart';
 import 'package:treehouse/category_pages/academics.dart';
 import 'package:treehouse/category_pages/cleaning.dart';
@@ -63,8 +68,8 @@ class MyApp extends StatelessWidget {
       theme: lightMode(fontFamily: "Roboto"),
       darkTheme: darkMode(fontFamily: "Roboto"),
       themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      home: const AuthPage(),
-      title: 'Treehouse • UCSC Marketplace',
+      home: const InitialPage(),
+      title: 'Treehouse Connect • UCSC Marketplace',
       onGenerateRoute: (settings) {
         // Handle /post/ routes
         if (settings.name != null && settings.name!.startsWith('/post/')) {
@@ -87,6 +92,10 @@ class MyApp extends StatelessWidget {
         // Handle all other routes with zero-duration transitions
         Widget? page;
         switch (settings.name) {
+          case '/':
+          case '/home':
+            page = const InitialPage();
+            break;
           case '/login':
             page = LoginPage(onTap: () {});
             break;
@@ -95,6 +104,9 @@ class MyApp extends StatelessWidget {
             break;
           case '/explore':
             page = ExplorePage();
+            break;
+          case '/landing':
+            page = const LandingPage();
             break;
           case '/messages':
             page = MessagesPage();
@@ -107,6 +119,15 @@ class MyApp extends StatelessWidget {
             break;
           case '/feedback':
             page = FeedbackPage();
+            break;
+          case '/about':
+            page = const AboutPage();
+            break;
+          case '/help':
+            page = const HelpPage();
+            break;
+          case '/terms':
+            page = const TermsPage();
             break;
           case '/category/personal-care':
             page = PersonalCarePage();

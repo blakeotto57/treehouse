@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/components/user_post.dart';
 import 'package:treehouse/components/drawer.dart';
-import 'package:treehouse/components/nav_bar.dart';
+import 'package:treehouse/components/professional_navbar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
@@ -31,6 +31,7 @@ class CategoryForumPage extends StatefulWidget {
 }
 
 class _CategoryForumPageState extends State<CategoryForumPage> {
+  final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
   final searchController = TextEditingController();
   final currentUser = FirebaseAuth.instance.currentUser!;
   late TextEditingController titleController;
@@ -460,197 +461,229 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
     final background =
         isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
 
-    final GlobalKey<SlidingDrawerState> _drawerKey =
-        GlobalKey<SlidingDrawerState>();
+    final navbar = ProfessionalNavbar(drawerKey: _drawerKey);
+    final headerHeight = navbar.preferredSize.height;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final headerTotalHeight = topPadding + headerHeight;
 
-    return SlidingDrawer(
-      key: _drawerKey,
-      drawer: customDrawer(context), // Use customDrawerContent from drawer.dart
-      child: Scaffold(
-        backgroundColor: background,
-        drawer: customDrawer(context),
-        appBar: Navbar(drawerKey: _drawerKey),
-        body: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: GestureDetector(
-              onTap: () => FocusScope.of(context).unfocus(),
-              child: Column(
-                children: [
-                  const SizedBox(height: 16),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[900] : Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextField(
-                      controller: searchController,
-                      cursorColor: Colors.black,
-                      style: TextStyle(
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                      onChanged: (value) {
-                        setState(() {
-                          searchQuery = value.toLowerCase();
-                        });
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Search posts...',
-                        hintStyle: TextStyle(
-                            color:
-                                isDark ? Colors.grey[400] : Colors.grey[600]),
-                        prefixIcon:
-                            const Icon(Icons.search, color: Color(0xFF386A53)),
-                        contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12, horizontal: 16),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide(
-                              color: const Color(0xFF386A53), width: 1.5),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Icon(widget.icon, color: widget.forumIconColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        "${widget.title} Forum",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20,
-                          color: widget.forumIconColor,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Divider(
-                          color: isDark
-                              ? Colors.white24
-                              : widget.forumIconColor.withOpacity(0.2),
-                          thickness: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Expanded(
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection(widget.firestoreCollection)
-                          .orderBy("timestamp", descending: true)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          final docs = snapshot.data!.docs;
-                          if (docs.isEmpty) {
-                            return const Center(
-                              child: Text(
-                                "No posts found.",
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 16),
+    return Scaffold(
+      backgroundColor: background,
+      body: Stack(
+        children: [
+          // Sliding drawer and content - full screen
+          SlidingDrawer(
+            key: _drawerKey,
+            drawer: customDrawer(context),
+            appBarHeight: headerTotalHeight,
+            child: Column(
+              children: [
+                // Spacer for header (SafeArea + navbar)
+                SizedBox(height: headerTotalHeight),
+                // Content area
+                Expanded(
+                  child: SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 600),
+                        child: GestureDetector(
+                          onTap: () => FocusScope.of(context).unfocus(),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 16),
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.grey[900] : Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: TextField(
+                                  controller: searchController,
+                                  cursorColor: Colors.black,
+                                  style: TextStyle(
+                                    color: isDark ? Colors.white : Colors.black,
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      searchQuery = value.toLowerCase();
+                                    });
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: 'Search posts...',
+                                    hintStyle: TextStyle(
+                                        color:
+                                            isDark ? Colors.grey[400] : Colors.grey[600]),
+                                    prefixIcon:
+                                        const Icon(Icons.search, color: Color(0xFF386A53)),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        vertical: 12, horizontal: 16),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                          color: const Color(0xFF386A53), width: 1.5),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            );
-                          }
-
-                          // Filter posts by search query
-                          final filteredPosts = docs.where((doc) {
-                            final data = doc.data() as Map<String, dynamic>;
-                            return searchQuery.isEmpty ||
-                                (data["body_text"] ?? "")
-                                    .toString()
-                                    .toLowerCase()
-                                    .contains(searchQuery.toLowerCase());
-                          }).toList();
-
-                          if (filteredPosts.isEmpty) {
-                            return const Center(
-                              child: Text(
-                                "No posts found.",
-                                style:
-                                    TextStyle(color: Colors.grey, fontSize: 16),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Icon(widget.icon, color: widget.forumIconColor),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "${widget.title} Forum",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 20,
+                                      color: widget.forumIconColor,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Divider(
+                                      color: isDark
+                                          ? Colors.white24
+                                          : widget.forumIconColor.withOpacity(0.2),
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            );
-                          }
+                              Expanded(
+                                child: StreamBuilder<QuerySnapshot>(
+                                  stream: FirebaseFirestore.instance
+                                      .collection(widget.firestoreCollection)
+                                      .orderBy("timestamp", descending: true)
+                                      .snapshots(),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData) {
+                                      final docs = snapshot.data!.docs;
+                                      if (docs.isEmpty) {
+                                        return const Center(
+                                          child: Text(
+                                            "No posts found.",
+                                            style:
+                                                TextStyle(color: Colors.grey, fontSize: 16),
+                                          ),
+                                        );
+                                      }
 
-                          return ListView.builder(
-                            padding: const EdgeInsets.symmetric(vertical: 0),
-                            itemCount: filteredPosts.length,
-                            itemBuilder: (context, index) {
-                              final post = filteredPosts[index].data()
-                                  as Map<String, dynamic>;
-                              return UserPost(
-                                message: post["body_text"] ?? '',
-                                user: post["username"] ?? '',
-                                title: post["title"] ?? '',
-                                likes: List<String>.from(post["likes"] ?? []),
-                                timestamp: post["timestamp"] ?? Timestamp.now(),
-                                category: widget.firestoreCollection,
-                                forumIconColor: widget.forumIconColor,
-                                documentId: filteredPosts[index].id,
-                              );
-                            },
-                          );
-                        } else if (snapshot.hasError) {
-                          return Center(
-                            child: Text("Error: ${snapshot.error}"),
-                          );
-                        }
-                        return const Center(child: CircularProgressIndicator());
-                      },
-                    ),
-                  ),
-                  
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        icon: Icon(Icons.add_circle, color: Colors.white),
-                        label: Text(
-                          'Create Post',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                            letterSpacing: 1.1,
+                                      // Filter posts by search query
+                                      final filteredPosts = docs.where((doc) {
+                                        final data = doc.data() as Map<String, dynamic>;
+                                        return searchQuery.isEmpty ||
+                                            (data["body_text"] ?? "")
+                                                .toString()
+                                                .toLowerCase()
+                                                .contains(searchQuery.toLowerCase());
+                                      }).toList();
+
+                                      if (filteredPosts.isEmpty) {
+                                        return const Center(
+                                          child: Text(
+                                            "No posts found.",
+                                            style:
+                                                TextStyle(color: Colors.grey, fontSize: 16),
+                                          ),
+                                        );
+                                      }
+
+                                      return ListView.builder(
+                                        padding: const EdgeInsets.symmetric(vertical: 0),
+                                        itemCount: filteredPosts.length,
+                                        itemBuilder: (context, index) {
+                                          final post = filteredPosts[index].data()
+                                              as Map<String, dynamic>;
+                                          return UserPost(
+                                            message: post["body_text"] ?? '',
+                                            user: post["username"] ?? '',
+                                            title: post["title"] ?? '',
+                                            likes: List<String>.from(post["likes"] ?? []),
+                                            timestamp: post["timestamp"] ?? Timestamp.now(),
+                                            category: widget.firestoreCollection,
+                                            forumIconColor: widget.forumIconColor,
+                                            documentId: filteredPosts[index].id,
+                                          );
+                                        },
+                                      );
+                                    } else if (snapshot.hasError) {
+                                      return Center(
+                                        child: Text("Error: ${snapshot.error}"),
+                                      );
+                                    }
+                                    return const Center(child: CircularProgressIndicator());
+                                  },
+                                ),
+                              ),
+                              
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4.0),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    icon: Icon(Icons.add_circle, color: Colors.white),
+                                    label: Text(
+                                      'Create Post',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                        letterSpacing: 1.1,
+                                      ),
+                                    ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: widget.forumIconColor,
+                                      padding: EdgeInsets.symmetric(vertical: 16),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 6,
+                                      shadowColor: widget.forumIconColor.withOpacity(0.3),
+                                    ),
+                                    onPressed: _showCreatePostDialog,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: widget.forumIconColor,
-                          padding: EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 6,
-                          shadowColor: widget.forumIconColor.withOpacity(0.3),
-                        ),
-                        onPressed: _showCreatePostDialog,
                       ),
                     ),
                   ),
-                ],
+                ),
+              ],
+            ),
+          ),
+          // Fixed header on top - always visible above drawer
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Container(
+                height: headerHeight,
+                child: navbar,
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

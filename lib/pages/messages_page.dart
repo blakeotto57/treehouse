@@ -6,7 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/auth/auth_service.dart';
 import 'package:treehouse/components/drawer.dart';
-import 'package:treehouse/components/nav_bar.dart';
+import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/auth/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,6 +25,7 @@ class MessagesPage extends StatefulWidget {
 }
 
 class _MessagesPageState extends State<MessagesPage> {
+  final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
   final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
 
@@ -284,747 +285,793 @@ class _MessagesPageState extends State<MessagesPage> {
     final textColor = isDarkMode ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
 
     final screenWidth = MediaQuery.of(context).size.width;
+    final navbar = ProfessionalNavbar(drawerKey: _drawerKey);
+    final headerHeight = navbar.preferredSize.height;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final headerTotalHeight = topPadding + headerHeight;
 
-    final GlobalKey<SlidingDrawerState> _drawerKey =
-        GlobalKey<SlidingDrawerState>();
-
-    return SlidingDrawer(
-      key: _drawerKey,
-      drawer: customDrawer(context), // Use customDrawerContent from drawer.dart
-      child: Scaffold(
+    return Scaffold(
       backgroundColor: backgroundColor,
-      drawer: customDrawer(context),
-      appBar: Navbar(
-        drawerKey: _drawerKey,
-        title: 'Messages',
+      body: Stack(
+        children: [
+          // Sliding drawer and content - full screen
+          SlidingDrawer(
+            key: _drawerKey,
+            drawer: customDrawer(context),
+            appBarHeight: headerTotalHeight,
+            child: Column(
+              children: [
+                // Spacer for header (SafeArea + navbar)
+                SizedBox(height: headerTotalHeight),
+                // Content area
+                Expanded(
+                  child: SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: _buildMessagesContent(screenWidth, isDarkMode, backgroundColor, cardColor, dividerColor, textColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Fixed header on top - always visible above drawer
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Container(
+                height: headerHeight,
+                child: navbar,
+              ),
+            ),
+          ),
+        ],
       ),
-      body: screenWidth < 600 // Adjust layout for phone screens
-          ? selectedUserEmail == null
-              ? Column(
+    );
+  }
+
+  Widget _buildMessagesContent(double screenWidth, bool isDarkMode, Color backgroundColor, Color cardColor, Color dividerColor, Color textColor) {
+    if (screenWidth < 600) {
+      // Mobile layout
+      if (selectedUserEmail == null) {
+        return Column(
+          children: [
+            // Messages Stream
+            Expanded(
+              child: Container(
+                color: cardColor,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Messages Stream
-                    Expanded(
-                      child: Container(
-                        color: cardColor,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // Messages title row with notification icon
-                            Padding(
-                              padding: EdgeInsets.all(10),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    "Messages",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 22,
-                                      color: Color(0xFF222222),
-                                    ),
-                                  ),
-                                  SizedBox(width: 20),
-                                  GestureDetector(
-                                    onTap: _showMessageRequestsDialog,
-                                    child: Stack(
-                                      children: [
-                                        Icon(Icons.mail_outline, color: Color(0xFF386A53)),
-                                        if (_messageRequestCount > 0)
-                                          Positioned(
-                                            right: 0,
-                                            top: 0,
-                                            child: Container(
-                                              padding: EdgeInsets.all(4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Text(
-                                                '$_messageRequestCount',
-                                                style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                              ),
+                                          // Messages title row with notification icon
+                                          Padding(
+                                            padding: EdgeInsets.all(10),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  "Messages",
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 22,
+                                                    color: Color(0xFF222222),
+                                                  ),
+                                                ),
+                                                SizedBox(width: 20),
+                                                GestureDetector(
+                                                  onTap: _showMessageRequestsDialog,
+                                                  child: Stack(
+                                                    children: [
+                                                      Icon(Icons.mail_outline, color: Color(0xFF386A53)),
+                                                      if (_messageRequestCount > 0)
+                                                        Positioned(
+                                                          right: 0,
+                                                          top: 0,
+                                                          child: Container(
+                                                            padding: EdgeInsets.all(4),
+                                                            decoration: BoxDecoration(
+                                                              color: Colors.red,
+                                                              shape: BoxShape.circle,
+                                                            ),
+                                                            child: Text(
+                                                              '$_messageRequestCount',
+                                                              style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Divider(
-                              color: dividerColor,
-                              height: 1,
-                              thickness: 1,
-                              indent: 16,
-                              endIndent: 16,
-                            ),
-                            Expanded(
-                              child: StreamBuilder<List<Map<String, dynamic>>>(
-                                stream: _chatService.getAcceptedChatsStream(),
-                                builder: (context, snapshot) {
-                                  if (snapshot.hasError) {
-                                    return Center(
-                                      child: Text(
-                                        'Error: ${snapshot.error}',
-                                        style: TextStyle(color: textColor),
-                                      ),
-                                    );
-                                  }
-                                  if (!snapshot.hasData) {
-                                    return const Center(
-                                        child: CircularProgressIndicator());
-                                  }
-                                  final users = snapshot.data!;
-                                  if (users.isEmpty) {
-                                    return Center(
-                                      child: Text(
-                                        'No conversations yet',
-                                        style: TextStyle(color: textColor),
-                                      ),
-                                    );
-                                  }
-                                  return ListView.separated(
-                                    itemCount: users.length,
-                                    separatorBuilder: (context, index) =>
-                                        Divider(
-                                      color: dividerColor,
-                                      height: 1,
-                                      thickness: 1,
-                                      indent: 16,
-                                      endIndent: 16,
-                                    ),
-                                    itemBuilder: (context, index) {
-                                      final user = users[index];
-                                      final email = user["email"];
-                                      final username = user["username"] ??
-                                          user["name"] ??
-                                          email;
-                                      final profileUrl =
-                                          user["profileImageUrl"];
-                                      final isSelected =
-                                          selectedUserEmail == email;
+                                          Divider(
+                                            color: dividerColor,
+                                            height: 1,
+                                            thickness: 1,
+                                            indent: 16,
+                                            endIndent: 16,
+                                          ),
+                                          Expanded(
+                                            child: StreamBuilder<List<Map<String, dynamic>>>(
+                                              stream: _chatService.getAcceptedChatsStream(),
+                                              builder: (context, snapshot) {
+                                                if (snapshot.hasError) {
+                                                  return Center(
+                                                    child: Text(
+                                                      'Error: ${snapshot.error}',
+                                                      style: TextStyle(color: textColor),
+                                                    ),
+                                                  );
+                                                }
+                                                if (!snapshot.hasData) {
+                                                  return const Center(
+                                                      child: CircularProgressIndicator());
+                                                }
+                                                final users = snapshot.data!;
+                                                if (users.isEmpty) {
+                                                  return Center(
+                                                    child: Text(
+                                                      'No conversations yet',
+                                                      style: TextStyle(color: textColor),
+                                                    ),
+                                                  );
+                                                }
+                                                return ListView.separated(
+                                                  itemCount: users.length,
+                                                  separatorBuilder: (context, index) =>
+                                                      Divider(
+                                                    color: dividerColor,
+                                                    height: 1,
+                                                    thickness: 1,
+                                                    indent: 16,
+                                                    endIndent: 16,
+                                                  ),
+                                                  itemBuilder: (context, index) {
+                                                    final user = users[index];
+                                                    final email = user["email"];
+                                                    final username = user["username"] ??
+                                                        user["name"] ??
+                                                        email;
+                                                    final profileUrl =
+                                                        user["profileImageUrl"];
+                                                    final isSelected =
+                                                        selectedUserEmail == email;
 
-                                      final lastMessage =
-                                          user['lastMessage'] ?? {};
-                                      final lastSender =
-                                          lastMessage['sender'] ?? username;
-                                      final lastMessageText =
-                                          lastMessage['text'] ?? '';
+                                                    final lastMessage =
+                                                        user['lastMessage'] ?? {};
+                                                    final lastSender =
+                                                        lastMessage['sender'] ?? username;
+                                                    final lastMessageText =
+                                                        lastMessage['text'] ?? '';
 
-                                      return Material(
-                                        color: isSelected
-                                            ? (isDarkMode
-                                                ? Colors.grey[800]
-                                                : Colors.grey[200])
-                                            : cardColor,
-                                        child: InkWell(
-                                          borderRadius:
-                                              BorderRadius.circular(0),
-                                          onTap: () {
-                                            _onChatSelected(email);
-                                            setState(() {
-                                              selectedUserName = username;
-                                              selectedUserProfileUrl =
-                                                  profileUrl;
-                                            });
-                                          },
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 8),
-                                            child: Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.center,
-                                              children: [
-                                                // 3-dot icon
-                                                IconButton(
-                                                  icon: Icon(Icons.more_vert,
-                                                      color: Color(0xFF386A53)),
-                                                  tooltip: "More options",
-                                                  onPressed: () {
-                                                    showDialog(
-                                                      context: context,
-                                                      builder: (context) {
-                                                        final isDark = Theme.of(
-                                                                    context)
-                                                                .brightness ==
-                                                            Brightness.dark;
-                                                        return AlertDialog(
-                                                          backgroundColor:
-                                                              isDark
-                                                                  ? Colors
-                                                                      .grey[900]
-                                                                  : Colors
-                                                                      .white,
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        18),
-                                                          ),
-                                                          title: Row(
+                                                    return Material(
+                                                      color: isSelected
+                                                          ? (isDarkMode
+                                                              ? Colors.grey[800]
+                                                              : Colors.grey[200])
+                                                          : cardColor,
+                                                      child: InkWell(
+                                                        borderRadius:
+                                                            BorderRadius.circular(0),
+                                                        onTap: () {
+                                                          _onChatSelected(email);
+                                                          setState(() {
+                                                            selectedUserName = username;
+                                                            selectedUserProfileUrl =
+                                                                profileUrl;
+                                                          });
+                                                        },
+                                                        child: Padding(
+                                                          padding: const EdgeInsets.symmetric(
+                                                              horizontal: 12, vertical: 8),
+                                                          child: Row(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment.center,
                                                             children: [
-                                                              Icon(
-                                                                  Icons
-                                                                      .warning_amber_rounded,
-                                                                  color: Color(
-                                                                      0xFF386A53)),
-                                                              const SizedBox(
-                                                                  width: 8),
-                                                              Text(
-                                                                "Chat Options",
-                                                                style:
-                                                                    TextStyle(
-                                                                  color: Color(
-                                                                      0xFF386A53),
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
+                                                              // 3-dot icon
+                                                              IconButton(
+                                                                icon: Icon(Icons.more_vert,
+                                                                    color: Color(0xFF386A53)),
+                                                                tooltip: "More options",
+                                                                onPressed: () {
+                                                                  showDialog(
+                                                                    context: context,
+                                                                    builder: (context) {
+                                                                      final isDark = Theme.of(
+                                                                                  context)
+                                                                              .brightness ==
+                                                                          Brightness.dark;
+                                                                      return AlertDialog(
+                                                                        backgroundColor:
+                                                                            isDark
+                                                                                ? Colors
+                                                                                    .grey[900]
+                                                                                : Colors
+                                                                                    .white,
+                                                                        shape:
+                                                                            RoundedRectangleBorder(
+                                                                          borderRadius:
+                                                                              BorderRadius
+                                                                                  .circular(
+                                                                                      18),
+                                                                        ),
+                                                                        title: Row(
+                                                                          children: [
+                                                                            Icon(
+                                                                                Icons
+                                                                                    .warning_amber_rounded,
+                                                                                color: Color(
+                                                                                    0xFF386A53)),
+                                                                            const SizedBox(
+                                                                                width: 8),
+                                                                            Text(
+                                                                              "Chat Options",
+                                                                              style:
+                                                                                  TextStyle(
+                                                                                color: Color(
+                                                                                    0xFF386A53),
+                                                                                fontWeight:
+                                                                                    FontWeight
+                                                                                        .bold,
+                                                                              ),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                        content: Text(
+                                                                          "Do you want to delete the chat with $username?",
+                                                                          style: TextStyle(
+                                                                            color: isDark
+                                                                                ? Colors.white
+                                                                                : Colors
+                                                                                    .black87,
+                                                                          ),
+                                                                        ),
+                                                                        actions: [
+                                                                          TextButton(
+                                                                            style: TextButton
+                                                                                .styleFrom(
+                                                                              foregroundColor:
+                                                                                  isDark
+                                                                                      ? Colors
+                                                                                          .white
+                                                                                      : Color(
+                                                                                          0xFF386A53),
+                                                                            ),
+                                                                            child: Text(
+                                                                                "Cancel"),
+                                                                            onPressed: () =>
+                                                                                Navigator.of(
+                                                                                        context)
+                                                                                    .pop(),
+                                                                          ),
+                                                                          ElevatedButton.icon(
+                                                                            style:
+                                                                                ElevatedButton
+                                                                                    .styleFrom(
+                                                                              backgroundColor:
+                                                                                  Color(
+                                                                                      0xFF386A53),
+                                                                              foregroundColor:
+                                                                                  Colors
+                                                                                      .white,
+                                                                              shape:
+                                                                                  RoundedRectangleBorder(
+                                                                                borderRadius:
+                                                                                    BorderRadius
+                                                                                        .circular(
+                                                                                            12),
+                                                                              ),
+                                                                            ),
+                                                                            icon: Icon(
+                                                                                Icons.delete),
+                                                                            label: Text(
+                                                                                "Delete Chat"),
+                                                                            onPressed:
+                                                                                () async {
+                                                                              Navigator.of(
+                                                                                      context)
+                                                                                  .pop();
+                                                                              await _deleteChat(
+                                                                                  email);
+                                                                            },
+                                                                          ),
+                                                                        ],
+                                                                      );
+                                                                    },
+                                                                  );
+                                                                },
+                                                              ),
+                                                              // Avatar
+                                                              CircleAvatar(
+                                                                radius: 24,
+                                                                backgroundImage: profileUrl !=
+                                                                        null
+                                                                    ? NetworkImage(profileUrl)
+                                                                    : null,
+                                                                backgroundColor:
+                                                                    Colors.grey[300],
+                                                                child: profileUrl == null
+                                                                    ? const Icon(Icons.person,
+                                                                        color: Colors.white)
+                                                                    : null,
+                                                              ),
+                                                              const SizedBox(width: 12),
+                                                              // Username and last message
+                                                              Expanded(
+                                                                child: Column(
+                                                                  crossAxisAlignment:
+                                                                      CrossAxisAlignment
+                                                                          .start,
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .center,
+                                                                  children: [
+                                                                    Text(
+                                                                      username,
+                                                                      style: TextStyle(
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
+                                                                        fontSize: 16,
+                                                                        color: textColor,
+                                                                      ),
+                                                                      maxLines: 1,
+                                                                      overflow: TextOverflow
+                                                                          .ellipsis,
+                                                                    ),
+                                                                    const SizedBox(height: 2),
+                                                                    Text(
+                                                                      "$lastSender: $lastMessageText",
+                                                                      style: TextStyle(
+                                                                        color: isDarkMode
+                                                                            ? Colors.grey[400]
+                                                                            : Colors
+                                                                                .grey[600],
+                                                                        fontSize: 12,
+                                                                      ),
+                                                                      maxLines: 1,
+                                                                      overflow: TextOverflow
+                                                                          .ellipsis,
+                                                                    ),
+                                                                  ],
                                                                 ),
                                                               ),
                                                             ],
                                                           ),
-                                                          content: Text(
-                                                            "Do you want to delete the chat with $username?",
-                                                            style: TextStyle(
-                                                              color: isDark
-                                                                  ? Colors.white
-                                                                  : Colors
-                                                                      .black87,
-                                                            ),
-                                                          ),
-                                                          actions: [
-                                                            TextButton(
-                                                              style: TextButton
-                                                                  .styleFrom(
-                                                                foregroundColor:
-                                                                    isDark
-                                                                        ? Colors
-                                                                            .white
-                                                                        : Color(
-                                                                            0xFF386A53),
-                                                              ),
-                                                              child: Text(
-                                                                  "Cancel"),
-                                                              onPressed: () =>
-                                                                  Navigator.of(
-                                                                          context)
-                                                                      .pop(),
-                                                            ),
-                                                            ElevatedButton.icon(
-                                                              style:
-                                                                  ElevatedButton
-                                                                      .styleFrom(
-                                                                backgroundColor:
-                                                                    Color(
-                                                                        0xFF386A53),
-                                                                foregroundColor:
-                                                                    Colors
-                                                                        .white,
-                                                                shape:
-                                                                    RoundedRectangleBorder(
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              12),
-                                                                ),
-                                                              ),
-                                                              icon: Icon(
-                                                                  Icons.delete),
-                                                              label: Text(
-                                                                  "Delete Chat"),
-                                                              onPressed:
-                                                                  () async {
-                                                                Navigator.of(
-                                                                        context)
-                                                                    .pop();
-                                                                await _deleteChat(
-                                                                    email);
-                                                              },
-                                                            ),
-                                                          ],
-                                                        );
-                                                      },
+                                                        ),
+                                                      ),
                                                     );
                                                   },
-                                                ),
-                                                // Avatar
-                                                CircleAvatar(
-                                                  radius: 24,
-                                                  backgroundImage: profileUrl !=
-                                                          null
-                                                      ? NetworkImage(profileUrl)
-                                                      : null,
-                                                  backgroundColor:
-                                                      Colors.grey[300],
-                                                  child: profileUrl == null
-                                                      ? const Icon(Icons.person,
-                                                          color: Colors.white)
-                                                      : null,
-                                                ),
-                                                const SizedBox(width: 12),
-                                                // Username and last message
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Text(
-                                                        username,
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16,
-                                                          color: textColor,
-                                                        ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                      const SizedBox(height: 2),
-                                                      Text(
-                                                        "$lastSender: $lastMessageText",
-                                                        style: TextStyle(
-                                                          color: isDarkMode
-                                                              ? Colors.grey[400]
-                                                              : Colors
-                                                                  .grey[600],
-                                                          fontSize: 12,
-                                                        ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : Column(
-                  children: [
-                    // Chat Page
-                    Expanded(
-                      child: Container(
-                        color: backgroundColor,
-                        child: Column(
-                          children: [
-                            // Back Button
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.arrow_back,
-                                        color: Color(0xFF386A53)),
-                                    onPressed: () {
-                                      setState(() {
-                                        selectedUserEmail = null;
-                                      });
-                                    },
-                                  ),
-                                  Text(
-                                    selectedUserName ?? "Chat",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      color: Color(0xFF386A53),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Expanded(
-                              child: Column(
-                                children: [
-                                  Expanded(
-                                    child: _ChatMessagesWidget(
-                                      receiverEmail: selectedUserEmail!,
-                                      themeColor: const Color(0xFF386A53),
-                                      scrollController: _scrollController,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Divider(
-                                    color: Color(0xFF386A53),
-                                    thickness: 1,
-                                    height: 1,
-                                  ),
-                                  _ChatInputWidget(
-                                    onSend: (text) {},
-                                    receiverEmail: selectedUserEmail!,
-                                    currentUserEmail:
-                                        _authService.currentUser?.email ?? '',
-                                    messageController: _messageController,
-                                    pickAndSendImage: _pickAndSendImage,
-                                    sendMessage: _sendMessage,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-          : Row(
-              children: [
-                // Left: Conversations List
-                Container(
-                  width: 320,
-                  color: cardColor,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Messages title row with notification icon
-                      Padding(
-                        padding: EdgeInsets.all(10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              "Messages",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                                color: Color(0xFF222222),
-                              ),
-                            ),
-                            SizedBox(width: 20),
-                            GestureDetector(
-                              onTap: _showMessageRequestsDialog,
-                              child: Stack(
-                                children: [
-                                  Icon(Icons.mail_outline, color: Color(0xFF386A53)),
-                                  if (_messageRequestCount > 0)
-                                    Positioned(
-                                      right: 0,
-                                      top: 0,
-                                      child: Container(
-                                        padding: EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Text(
-                                          '$_messageRequestCount',
-                                          style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Divider(
-                        color: dividerColor,
-                        height: 1,
-                        thickness: 1,
-                        indent: 16,
-                        endIndent: 16,
-                      ),
-                      Expanded(
-                        child: StreamBuilder<List<Map<String, dynamic>>>(
-                          stream: _chatService.getAcceptedChatsStream(),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasError) {
-                              return Center(
-                                child: Text(
-                                  'Error: ${snapshot.error}',
-                                  style: TextStyle(color: textColor),
-                                ),
-                              );
-                            }
-                            if (!snapshot.hasData) {
-                              return const Center(
-                                  child: CircularProgressIndicator());
-                            }
-                            final users = snapshot.data!;
-                            if (users.isEmpty) {
-                              return Center(
-                                child: Text(
-                                  'No conversations yet',
-                                  style: TextStyle(color: textColor),
-                                ),
-                              );
-                            }
-                            return ListView.separated(
-                              itemCount: users.length,
-                              separatorBuilder: (context, index) => Divider(
-                                color: dividerColor,
-                                height: 1,
-                                thickness: 1,
-                                indent: 16,
-                                endIndent: 16,
-                              ),
-                              itemBuilder: (context, index) {
-                                final user = users[index];
-                                final email = user["email"];
-                                final username =
-                                    user["username"] ?? user["name"] ?? email;
-                                final profileUrl = user["profileImageUrl"];
-                                final isSelected = selectedUserEmail == email;
-
-                                final lastMessage = user['lastMessage'] ?? {};
-                                final lastSender =
-                                    lastMessage['sender'] ?? username;
-                                final lastMessageText =
-                                    lastMessage['text'] ?? '';
-
-                                return Material(
-                                  color: isSelected
-                                      ? (isDarkMode
-                                          ? Colors.grey[800]
-                                          : Colors.grey[200])
-                                      : cardColor,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(0),
-                                    onTap: () {
-                                      _onChatSelected(email);
-                                      setState(() {
-                                        selectedUserName = username;
-                                        selectedUserProfileUrl = profileUrl;
-                                      });
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                      child: Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          // 3-dot icon
-                                          IconButton(
-                                            icon: Icon(Icons.more_vert,
-                                                color: Color(0xFF386A53)),
-                                            tooltip: "More options",
-                                            onPressed: () {
-                                              showDialog(
-                                                context: context,
-                                                builder: (context) {
-                                                  final isDark =
-                                                      Theme.of(context)
-                                                              .brightness ==
-                                                          Brightness.dark;
-                                                  return AlertDialog(
-                                                    backgroundColor: isDark
-                                                        ? Colors.grey[900]
-                                                        : Colors.white,
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              18),
-                                                    ),
-                                                    title: Row(
-                                                      children: [
-                                                        Icon(
-                                                            Icons
-                                                                .warning_amber_rounded,
-                                                            color: Color(
-                                                                0xFF386A53)),
-                                                        const SizedBox(
-                                                            width: 8),
-                                                        Text(
-                                                          "Chat Options",
-                                                          style: TextStyle(
-                                                            color: Color(
-                                                                0xFF386A53),
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    content: Text(
-                                                      "Do you want to delete the chat with $username?",
-                                                      style: TextStyle(
-                                                        color: isDark
-                                                            ? Colors.white
-                                                            : Colors.black87,
-                                                      ),
-                                                    ),
-                                                    actions: [
-                                                      TextButton(
-                                                        style: TextButton
-                                                            .styleFrom(
-                                                          foregroundColor: isDark
-                                                              ? Colors.white
-                                                              : Color(
-                                                                  0xFF386A53),
-                                                        ),
-                                                        child: Text("Cancel"),
-                                                        onPressed: () =>
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop(),
-                                                      ),
-                                                      ElevatedButton.icon(
-                                                        style: ElevatedButton
-                                                            .styleFrom(
-                                                          backgroundColor:
-                                                              Color(0xFF386A53),
-                                                          foregroundColor:
-                                                              Colors.white,
-                                                          shape:
-                                                              RoundedRectangleBorder(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                          ),
-                                                        ),
-                                                        icon:
-                                                            Icon(Icons.delete),
-                                                        label:
-                                                            Text("Delete Chat"),
-                                                        onPressed: () async {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                          await _deleteChat(
-                                                              email);
-                                                        },
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          ),
-                                          // Avatar
-                                          CircleAvatar(
-                                            radius: 24,
-                                            backgroundImage: profileUrl != null
-                                                ? NetworkImage(profileUrl)
-                                                : null,
-                                            backgroundColor: Colors.grey[300],
-                                            child: profileUrl == null
-                                                ? const Icon(Icons.person,
-                                                    color: Colors.white)
-                                                : null,
-                                          ),
-                                          const SizedBox(width: 12),
-                                          // Username and last message
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Text(
-                                                  username,
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                    color: textColor,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  "$lastSender: $lastMessageText",
-                                                  style: TextStyle(
-                                                    color: isDarkMode
-                                                        ? Colors.grey[400]
-                                                        : Colors.grey[600],
-                                                    fontSize: 12,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ],
+                                                );
+                                              },
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
                                   ),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                                ],
+                              );
+      } else {
+        // Mobile layout with selected user
+        return Column(
+          children: [
+            // Chat Page
+            Expanded(
+              child: Container(
+                color: backgroundColor,
+                decoration: BoxDecoration(
+                  color: backgroundColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
                   ),
                 ),
-                // Right: Chat Page
-                Expanded(
-                  child: selectedUserEmail == null
-                      ? Center(
-                          child: Text(
-                            "Select a conversation",
-                            style: TextStyle(
-                                color: isDarkMode
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
-                                fontSize: 18),
+                child: Column(
+                  children: [
+                    // Back Button
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.arrow_back,
+                                color: Color(0xFF386A53)),
+                            onPressed: () {
+                              setState(() {
+                                selectedUserEmail = null;
+                              });
+                            },
                           ),
-                        )
-                      : Container(
-                          color: backgroundColor,
-                          child: Column(
+                          Text(
+                            selectedUserName ?? "Chat",
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: Color(0xFF386A53),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: _ChatMessagesWidget(
+                              receiverEmail: selectedUserEmail!,
+                              themeColor: const Color(0xFF386A53),
+                              scrollController: _scrollController,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Divider(
+                            color: Color(0xFF386A53),
+                            thickness: 1,
+                            height: 1,
+                          ),
+                          _ChatInputWidget(
+                            onSend: (text) {},
+                            receiverEmail: selectedUserEmail!,
+                            currentUserEmail:
+                                _authService.currentUser?.email ?? '',
+                            messageController: _messageController,
+                            pickAndSendImage: _pickAndSendImage,
+                            sendMessage: _sendMessage,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+    } else {
+      // Desktop layout
+      return Row(
                             children: [
-                              Expanded(
+                              // Left: Conversations List
+                              Container(
+                                width: 320,
+                                color: cardColor,
                                 child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    Expanded(
-                                      child: _ChatMessagesWidget(
-                                        receiverEmail: selectedUserEmail!,
-                                        themeColor: const Color(0xFF386A53),
-                                        scrollController: _scrollController,
+                                    // Messages title row with notification icon
+                                    Padding(
+                                      padding: EdgeInsets.all(10),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Messages",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 22,
+                                              color: Color(0xFF222222),
+                                            ),
+                                          ),
+                                          SizedBox(width: 20),
+                                          GestureDetector(
+                                            onTap: _showMessageRequestsDialog,
+                                            child: Stack(
+                                              children: [
+                                                Icon(Icons.mail_outline, color: Color(0xFF386A53)),
+                                                if (_messageRequestCount > 0)
+                                                  Positioned(
+                                                    right: 0,
+                                                    top: 0,
+                                                    child: Container(
+                                                      padding: EdgeInsets.all(4),
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.red,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                      child: Text(
+                                                        '$_messageRequestCount',
+                                                        style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold),
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                    const SizedBox(height: 8),
                                     Divider(
-                                      color: Color(0xFF386A53),
-                                      thickness: 1,
+                                      color: dividerColor,
                                       height: 1,
+                                      thickness: 1,
+                                      indent: 16,
+                                      endIndent: 16,
                                     ),
-                                    _ChatInputWidget(
-                                      onSend: (text) {},
-                                      receiverEmail: selectedUserEmail!,
-                                      currentUserEmail:
-                                          _authService.currentUser?.email ?? '',
-                                      messageController: _messageController,
-                                      pickAndSendImage: _pickAndSendImage,
-                                      sendMessage: _sendMessage,
+                                    Expanded(
+                                      child: StreamBuilder<List<Map<String, dynamic>>>(
+                                        stream: _chatService.getAcceptedChatsStream(),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasError) {
+                                            return Center(
+                                              child: Text(
+                                                'Error: ${snapshot.error}',
+                                                style: TextStyle(color: textColor),
+                                              ),
+                                            );
+                                          }
+                                          if (!snapshot.hasData) {
+                                            return const Center(
+                                                child: CircularProgressIndicator());
+                                          }
+                                          final users = snapshot.data!;
+                                          if (users.isEmpty) {
+                                            return Center(
+                                              child: Text(
+                                                'No conversations yet',
+                                                style: TextStyle(color: textColor),
+                                              ),
+                                            );
+                                          }
+                                          return ListView.separated(
+                                            itemCount: users.length,
+                                            separatorBuilder: (context, index) => Divider(
+                                              color: dividerColor,
+                                              height: 1,
+                                              thickness: 1,
+                                              indent: 16,
+                                              endIndent: 16,
+                                            ),
+                                            itemBuilder: (context, index) {
+                                              final user = users[index];
+                                              final email = user["email"];
+                                              final username =
+                                                  user["username"] ?? user["name"] ?? email;
+                                              final profileUrl = user["profileImageUrl"];
+                                              final isSelected = selectedUserEmail == email;
+
+                                              final lastMessage = user['lastMessage'] ?? {};
+                                              final lastSender =
+                                                  lastMessage['sender'] ?? username;
+                                              final lastMessageText =
+                                                  lastMessage['text'] ?? '';
+
+                                              return Material(
+                                                color: isSelected
+                                                    ? (isDarkMode
+                                                        ? Colors.grey[800]
+                                                        : Colors.grey[200])
+                                                    : cardColor,
+                                                child: InkWell(
+                                                  borderRadius: BorderRadius.circular(0),
+                                                  onTap: () {
+                                                    _onChatSelected(email);
+                                                    setState(() {
+                                                      selectedUserName = username;
+                                                      selectedUserProfileUrl = profileUrl;
+                                                    });
+                                                  },
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.symmetric(
+                                                        horizontal: 12, vertical: 8),
+                                                    child: Row(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment.center,
+                                                      children: [
+                                                        // 3-dot icon
+                                                        IconButton(
+                                                          icon: Icon(Icons.more_vert,
+                                                              color: Color(0xFF386A53)),
+                                                          tooltip: "More options",
+                                                          onPressed: () {
+                                                            showDialog(
+                                                              context: context,
+                                                              builder: (context) {
+                                                                final isDark =
+                                                                    Theme.of(context)
+                                                                            .brightness ==
+                                                                        Brightness.dark;
+                                                                return AlertDialog(
+                                                                  backgroundColor: isDark
+                                                                      ? Colors.grey[900]
+                                                                      : Colors.white,
+                                                                  shape:
+                                                                      RoundedRectangleBorder(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            18),
+                                                                  ),
+                                                                  title: Row(
+                                                                    children: [
+                                                                      Icon(
+                                                                          Icons
+                                                                              .warning_amber_rounded,
+                                                                          color: Color(
+                                                                              0xFF386A53)),
+                                                                      const SizedBox(
+                                                                          width: 8),
+                                                                      Text(
+                                                                        "Chat Options",
+                                                                        style: TextStyle(
+                                                                          color: Color(
+                                                                              0xFF386A53),
+                                                                          fontWeight:
+                                                                              FontWeight.bold,
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                  content: Text(
+                                                                    "Do you want to delete the chat with $username?",
+                                                                    style: TextStyle(
+                                                                      color: isDark
+                                                                          ? Colors.white
+                                                                          : Colors.black87,
+                                                                    ),
+                                                                  ),
+                                                                  actions: [
+                                                                    TextButton(
+                                                                      style: TextButton
+                                                                          .styleFrom(
+                                                                        foregroundColor: isDark
+                                                                            ? Colors.white
+                                                                            : Color(
+                                                                                0xFF386A53),
+                                                                      ),
+                                                                      child: Text("Cancel"),
+                                                                      onPressed: () =>
+                                                                          Navigator.of(
+                                                                                  context)
+                                                                              .pop(),
+                                                                    ),
+                                                                    ElevatedButton.icon(
+                                                                      style: ElevatedButton
+                                                                          .styleFrom(
+                                                                        backgroundColor:
+                                                                            Color(0xFF386A53),
+                                                                        foregroundColor:
+                                                                            Colors.white,
+                                                                        shape:
+                                                                            RoundedRectangleBorder(
+                                                                          borderRadius:
+                                                                              BorderRadius
+                                                                                  .circular(
+                                                                                      12),
+                                                                        ),
+                                                                      ),
+                                                                      icon:
+                                                                          Icon(Icons.delete),
+                                                                      label:
+                                                                          Text("Delete Chat"),
+                                                                      onPressed: () async {
+                                                                        Navigator.of(context)
+                                                                            .pop();
+                                                                        await _deleteChat(
+                                                                            email);
+                                                                      },
+                                                                    ),
+                                                                  ],
+                                                                );
+                                                              },
+                                                            );
+                                                          },
+                                                        ),
+                                                        // Avatar
+                                                        CircleAvatar(
+                                                          radius: 24,
+                                                          backgroundImage: profileUrl != null
+                                                              ? NetworkImage(profileUrl)
+                                                              : null,
+                                                          backgroundColor: Colors.grey[300],
+                                                          child: profileUrl == null
+                                                              ? const Icon(Icons.person,
+                                                                  color: Colors.white)
+                                                              : null,
+                                                        ),
+                                                        const SizedBox(width: 12),
+                                                        // Username and last message
+                                                        Expanded(
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment.start,
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment.center,
+                                                            children: [
+                                                              Text(
+                                                                username,
+                                                                style: TextStyle(
+                                                                  fontWeight: FontWeight.bold,
+                                                                  fontSize: 16,
+                                                                  color: textColor,
+                                                                ),
+                                                                maxLines: 1,
+                                                                overflow:
+                                                                    TextOverflow.ellipsis,
+                                                              ),
+                                                              const SizedBox(height: 2),
+                                                              Text(
+                                                                "$lastSender: $lastMessageText",
+                                                                style: TextStyle(
+                                                                  color: isDarkMode
+                                                                      ? Colors.grey[400]
+                                                                      : Colors.grey[600],
+                                                                  fontSize: 12,
+                                                                ),
+                                                                maxLines: 1,
+                                                                overflow:
+                                                                    TextOverflow.ellipsis,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
                                     ),
                                   ],
                                 ),
                               ),
+                              // Right: Chat Page
+                              Expanded(
+                                child: selectedUserEmail == null
+                                    ? Center(
+                                        child: Text(
+                                          "Select a conversation",
+                                          style: TextStyle(
+                                              color: isDarkMode
+                                                  ? Colors.grey[400]
+                                                  : Colors.grey[600],
+                                              fontSize: 18),
+                                        ),
+                                      )
+                                    : Container(
+                                        color: backgroundColor,
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                children: [
+                                                  Expanded(
+                                                    child: _ChatMessagesWidget(
+                                                      receiverEmail: selectedUserEmail!,
+                                                      themeColor: const Color(0xFF386A53),
+                                                      scrollController: _scrollController,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Divider(
+                                                    color: Color(0xFF386A53),
+                                                    thickness: 1,
+                                                    height: 1,
+                                                  ),
+                                                  _ChatInputWidget(
+                                                    onSend: (text) {},
+                                                    receiverEmail: selectedUserEmail!,
+                                                    currentUserEmail:
+                                                        _authService.currentUser?.email ?? '',
+                                                    messageController: _messageController,
+                                                    pickAndSendImage: _pickAndSendImage,
+                                                    sendMessage: _sendMessage,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                              ),
                             ],
-                          ),
-                        ),
-                ),
-              ],
-            ),
-      ),
-    );
+                          );
+    }
   }
 }
 

@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:treehouse/auth/login_page.dart';
-import 'package:treehouse/components/text_field.dart';
+import 'package:treehouse/components/text_form_field.dart';
+import 'package:treehouse/components/landing_header.dart';
 import '../components/button.dart';
 import '../pages/explore_page.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -22,74 +23,87 @@ class _RegisterPageState extends State<RegisterPage> {
   final emailTextController = TextEditingController();
   final passwordTextController = TextEditingController();
   final confirmPasswordTextController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+  bool _emailSent = false;
+  String? _generalError;
 
   bool isValidEducationalEmail(String email) {
     return RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.edu$').hasMatch(email);
   }
 
-  /*
-  Future<void> signInWithGoogle() async {
-    try {
-      final GoogleSignIn googleSignIn = GoogleSignIn(
-        clientId: kIsWeb
-            ? '545022405037-drtlnh2b0o6j8uoc0te2t20pft5fisie.apps.googleusercontent.com'
-            : null,
-        scopes: ['email', 'profile'],
+  String? _validateEmail(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Please enter your email address';
+    }
+    if (!isValidEducationalEmail(value.trim())) {
+      return 'Please enter a valid .edu email address';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter a password';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
+
+  String? _validateConfirmPassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please confirm your password';
+    }
+    if (value != passwordTextController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+
+  Future<void> _checkEmailVerification() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    await user.reload();
+    if (user.emailVerified) {
+      if (!mounted) return;
+      setState(() {
+        _emailSent = false;
+        _isLoading = false;
+      });
+      Navigator.pushReplacement(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation1, animation2) => ExplorePage(),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+        ),
       );
-
-      GoogleSignInAccount? googleUser = await googleSignIn.signInSilently();
-      googleUser ??= await googleSignIn.signIn(); // fallback if not already signed in
-
-      if (googleUser == null) return;
-
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      final user = userCredential.user;
-
-      if (user != null) {
-        final userDoc = FirebaseFirestore.instance.collection('users').doc(user.uid);
-        final docSnapshot = await userDoc.get();
-        if (!docSnapshot.exists) {
-          await userDoc.set({
-            'email': user.email,
-            'name': user.displayName,
-            'photoUrl': user.photoURL,
-          });
-        }
-
-        if (!mounted) return;
-
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => ExplorePage()),
-        );
-      }
-    } catch (e) {
-      print("Google sign-in error: $e");
+    } else {
+      if (!mounted) return;
+      setState(() {
+        _generalError = 'Email not verified yet. Please check your inbox and click the verification link.';
+      });
     }
   }
-  */
 
   Future<void> signUp() async {
-    if (passwordTextController.text != confirmPasswordTextController.text) {
-      displayMessage("Passwords do not match!");
+    if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    showDialog(
-      context: context,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
+    setState(() {
+      _isLoading = true;
+      _generalError = null;
+      _emailSent = false;
+    });
 
     try {
       UserCredential userCredential =
           await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailTextController.text,
+        email: emailTextController.text.trim(),
         password: passwordTextController.text,
       );
 
@@ -102,52 +116,185 @@ class _RegisterPageState extends State<RegisterPage> {
         await user.sendEmailVerification();
 
         if (!mounted) return;
-        Navigator.pop(context); // Close loading
-
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Verify your email'),
-            content: const Text(
-                'A verification email has been sent. Please verify your account.'),
-            actions: [
-              TextButton(
-                onPressed: () async {
-                  if (!mounted) return;
-                  await user.reload();
-                  if (FirebaseAuth.instance.currentUser!.emailVerified) {
-                    if (!mounted) return;
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation1, animation2) => ExplorePage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Email not verified yet.')),
-                    );
-                  }
-                },
-                child: const Text('I have verified'),
-              ),
-            ],
-          ),
-        );
+        setState(() {
+          _isLoading = false;
+          _emailSent = true;
+          _generalError = null;
+        });
       }
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        if (e.code == 'weak-password') {
+          _generalError = 'The password provided is too weak.';
+        } else if (e.code == 'email-already-in-use') {
+          _generalError = 'An account already exists with this email address.';
+        } else if (e.code == 'invalid-email') {
+          _generalError = 'Invalid email format.';
+        } else {
+          _generalError = 'An error occurred during registration. Please try again.';
+        }
+      });
     } catch (e) {
-      Navigator.pop(context);
-      displayMessage('An error occurred. ${e.toString()}');
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _generalError = 'An error occurred during registration. Please try again.';
+      });
     }
   }
 
-  void displayMessage(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(title: Text(message)),
-    );
+  Future<void> _signInWithGoogle() async {
+    setState(() {
+      _isLoading = true;
+      _generalError = null;
+      _emailSent = false;
+    });
+
+    try {
+      // Configure GoogleSignIn with proper settings for web
+      // For Flutter web, the client ID is set in web/index.html as a meta tag:
+      // <meta name="google-signin-client_id" content="YOUR_CLIENT_ID">
+      // The clientId parameter here is optional for web but can be used as a fallback
+      // Note: We only need 'email' scope - Firebase Auth will provide the email from the ID token
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        clientId: '545022405037-drtlnh2b0o6j8uoc0te2t20pft5fisie.apps.googleusercontent.com',
+        scopes: ['email'], // Only request email scope to avoid People API requirement
+      );
+
+      // Sign in with Google
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) {
+        // User canceled the sign-in
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
+
+      // Obtain the auth details from the request
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+
+      // Create a new credential
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      // Sign in to Firebase with the Google credential
+      final UserCredential userCredential = 
+          await FirebaseAuth.instance.signInWithCredential(credential);
+      final User? user = userCredential.user;
+
+      if (user != null) {
+        // Get email from Firebase user (most reliable source)
+        // Firebase Auth provides the email from the ID token without needing People API
+        final userEmail = user.email;
+        if (userEmail == null || userEmail.isEmpty) {
+          // Sign out from both Google and Firebase before showing error
+          await googleSignIn.signOut();
+          await FirebaseAuth.instance.signOut();
+          if (!mounted) return;
+          setState(() {
+            _isLoading = false;
+            _generalError = 'Unable to retrieve email address. Please try again.';
+          });
+          return;
+        }
+        
+        // Check if email is a .edu email
+        if (!isValidEducationalEmail(userEmail)) {
+          // Sign out from both Google and Firebase before showing error
+          await googleSignIn.signOut();
+          await FirebaseAuth.instance.signOut();
+          if (!mounted) return;
+          setState(() {
+            _isLoading = false;
+            _generalError = 'You need to sign up with a .edu email address.';
+          });
+          return;
+        }
+
+        // Check if user document exists, if not create it
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (!userDoc.exists) {
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+            'email': user.email,
+          });
+        }
+
+        if (!mounted) return;
+        // Navigate to explore page
+        Navigator.pushReplacement(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation1, animation2) => ExplorePage(),
+            transitionDuration: Duration.zero,
+            reverseTransitionDuration: Duration.zero,
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      // Sign out from Google and Firebase on any auth error
+      try {
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        await googleSignIn.signOut();
+        await FirebaseAuth.instance.signOut();
+      } catch (_) {}
+      
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        if (e.code == 'account-exists-with-different-credential') {
+          _generalError = 'An account already exists with this email address using a different sign-in method.';
+        } else if (e.code == 'invalid-credential') {
+          _generalError = 'The credential is invalid. Please try again.';
+        } else {
+          _generalError = 'An error occurred during Google sign-in: ${e.message}';
+        }
+      });
+    } catch (e) {
+      // Handle ClientException and other errors
+      String errorMessage = e.toString();
+      
+      // Check if this is a People API error
+      if (errorMessage.contains('People API') || errorMessage.contains('SERVICE_DISABLED')) {
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+          _generalError = 'Google People API is not enabled. Please enable it in Google Cloud Console.';
+        });
+        return;
+      }
+      
+      // Sign out from Google and Firebase on any error
+      try {
+        final GoogleSignIn googleSignIn = GoogleSignIn();
+        await googleSignIn.signOut();
+        await FirebaseAuth.instance.signOut();
+      } catch (_) {}
+      
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _generalError = 'An error occurred during Google sign-in. Please try again.';
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    emailTextController.dispose();
+    passwordTextController.dispose();
+    confirmPasswordTextController.dispose();
+    super.dispose();
   }
 
   @override
@@ -155,159 +302,359 @@ class _RegisterPageState extends State<RegisterPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: isDark ? AppColors.primaryGreenDark : AppColors.primaryGreen,
-      body: Center(
-        child: SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 420),
-            child: Card(
-              elevation: 8,
-              shadowColor: Colors.black.withOpacity(0.2),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24)),
-              color: isDark ? AppColors.cardDark : AppColors.cardLight,
-              child: Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 8),
-                    Text(
-                      "Welcome to Treehouse",
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
-                        letterSpacing: -1,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Create your account",
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                        fontWeight: FontWeight.normal,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    Stack(
-                      children: [
-                        MyTextField(
-                          controller: emailTextController,
-                          hintText: "College Email (.edu)",
-                          obscureText: false,
-                        ),
-                        Positioned(
-                          right: 6,
-                          top: 2,
-                          child: IconButton(
-                            icon: Icon(Icons.info_outline,
-                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, size: 20),
-                            onPressed: () {
-                              showDialog(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16)),
-                                  content: Column(
-                                    mainAxisSize: MainAxisSize.min,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Header
+            LandingHeader(
+              rightButtonText: 'Sign In',
+              onRightButtonTap: () {
+                Navigator.push(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) => const LoginPage(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
+              },
+            ),
+            
+            // Register Form
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 420),
+                    child: Card(
+                      elevation: 8,
+                      shadowColor: Colors.black.withOpacity(0.2),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24)),
+                      color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                      child: Padding(
+                        padding: const EdgeInsets.all(32.0),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(height: 8),
+                              Text(
+                                "Welcome to Treehouse",
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                                  letterSpacing: -1,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                "Create your account",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+
+                              if (_emailSent)
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryGreen.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.primaryGreen.withOpacity(0.3)),
+                                  ),
+                                  child: Column(
                                     children: [
-                                      Icon(Icons.info_outline,
-                                          color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen, size: 32),
-                                      const SizedBox(height: 10),
+                                      Icon(Icons.mark_email_read, color: AppColors.primaryGreen, size: 32),
+                                      const SizedBox(height: 8),
                                       Text(
-                                        'College Email Required',
+                                        'Verification Email Sent',
                                         style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                            color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
+                                          color: AppColors.primaryGreen,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
                                         textAlign: TextAlign.center,
                                       ),
-                                      const SizedBox(height: 10),
+                                      const SizedBox(height: 8),
                                       Text(
-                                        'We require a college email to ensure our community consists of verified college students.',
-                                        style: TextStyle(fontSize: 14),
+                                        'A verification email has been sent to ${emailTextController.text.trim()}. Please verify your account before continuing.',
+                                        style: TextStyle(
+                                          color: AppColors.textSecondaryLight,
+                                          fontSize: 14,
+                                        ),
                                         textAlign: TextAlign.center,
+                                      ),
+                                      const SizedBox(height: 12),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton(
+                                          onPressed: _checkEmailVerification,
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: AppColors.primaryGreen,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(vertical: 12),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: const Text('I have verified my email'),
+                                        ),
                                       ),
                                     ],
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: const Text('Got it'),
-                                    ),
-                                  ],
                                 ),
-                              );
-                            },
+
+                              if (_generalError != null && !_emailSent)
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.errorRed.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: AppColors.errorRed.withOpacity(0.3)),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.error_outline, color: AppColors.errorRed, size: 20),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _generalError!,
+                                          style: TextStyle(
+                                            color: AppColors.errorRed,
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                              Stack(
+                                children: [
+                                  MyTextFormField(
+                                    controller: emailTextController,
+                                    hintText: "College Email (.edu)",
+                                    obscureText: false,
+                                    validator: _validateEmail,
+                                  ),
+                                  Positioned(
+                                    right: 6,
+                                    top: 2,
+                                    child: IconButton(
+                                      icon: Icon(Icons.info_outline,
+                                          color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight, size: 20),
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (context) => AlertDialog(
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(16)),
+                                            content: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.info_outline,
+                                                    color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen, size: 32),
+                                                const SizedBox(height: 10),
+                                                Text(
+                                                  'College Email Required',
+                                                  style: TextStyle(
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 18,
+                                                      color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 10),
+                                                Text(
+                                                  'We require a college email to ensure our community consists of verified college students.',
+                                                  style: TextStyle(fontSize: 14),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: const Text('Got it'),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              MyTextFormField(
+                                controller: passwordTextController,
+                                hintText: "Password",
+                                obscureText: true,
+                                validator: _validatePassword,
+                              ),
+                              const SizedBox(height: 16),
+                              MyTextFormField(
+                                controller: confirmPasswordTextController,
+                                hintText: "Confirm Password",
+                                obscureText: true,
+                                validator: _validateConfirmPassword,
+                              ),
+                              const SizedBox(height: 24),
+                              
+                              SizedBox(
+                                width: double.infinity,
+                                child: MyButton(
+                                  onTap: _isLoading ? null : signUp,
+                                  text: _isLoading ? "Creating Account..." : "Sign Up",
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              
+                              // Divider with "OR" text
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Divider(
+                                      color: isDark 
+                                          ? AppColors.borderDark.withOpacity(0.3)
+                                          : AppColors.borderLight.withOpacity(0.5),
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text(
+                                      'OR',
+                                      style: TextStyle(
+                                        color: isDark 
+                                            ? AppColors.textSecondaryDark 
+                                            : AppColors.textSecondaryLight,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    child: Divider(
+                                      color: isDark 
+                                          ? AppColors.borderDark.withOpacity(0.3)
+                                          : AppColors.borderLight.withOpacity(0.5),
+                                      thickness: 1,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Google Sign In Button
+                              SizedBox(
+                                width: double.infinity,
+                                child: OutlinedButton.icon(
+                                  onPressed: _isLoading ? null : _signInWithGoogle,
+                                  icon: kIsWeb
+                                      ? Image.network(
+                                          'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                                          height: 20,
+                                          width: 20,
+                                          errorBuilder: (context, error, stackTrace) {
+                                            return const Text(
+                                              'G',
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.blue,
+                                              ),
+                                            );
+                                          },
+                                        )
+                                      : const Icon(
+                                          Icons.login,
+                                          size: 20,
+                                        ),
+                                  label: Text(
+                                    'Sign up with Google',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: isDark 
+                                          ? AppColors.textPrimaryDark 
+                                          : AppColors.textPrimaryLight,
+                                    ),
+                                  ),
+                                  style: OutlinedButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    side: BorderSide(
+                                      color: isDark 
+                                          ? AppColors.borderDark.withOpacity(0.3)
+                                          : AppColors.borderLight.withOpacity(0.5),
+                                      width: 1.5,
+                                    ),
+                                    backgroundColor: isDark 
+                                        ? AppColors.cardDark 
+                                        : Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    "Already have an account?",
+                                    style: TextStyle(
+                                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                      fontWeight: FontWeight.w500,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  GestureDetector(
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        PageRouteBuilder(
+                                          pageBuilder:
+                                              (context, animation1, animation2) =>
+                                                  const LoginPage(),
+                                          transitionDuration: Duration.zero,
+                                          reverseTransitionDuration: Duration.zero,
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      "Login now",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                                        fontSize: 14,
+                                        decoration: TextDecoration.underline
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    MyTextField(
-                      controller: passwordTextController,
-                      hintText: "Password",
-                      obscureText: true,
-                    ),
-                    const SizedBox(height: 16),
-                    MyTextField(
-                      controller: confirmPasswordTextController,
-                      hintText: "Confirm Password",
-                      obscureText: true,
-                    ),
-                    const SizedBox(height: 24),
-
-                    SizedBox(
-                      width: double.infinity,
-                      child: MyButton(
-                        onTap: signUp,
-                        text: "Sign Up",
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Already have an account?",
-                          style: TextStyle(
-                            color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder:
-                                    (context, animation1, animation2) =>
-                                        LoginPage(),
-                                transitionDuration: Duration.zero,
-                                reverseTransitionDuration: Duration.zero,
-                              ),
-                            );
-                          },
-                          child: Text(
-                            "Login now",
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

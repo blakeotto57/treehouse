@@ -10,7 +10,7 @@ import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:treehouse/pages/feedback.dart';
-import 'package:treehouse/components/nav_bar.dart';
+import 'package:treehouse/components/professional_navbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:treehouse/theme/theme.dart';
@@ -259,7 +259,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
       drawer: customDrawer(context), // Use customDrawerContent from drawer.dart
       child: Scaffold(
       drawer: customDrawer(context),
-      appBar: Navbar(drawerKey: _drawerKey),
+      appBar: ProfessionalNavbar(drawerKey: _drawerKey),
       backgroundColor: backgroundColor,
       body: Column(
         children: [

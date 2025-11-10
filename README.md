@@ -1,6 +1,6 @@
-# workspace
+# Treehouse Connect
 
-A new Flutter project.
+Treehouse Connect is a peer-to-peer service platform exclusively for college students. Whether you're looking for academic help, personal care services, food delivery, or technical support, our platform connects you with trusted students in your community. Join thousands of students who are building connections and supporting each other.
 
 ## Getting Started
 

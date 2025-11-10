@@ -1,228 +1,549 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/models/category_model.dart';
-import 'package:treehouse/auth/login_page.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/pages/user_profile.dart';
-import 'package:treehouse/pages/user_settings.dart';
+import 'package:treehouse/models/user_post_page.dart';
+import 'package:treehouse/theme/theme.dart';
 
 Widget customDrawer(BuildContext context) {
   return Drawer(
-    child: customDrawerContent(context),
+    elevation: 0,
+    backgroundColor: Colors.transparent,
+    width: 280,
+    child: _TriagedDrawerContent(),
   );
 }
 
-Widget customDrawerContent(BuildContext context) {
-  final isDark = Theme.of(context).brightness == Brightness.dark;
-  final currentUser = FirebaseAuth.instance.currentUser!;
-  final user = currentUser.email;
+class _TriagedDrawerContent extends StatefulWidget {
+  @override
+  State<_TriagedDrawerContent> createState() => _TriagedDrawerContentState();
+}
 
-  return Container(
-    decoration: BoxDecoration(
-      color: isDark ? Colors.black : Colors.white,
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Profile section with improved spacing
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-                width: 1.0,
-              ),
+class _TriagedDrawerContentState extends State<_TriagedDrawerContent> {
+  // Map to track which categories are expanded
+  final Map<String, bool> _expandedCategories = {};
+  String? _selectedPostId;
+  String? _selectedCategory;
+
+  // Firestore collection mappings
+  final Map<String, String> _categoryCollections = {
+    'Personal Care': 'personal_care_posts',
+    'Food': 'food_posts',
+    'Photography': 'photography_posts',
+    'Academics': 'academic_posts',
+    'Technical': 'technical_posts',
+    'Errands & Moving': 'errands_moving_posts',
+    'Pet Care': 'pet_care_posts',
+    'Cleaning': 'cleaning_posts',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize all categories as collapsed
+    for (var category in CategoryModel.getCategories()) {
+      final categoryName = _getCategoryName(category);
+      _expandedCategories[categoryName] = false;
+    }
+  }
+
+  String _getCategoryName(CategoryModel category) {
+    // Map categories by their known names in order
+    final knownCategories = [
+      'Personal Care', 'Food', 'Photography', 'Academics', 
+      'Technical', 'Errands & Moving', 'Pet Care', 'Cleaning'
+    ];
+    
+    // Get the index of this category in the list
+    final categories = CategoryModel.getCategories();
+    final index = categories.indexOf(category);
+    
+    if (index >= 0 && index < knownCategories.length) {
+      return knownCategories[index];
+    }
+    
+    // Fallback: try to extract from Text widget
+    try {
+      final textData = category.name.data;
+      if (textData != null && textData.isNotEmpty) {
+        return textData;
+      }
+    } catch (e) {
+      // Ignore
+    }
+    
+    return 'Unknown';
+  }
+
+  void _toggleCategory(String categoryName) {
+    setState(() {
+      _expandedCategories[categoryName] = !(_expandedCategories[categoryName] ?? false);
+    });
+  }
+
+  void _selectPost(String category, String postId, String firestoreCollection) {
+    setState(() {
+      _selectedCategory = category;
+      _selectedPostId = postId;
+    });
+    Navigator.pop(context);
+    // Navigate to the post page
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation1, animation2) => UserPostPage(
+          postId: postId,
+          categoryColor: _getCategoryColor(category),
+          firestoreCollection: firestoreCollection,
+        ),
+        transitionDuration: const Duration(milliseconds: 200),
+        reverseTransitionDuration: const Duration(milliseconds: 200),
+      ),
+    );
+  }
+
+  Color _getCategoryColor(String categoryName) {
+    final categories = CategoryModel.getCategories();
+    for (var cat in categories) {
+      if (_getCategoryName(cat) == categoryName) {
+        return cat.boxColor;
+      }
+    }
+    return AppColors.primaryGreen;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        border: Border(
+          right: BorderSide(
+            color: isDark 
+                ? AppColors.borderDark.withOpacity(0.3) 
+                : AppColors.borderLight.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Section
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.folder_outlined,
+                  size: 20,
+                  color: isDark 
+                      ? AppColors.textSecondaryDark 
+                      : AppColors.textSecondaryLight,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'CATEGORIES',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isDark 
+                        ? AppColors.textSecondaryDark 
+                        : AppColors.textSecondaryLight,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
             ),
           ),
-          child: Row(
-            children: [
-              FutureBuilder<QuerySnapshot>(
-                future: FirebaseFirestore.instance
-                    .collection('users')
-                    .where('email', isEqualTo: user)
-                    .limit(1)
-                    .get(),
-                builder: (context, snapshot) {
-                  String? photoUrl;
-                  if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                    final userData =
-                        snapshot.data!.docs.first.data() as Map<String, dynamic>;
-                    photoUrl = userData['profileImageUrl'] as String?;
-                  }
-                  return CircleAvatar(
-                    backgroundColor: Colors.grey.withOpacity(0.15),
-                    radius: 20,
-                    backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                        ? NetworkImage(photoUrl)
-                        : null,
-                    child: (photoUrl == null || photoUrl.isEmpty)
-                        ? Text(
-                            user != null && user.isNotEmpty ? user[0].toUpperCase() : '?',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          )
-                        : null,
-                  );
-                },
-              ),
-              const SizedBox(width: 16), // Increased spacing
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+
+          // Expandable Categories List
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              itemCount: CategoryModel.getCategories().length,
+              itemBuilder: (context, index) {
+                final category = CategoryModel.getCategories()[index];
+                final categoryName = _getCategoryName(category);
+                final isExpanded = _expandedCategories[categoryName] ?? false;
+                final firestoreCollection = _categoryCollections[categoryName] ?? '';
+                final iconList = [
+                  Icons.spa_rounded,
+                  Icons.restaurant_rounded,
+                  Icons.camera_alt_rounded,
+                  Icons.menu_book_rounded,
+                  Icons.build_rounded,
+                  Icons.local_shipping_rounded,
+                  Icons.pets_rounded,
+                  Icons.cleaning_services_rounded,
+                ];
+                final iconColor = category.boxColor;
+
+                return _ExpandableCategorySection(
+                  categoryName: categoryName,
+                  icon: iconList.length > index ? iconList[index] : category.icon,
+                  iconColor: iconColor,
+                  isExpanded: isExpanded,
+                  isDark: isDark,
+                  firestoreCollection: firestoreCollection,
+                  selectedPostId: _selectedPostId,
+                  selectedCategory: _selectedCategory,
+                  onToggle: () => _toggleCategory(categoryName),
+                  onPostSelected: (postId) => _selectPost(
+                    categoryName,
+                    postId,
+                    firestoreCollection,
+                  ),
+                  onCategoryTap: () {
+                    Navigator.pop(context);
+                    category.onTap(context);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ExpandableCategorySection extends StatelessWidget {
+  final String categoryName;
+  final IconData icon;
+  final Color iconColor;
+  final bool isExpanded;
+  final bool isDark;
+  final String firestoreCollection;
+  final String? selectedPostId;
+  final String? selectedCategory;
+  final VoidCallback onToggle;
+  final Function(String) onPostSelected;
+  final VoidCallback onCategoryTap;
+
+  const _ExpandableCategorySection({
+    required this.categoryName,
+    required this.icon,
+    required this.iconColor,
+    required this.isExpanded,
+    required this.isDark,
+    required this.firestoreCollection,
+    required this.selectedPostId,
+    required this.selectedCategory,
+    required this.onToggle,
+    required this.onPostSelected,
+    required this.onCategoryTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      child: Column(
+        children: [
+          // Category Header - Clickable to navigate to category page
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onCategoryTap,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: isExpanded
+                      ? (isDark 
+                          ? AppColors.cardDark.withOpacity(0.5)
+                          : AppColors.cardLight.withOpacity(0.5))
+                      : Colors.transparent,
+                ),
+                child: Row(
                   children: [
-                    FutureBuilder<DocumentSnapshot>(
-                      future: FirebaseFirestore.instance
-                          .collection('users')
-                          .doc(user)
-                          .get(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return Text('Loading...');
-                        }
-                        if (snapshot.hasError || !snapshot.hasData || !snapshot.data!.exists) {
-                          return Text('Guest User');
-                        }
-                        final data =
-                            snapshot.data!.data() as Map<String, dynamic>;
-                        return Text(
-                          data['username'] ?? 'Guest User',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        );
-                      },
+                    // Chevron Icon (for visual indication of expandable state)
+                    AnimatedRotation(
+                      turns: isExpanded ? 0.25 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        Icons.keyboard_arrow_right,
+                        size: 20,
+                        color: isDark 
+                            ? AppColors.textSecondaryDark 
+                            : AppColors.textSecondaryLight,
+                      ),
                     ),
-                    Text(
-                      user ?? '',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
+                    const SizedBox(width: 8),
+                    // Category Icon
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: iconColor.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Icon(
+                        icon,
+                        size: 16,
+                        color: iconColor,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Category Name
+                    Expanded(
+                      child: Text(
+                        categoryName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: isDark 
+                              ? AppColors.textPrimaryDark 
+                              : AppColors.textPrimaryLight,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-        
-        // Section header
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 16, bottom: 8),
-          child: Text(
-            "CATEGORIES",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.grey[400] : Colors.grey[700],
-              letterSpacing: 1.2,
             ),
           ),
-        ),
+          // Expanded Posts List with Animation
+          AnimatedCrossFade(
+            firstChild: const SizedBox.shrink(),
+            secondChild: firestoreCollection.isNotEmpty
+                ? StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection(firestoreCollection)
+                        .orderBy('timestamp', descending: true)
+                        .limit(10) // Limit to 10 most recent posts
+                        .snapshots(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 40, top: 8, bottom: 8),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                            ),
+                          ),
+                        );
+                      }
 
-        // Category list with improved spacing
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            itemCount: CategoryModel.getCategories().length,
-            itemBuilder: (context, i) {
-              final category = CategoryModel.getCategories()[i];
-              final iconList = [
-                Icons.spa,
-                Icons.restaurant,
-                Icons.camera_alt,
-                Icons.menu_book,
-                Icons.build,
-                Icons.local_shipping,
-                Icons.pets,
-                Icons.cleaning_services,
-              ];
-              final iconColor = category.boxColor;
+                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                        return Padding(
+                          padding: const EdgeInsets.only(left: 40, top: 8, bottom: 8),
+                          child: Text(
+                            'No posts yet',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark 
+                                  ? AppColors.textSecondaryDark 
+                                  : AppColors.textSecondaryLight,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        );
+                      }
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4), // Add vertical spacing between items
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4), // More horizontal padding
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
+                      final posts = snapshot.data!.docs;
+
+                      return Column(
+                        children: [
+                          ...posts.map((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            final postId = doc.id;
+                            final title = data['title'] ?? 'Untitled';
+                            final comments = List<Map<String, dynamic>>.from(data['comments'] ?? []);
+                            final commentCount = comments.length;
+                            final isSelected = selectedPostId == postId && selectedCategory == categoryName;
+
+                            return _PostListItem(
+                              title: title.toString(),
+                              postId: postId,
+                              commentCount: commentCount,
+                              isSelected: isSelected,
+                              isDark: isDark,
+                              iconColor: iconColor,
+                              onTap: () => onPostSelected(postId),
+                            );
+                          }).toList(),
+                          // View all link at the bottom
+                          Padding(
+                            padding: const EdgeInsets.only(left: 40, top: 4, bottom: 8),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: onCategoryTap,
+                                borderRadius: BorderRadius.circular(6),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.list_outlined,
+                                        size: 14,
+                                        color: iconColor,
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'View all posts',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: iconColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Icon(
+                                        Icons.chevron_right,
+                                        size: 14,
+                                        color: iconColor,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  )
+                : const SizedBox.shrink(),
+            crossFadeState: isExpanded 
+                ? CrossFadeState.showSecond 
+                : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PostListItem extends StatelessWidget {
+  final String title;
+  final String postId;
+  final int commentCount;
+  final bool isSelected;
+  final bool isDark;
+  final Color iconColor;
+  final VoidCallback onTap;
+
+  const _PostListItem({
+    required this.title,
+    required this.postId,
+    required this.commentCount,
+    required this.isSelected,
+    required this.isDark,
+    required this.iconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final displayTitle = title.length > 25 ? '${title.substring(0, 25)}...' : title;
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Semantics(
+          button: true,
+          selected: isSelected,
+          label: '$displayTitle${commentCount > 0 ? ", $commentCount comments" : ""}',
+          child: Container(
+            margin: const EdgeInsets.only(left: 40, right: 8, top: 2, bottom: 2),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              color: isSelected
+                  ? (isDark 
+                      ? AppColors.primaryGreenDark.withOpacity(0.3)
+                      : AppColors.primaryGreenLight.withOpacity(0.2))
+                  : Colors.transparent,
+              border: isSelected
+                  ? Border.all(
+                      color: iconColor.withOpacity(0.4),
+                      width: 1.5,
+                    )
+                  : null,
+            ),
+            child: Row(
+              children: [
+                // Document Icon
+                Icon(
+                  Icons.description_outlined,
+                  size: 16,
+                  color: isSelected 
+                      ? iconColor 
+                      : (isDark 
+                          ? AppColors.textSecondaryDark 
+                          : AppColors.textSecondaryLight),
+                ),
+                const SizedBox(width: 10),
+                // Post Title
+                Expanded(
+                  child: Text(
+                    displayTitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      color: isSelected
+                          ? (isDark 
+                              ? AppColors.primaryGreenLight 
+                              : AppColors.primaryGreenDark)
+                          : (isDark 
+                              ? AppColors.textPrimaryDark 
+                              : AppColors.textPrimaryLight),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Comment Count Badge
+                if (commentCount > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: iconColor.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(8),
+                      color: isDark 
+                          ? AppColors.cardDark 
+                          : AppColors.cardLight,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isDark 
+                            ? AppColors.borderDark.withOpacity(0.3)
+                            : AppColors.borderLight.withOpacity(0.5),
+                      ),
                     ),
-                    child: Icon(
-                      iconList.length > i ? iconList[i] : category.icon,
-                      size: 22,
-                      color: iconColor,
+                    child: Text(
+                      commentCount > 99 ? '99+' : commentCount.toString(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: isDark 
+                            ? AppColors.textSecondaryDark 
+                            : AppColors.textSecondaryLight,
+                      ),
                     ),
                   ),
-                  title: category.name,
-                  titleTextStyle: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: isDark ? Colors.white : Colors.black,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  hoverColor: category.boxColor.withOpacity(0.15),
-                  focusColor: category.boxColor.withOpacity(0.2),
-                  tileColor: Colors.transparent, // Ensures the base color is transparent
-                  selectedTileColor: category.boxColor.withOpacity(0.2), // For selected state
-                  onTap: () {
-                    Navigator.pop(context);
-                    category.onTap(context);
-                  },
-                ),
-              );
-            },
+              ],
+            ),
           ),
         ),
-        
-        // Footer section with sign out
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-          decoration: BoxDecoration(
-            border: Border(
-              top: BorderSide(
-                color: isDark ? Colors.grey[800]! : Colors.grey[200]!,
-                width: 1.0,
-              ),
-            ),
-          ),
-          child: ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: Icon(
-              Icons.logout,
-              color: isDark ? Colors.grey[400] : Colors.grey[700],
-            ),
-            title: Text(
-              "Sign Out",
-              style: TextStyle(
-                fontWeight: FontWeight.w500,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            onTap: () {
-              FirebaseAuth.instance.signOut();
-              Navigator.pushReplacement(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation1, animation2) => LoginPage(onTap: () {}),
-                  transitionDuration: Duration.zero,
-                  reverseTransitionDuration: Duration.zero,
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    ),
-  );
+      ),
+    );
+  }
+}
+
+// Legacy function for backward compatibility
+Widget customDrawerContent(BuildContext context) {
+  return _TriagedDrawerContent();
 }

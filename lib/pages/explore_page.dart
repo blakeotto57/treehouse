@@ -16,6 +16,7 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
+  final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _messageController = TextEditingController();
   bool _isPosting = false;
@@ -93,15 +94,16 @@ class _ExplorePageState extends State<ExplorePage> {
           final isDark = Theme.of(context).brightness == Brightness.dark;
           return AlertDialog(
             backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: Row(
               children: [
-                Icon(Icons.edit_note,
+                Icon(Icons.edit_note, size: 20,
                     color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen),
                 const SizedBox(width: 8),
                 Text(
                   "New Bulletin Post",
                   style: TextStyle(
+                    fontSize: 18,
                     color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
                     fontWeight: FontWeight.bold,
                   ),
@@ -109,13 +111,13 @@ class _ExplorePageState extends State<ExplorePage> {
               ],
             ),
             content: SizedBox(
-              width: 320,
+              width: 300,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: _messageController,
-                    maxLines: 5,
+                    maxLines: 4,
                     minLines: 2,
                     cursorColor: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
                     maxLength: 200,
@@ -123,26 +125,27 @@ class _ExplorePageState extends State<ExplorePage> {
                     decoration: InputDecoration(
                       hintText: "What are you offering today?",
                       hintStyle: TextStyle(
+                          fontSize: 14,
                           color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight),
                       filled: true,
                       fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(
                             color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
                             width: 1.5),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                         borderSide: BorderSide(
                             color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
                             width: 2),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
                       errorText: errorText,
                     ),
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 14,
                       color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                     ),
                     onChanged: (_) {
@@ -153,11 +156,11 @@ class _ExplorePageState extends State<ExplorePage> {
                       }
                     },
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 8),
                   Text(
                     "Keep it friendly and helpful! Posts are visible for 24 hours.",
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                     ),
                     textAlign: TextAlign.center,
@@ -168,13 +171,13 @@ class _ExplorePageState extends State<ExplorePage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text("Cancel", style: TextStyle(color: AppColors.errorRed)),
+                child: Text("Cancel", style: TextStyle(fontSize: 14, color: AppColors.errorRed)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 ),
                 onPressed: _isPosting
                     ? null
@@ -201,11 +204,11 @@ class _ExplorePageState extends State<ExplorePage> {
                       },
                 child: _isPosting
                     ? const SizedBox(
-                        width: 18,
-                        height: 18,
+                        width: 16,
+                        height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                       )
-                    : const Text("Post", style: TextStyle(fontSize: 16, color: Colors.white)),
+                    : const Text("Post", style: TextStyle(fontSize: 14, color: Colors.white)),
               ),
             ],
           );
@@ -268,250 +271,281 @@ class _ExplorePageState extends State<ExplorePage> {
 
   @override
   Widget build(BuildContext context) {
-    final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
+    final navbar = ProfessionalNavbar(drawerKey: _drawerKey);
+    final headerHeight = navbar.preferredSize.height;
 
-    return SlidingDrawer(
-      key: _drawerKey,
-      drawer: customDrawer(context),
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundLight,
-        appBar: ProfessionalNavbar(drawerKey: _drawerKey),
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
+    final topPadding = MediaQuery.of(context).padding.top;
+    final headerTotalHeight = topPadding + headerHeight;
+
+    return Scaffold(
+      backgroundColor: AppColors.backgroundLight,
+      body: Stack(
+        children: [
+          // Sliding drawer and content - full screen
+          SlidingDrawer(
+            key: _drawerKey,
+            drawer: customDrawer(context),
+            appBarHeight: headerTotalHeight,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // "Today's Posts" heading
-                const Text(
-                  "Today's Posts",
-                  style: TextStyle(
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.black87,
-                    fontFamily: 'Roboto',
-                    letterSpacing: -1,
-                  ),
-                ),
-                const SizedBox(height: 18),
-
-                // Search + Sort row
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        constraints: const BoxConstraints(maxWidth: 720),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search listings...',
-                            prefixIcon: const Icon(Icons.search),
-                            filled: true,
-                            fillColor: Colors.white,
-                            contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade200),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(color: Colors.grey.shade200),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: _sortBy,
-                          items: ['Newest', 'Oldest', 'Most Popular']
-                              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
-                              .toList(),
-                          onChanged: (v) => setState(() => _sortBy = v ?? 'Newest'),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 22),
-
-                // Cards grid
+                // Spacer for header (SafeArea + navbar)
+                SizedBox(height: headerTotalHeight),
+                // Content area
                 Expanded(
-                  child: StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance
-                        .collection('bulletin_posts')
-                        .where('timestamp',
-                            isGreaterThan: Timestamp.fromDate(
-                                DateTime.now().subtract(const Duration(hours: 24))))
-                        .snapshots(),
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
-                      if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(48.0),
-                            child: Text(
-                              "No posts available today.",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                                fontFamily: 'Roboto',
-                              ),
+                  child: SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // "Today's Posts" heading
+                          const Text(
+                            "Today's Posts",
+                            style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.black87,
+                              fontFamily: 'Roboto',
+                              letterSpacing: -0.5,
                             ),
                           ),
-                        );
-                      }
+                          const SizedBox(height: 12),
 
-                      final allPosts = snapshot.data!.docs;
-                      final filteredPosts = _filterAndSortPosts(allPosts);
-
-                      if (filteredPosts.isEmpty) {
-                        return Center(
-                          child: Padding(
-                            padding: const EdgeInsets.all(48.0),
-                            child: Text(
-                              "No posts match your search.",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                                fontFamily: 'Roboto',
+                          // Search + Sort row
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  constraints: const BoxConstraints(maxWidth: 720),
+                                  child: TextField(
+                                    controller: _searchController,
+                                    style: const TextStyle(fontSize: 14),
+                                    decoration: InputDecoration(
+                                      hintText: 'Search listings...',
+                                      hintStyle: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                                      prefixIcon: const Icon(Icons.search, size: 20),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: Colors.grey.shade200),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _sortBy,
+                                    isDense: true,
+                                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                                    items: ['Newest', 'Oldest', 'Most Popular']
+                                        .map((s) => DropdownMenuItem(
+                                          value: s, 
+                                          child: Text(s, style: const TextStyle(fontSize: 14)),
+                                        ))
+                                        .toList(),
+                                    onChanged: (v) => setState(() => _sortBy = v ?? 'Newest'),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Cards grid
+                          Expanded(
+                            child: StreamBuilder<QuerySnapshot>(
+                              stream: FirebaseFirestore.instance
+                                  .collection('bulletin_posts')
+                                  .where('timestamp',
+                                      isGreaterThan: Timestamp.fromDate(
+                                          DateTime.now().subtract(const Duration(hours: 24))))
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                  return const Center(child: CircularProgressIndicator());
+                                }
+                                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(32.0),
+                                      child: Text(
+                                        "No posts available today.",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                          fontFamily: 'Roboto',
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                final allPosts = snapshot.data!.docs;
+                                final filteredPosts = _filterAndSortPosts(allPosts);
+
+                                if (filteredPosts.isEmpty) {
+                                  return Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(32.0),
+                                      child: Text(
+                                        "No posts match your search.",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                          fontFamily: 'Roboto',
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }
+
+                                return LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    int crossAxisCount = 1;
+                                    double width = constraints.maxWidth;
+                                    if (width >= 1100) {
+                                      crossAxisCount = 3;
+                                    } else if (width >= 700) {
+                                      crossAxisCount = 2;
+                                    } else {
+                                      crossAxisCount = 1;
+                                    }
+
+                                    return GridView.builder(
+                                      itemCount: filteredPosts.length,
+                                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount: crossAxisCount,
+                                        crossAxisSpacing: 16,
+                                        mainAxisSpacing: 16,
+                                        childAspectRatio: 0.75,
+                                      ),
+                                      itemBuilder: (context, idx) {
+                                        final postDoc = filteredPosts[idx];
+                                        final post = postDoc.data() as Map<String, dynamic>;
+                                        final timestamp = (post['timestamp'] as Timestamp).toDate();
+                                        final message = post['message'] ?? '';
+                                        final category = _getCategoryFromMessage(message);
+                                        final imageUrl = post['imageUrl'] as String?;
+
+                                        // Extract title and description from message
+                                        final lines = message.split('\n');
+                                        final title = lines.isNotEmpty
+                                            ? lines[0]
+                                            : (message.length > 30 ? message.substring(0, 30) + '...' : message);
+                                        final description = lines.length > 1
+                                            ? lines.sublist(1).join(' ')
+                                            : (message.length > 30 ? message.substring(30) : '');
+
+                                        return PostCard(
+                                          title: title,
+                                          description: description.isEmpty ? message : description,
+                                          imageUrl: imageUrl,
+                                          date: timestamp,
+                                          category: category,
+                                        );
+                                      },
+                                    );
+                                  },
+                                );
+                              },
                             ),
                           ),
-                        );
-                      }
-
-                      return LayoutBuilder(
-                        builder: (context, constraints) {
-                          int crossAxisCount = 1;
-                          double width = constraints.maxWidth;
-                          if (width >= 1100) {
-                            crossAxisCount = 3;
-                          } else if (width >= 700) {
-                            crossAxisCount = 2;
-                          } else {
-                            crossAxisCount = 1;
-                          }
-
-                          return GridView.builder(
-                            itemCount: filteredPosts.length,
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 20,
-                              mainAxisSpacing: 20,
-                              childAspectRatio: 3 / 4,
-                            ),
-                            itemBuilder: (context, idx) {
-                              final postDoc = filteredPosts[idx];
-                              final post = postDoc.data() as Map<String, dynamic>;
-                              final timestamp = (post['timestamp'] as Timestamp).toDate();
-                              final message = post['message'] ?? '';
-                              final category = _getCategoryFromMessage(message);
-                              final imageUrl = post['imageUrl'] as String?;
-
-                              // Extract title and description from message
-                              final lines = message.split('\n');
-                              final title = lines.isNotEmpty
-                                  ? lines[0]
-                                  : (message.length > 30 ? message.substring(0, 30) + '...' : message);
-                              final description = lines.length > 1
-                                  ? lines.sublist(1).join(' ')
-                                  : (message.length > 30 ? message.substring(30) : '');
-
-                              return PostCard(
-                                title: title,
-                                description: description.isEmpty ? message : description,
-                                imageUrl: imageUrl,
-                                date: timestamp,
-                                category: category,
-                              );
-                            },
-                          );
-                        },
-                      );
-                    },
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () async {
-            final user = FirebaseAuth.instance.currentUser;
-            if (user == null) return;
-
-            final query = await FirebaseFirestore.instance
-                .collection('bulletin_posts')
-                .where('userEmail', isEqualTo: user.email)
-                .get();
-
-            if (query.docs.isNotEmpty) {
-              final lastPost = query.docs.first.data() as Map<String, dynamic>;
-              final lastTimestamp = (lastPost['timestamp'] as Timestamp).toDate();
-              final now = DateTime.now();
-              final difference = now.difference(lastTimestamp);
-              if (difference.inHours < 24) {
-                final remaining = Duration(hours: 24) - difference;
-                final hours = remaining.inHours;
-                final minutes = remaining.inMinutes.remainder(60);
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      backgroundColor: AppColors.cardLight,
-                      title: const Text(
-                        "Already Posted",
-                        style: TextStyle(color: AppColors.textPrimaryLight),
-                      ),
-                      content: Text(
-                        "You already posted today.\nYou have ${hours}h ${minutes}m remaining before you can post again.",
-                        style: const TextStyle(color: AppColors.textSecondaryLight),
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            "OK",
-                            style: TextStyle(color: AppColors.primaryGreen),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-                return;
-              }
-            }
-            _showPostDialog();
-          },
-          label: const Text(
-            'New Post',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-              fontFamily: 'Roboto',
+          // Fixed header on top - always visible above drawer
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Container(
+                height: headerHeight,
+                child: navbar,
+              ),
             ),
           ),
-          icon: const Icon(Icons.add, color: Colors.white),
-          backgroundColor: AppColors.buttonGreen,
-        ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user == null) return;
+
+          final query = await FirebaseFirestore.instance
+              .collection('bulletin_posts')
+              .where('userEmail', isEqualTo: user.email)
+              .get();
+
+          if (query.docs.isNotEmpty) {
+            final lastPost = query.docs.first.data() as Map<String, dynamic>;
+            final lastTimestamp = (lastPost['timestamp'] as Timestamp).toDate();
+            final now = DateTime.now();
+            final difference = now.difference(lastTimestamp);
+            if (difference.inHours < 24) {
+              final remaining = Duration(hours: 24) - difference;
+              final hours = remaining.inHours;
+              final minutes = remaining.inMinutes.remainder(60);
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    backgroundColor: AppColors.cardLight,
+                    title: const Text(
+                      "Already Posted",
+                      style: TextStyle(fontSize: 18, color: AppColors.textPrimaryLight),
+                    ),
+                    content: Text(
+                      "You already posted today.\nYou have ${hours}h ${minutes}m remaining before you can post again.",
+                      style: const TextStyle(fontSize: 14, color: AppColors.textSecondaryLight),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          "OK",
+                          style: TextStyle(fontSize: 14, color: AppColors.primaryGreen),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              );
+              return;
+            }
+          }
+          _showPostDialog();
+        },
+        backgroundColor: AppColors.buttonGreen,
+        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }
@@ -538,20 +572,20 @@ class PostCard extends StatelessWidget {
     final dateStr = DateFormat('MMM d, h:mm a').format(date);
 
     return Material(
-      borderRadius: BorderRadius.circular(16),
-      elevation: 4,
-      shadowColor: Colors.black12,
+      borderRadius: BorderRadius.circular(12),
+      elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.08),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: imageUrl != null && imageUrl!.isNotEmpty
@@ -560,19 +594,19 @@ class PostCard extends StatelessWidget {
                         fit: BoxFit.cover,
                         loadingBuilder: (context, child, progress) {
                           if (progress == null) return child;
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
                         },
                         errorBuilder: (c, e, s) => Container(
                           color: Colors.grey[200],
                           child: Center(
-                            child: Icon(Icons.image, size: 48, color: Colors.grey[400]),
+                            child: Icon(Icons.image, size: 32, color: Colors.grey[400]),
                           ),
                         ),
                       )
                     : Container(
                         color: Colors.grey[200],
                         child: Center(
-                          child: Icon(Icons.image, size: 48, color: Colors.grey[400]),
+                          child: Icon(Icons.image, size: 32, color: Colors.grey[400]),
                         ),
                       ),
               ),
@@ -580,54 +614,54 @@ class PostCard extends StatelessWidget {
 
             // Content
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                       color: Colors.black87,
                       fontFamily: 'Roboto',
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     description,
                     style: TextStyle(
-                      fontSize: 14,
+                      fontSize: 13,
                       color: Colors.black54,
                       fontFamily: 'Roboto',
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 10),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         dateStr,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11,
                           color: Colors.grey[600],
                           fontFamily: 'Roboto',
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
                           category,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             color: Colors.green[800],
                             fontWeight: FontWeight.w600,
                             fontFamily: 'Roboto',

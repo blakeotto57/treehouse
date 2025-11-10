@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:treehouse/components/drawer.dart';
-import 'package:treehouse/components/nav_bar.dart';
+import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import '../components/user_post.dart';
 
@@ -33,7 +33,7 @@ class UserPostPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: isDark ? darkBackground : pastelGreen,
         drawer: customDrawer(context),
-        appBar: Navbar(drawerKey: _drawerKey),
+        appBar: ProfessionalNavbar(drawerKey: _drawerKey),
         body: FutureBuilder<DocumentSnapshot>(
           future: _getPostDocument(postId, firestoreCollection),
           builder: (context, snapshot) {

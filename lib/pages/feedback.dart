@@ -3,6 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:treehouse/theme/theme.dart';
+import 'package:treehouse/components/professional_navbar.dart';
+import 'package:treehouse/components/slidingdrawer.dart';
+import 'package:treehouse/components/drawer.dart';
 
 String? globalUserName;
 
@@ -104,23 +107,16 @@ class _FeedbackPageState extends State<FeedbackPage> {
     final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
     final cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
     final accent = isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen;
+    final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
 
-    return Scaffold(
-      backgroundColor: background,
-      appBar: AppBar(
-        title: const Text(
-          "Your Feedback",
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        backgroundColor: accent,
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: Center(
+    return SlidingDrawer(
+      key: _drawerKey,
+      drawer: customDrawer(context),
+      child: Scaffold(
+        backgroundColor: background,
+        drawer: customDrawer(context),
+        appBar: ProfessionalNavbar(drawerKey: _drawerKey),
+        body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 32),
           child: ConstrainedBox(
@@ -277,6 +273,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
             ),
           ),
         ),
+      ),
       ),
     );
   }

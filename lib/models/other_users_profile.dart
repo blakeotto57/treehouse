@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:treehouse/components/drawer.dart';
-import 'package:treehouse/components/nav_bar.dart';
+import 'package:treehouse/components/professional_navbar.dart';
+import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/pages/messages_page.dart';
 
 class OtherUsersProfilePage extends StatefulWidget {
@@ -144,12 +145,16 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
     final pastelGreen = const Color(0xFFF5FBF7);
     final darkBackground = const Color(0xFF181818);
     final currentUsername = FirebaseAuth.instance.currentUser?.displayName;
+    final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
 
-    return Scaffold(
-      backgroundColor: isDarkMode ? darkBackground : pastelGreen,
+    return SlidingDrawer(
+      key: _drawerKey,
       drawer: customDrawer(context),
-      appBar: const Navbar(),
-      body: Stack(
+      child: Scaffold(
+        backgroundColor: isDarkMode ? darkBackground : pastelGreen,
+        drawer: customDrawer(context),
+        appBar: ProfessionalNavbar(drawerKey: _drawerKey),
+        body: Stack(
         children: [
           FutureBuilder<QuerySnapshot>(
             future: usersCollection
@@ -557,6 +562,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
