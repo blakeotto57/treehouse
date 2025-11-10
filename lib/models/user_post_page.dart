@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
+import 'package:treehouse/theme/theme.dart';
 import '../components/user_post.dart';
 
 class UserPostPage extends StatelessWidget {
@@ -99,7 +100,7 @@ class UserPostPage extends StatelessWidget {
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.grey[900] : Colors.white,
+                          color: isDark ? AppColors.cardDark : AppColors.cardLight,
                           borderRadius: BorderRadius.circular(12),
                           border:
                               Border.all(color: categoryColor.withOpacity(0.2)),
@@ -207,7 +208,7 @@ class _CommentInputState extends State<_CommentInput> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? Colors.grey[900] : Colors.white,
+        color: isDark ? AppColors.cardDark : AppColors.cardLight,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(

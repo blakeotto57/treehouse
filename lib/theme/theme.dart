@@ -11,11 +11,11 @@ class AppColors {
   
   // Neutral Colors - Matching image
   static const Color backgroundLight = Color(0xFFFAFBF9); // Light off-white from image
-  static const Color backgroundDark = Color(0xFF121212); // True dark mode
+  static const Color backgroundDark = Color(0xFF2D2D2D); // Dark grey background
   static const Color surfaceLight = Color(0xFFFFFFFF);
-  static const Color surfaceDark = Color(0xFF1E1E1E);
+  static const Color surfaceDark = Color(0xFF3A3A3A); // Dark grey surface
   static const Color cardLight = Color(0xFFFFFFFF);
-  static const Color cardDark = Color(0xFF2C2C2C);
+  static const Color cardDark = Color(0xFF3A3A3A); // Dark grey card
   
   // Text Colors
   static const Color textPrimaryLight = Color(0xFF1A1A1A);

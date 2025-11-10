@@ -271,6 +271,7 @@ class _ExplorePageState extends State<ExplorePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final navbar = ProfessionalNavbar(drawerKey: _drawerKey);
     final headerHeight = navbar.preferredSize.height;
 
@@ -278,7 +279,7 @@ class _ExplorePageState extends State<ExplorePage> {
     final headerTotalHeight = topPadding + headerHeight;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Stack(
         children: [
           // Sliding drawer and content - full screen
@@ -301,12 +302,12 @@ class _ExplorePageState extends State<ExplorePage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // "Today's Posts" heading
-                          const Text(
+                          Text(
                             "Today's Posts",
                             style: TextStyle(
                               fontSize: 26,
                               fontWeight: FontWeight.w700,
-                              color: Colors.black87,
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
                               fontFamily: 'Roboto',
                               letterSpacing: -0.5,
                             ),
@@ -321,25 +322,42 @@ class _ExplorePageState extends State<ExplorePage> {
                                   constraints: const BoxConstraints(maxWidth: 720),
                                   child: TextField(
                                     controller: _searchController,
-                                    style: const TextStyle(fontSize: 14),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                    ),
                                     decoration: InputDecoration(
                                       hintText: 'Search listings...',
-                                      hintStyle: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                                      prefixIcon: const Icon(Icons.search, size: 20),
+                                      hintStyle: TextStyle(
+                                        fontSize: 14,
+                                        color: isDark ? AppColors.textSecondaryDark : Colors.grey[500],
+                                      ),
+                                      prefixIcon: Icon(
+                                        Icons.search,
+                                        size: 20,
+                                        color: isDark ? AppColors.textSecondaryDark : Colors.grey[500],
+                                      ),
                                       filled: true,
-                                      fillColor: Colors.white,
+                                      fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
                                       contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(10),
-                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                        borderSide: BorderSide(
+                                          color: isDark ? AppColors.borderDark : Colors.grey.shade200,
+                                        ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(10),
-                                        borderSide: BorderSide(color: Colors.grey.shade200),
+                                        borderSide: BorderSide(
+                                          color: isDark ? AppColors.borderDark : Colors.grey.shade200,
+                                        ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(10),
-                                        borderSide: const BorderSide(color: AppColors.primaryGreen, width: 2),
+                                        borderSide: BorderSide(
+                                          color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                                          width: 2,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -349,22 +367,38 @@ class _ExplorePageState extends State<ExplorePage> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
                                   borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.grey.shade200),
+                                  border: Border.all(
+                                    color: isDark ? AppColors.borderDark : Colors.grey.shade200,
+                                  ),
                                 ),
                                 child: DropdownButtonHideUnderline(
                                   child: DropdownButton<String>(
                                     value: _sortBy,
                                     isDense: true,
-                                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                    ),
+                                    dropdownColor: isDark ? AppColors.cardDark : AppColors.cardLight,
                                     items: ['Newest', 'Oldest', 'Most Popular']
                                         .map((s) => DropdownMenuItem(
                                           value: s, 
-                                          child: Text(s, style: const TextStyle(fontSize: 14)),
+                                          child: Text(
+                                            s,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                            ),
+                                          ),
                                         ))
                                         .toList(),
                                     onChanged: (v) => setState(() => _sortBy = v ?? 'Newest'),
+                                    icon: Icon(
+                                      Icons.arrow_drop_down,
+                                      color: isDark ? AppColors.textSecondaryDark : Colors.grey[600],
+                                    ),
                                   ),
                                 ),
                               ),

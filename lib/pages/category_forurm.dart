@@ -6,6 +6,7 @@ import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/components/user_post.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/professional_navbar.dart';
+import 'package:treehouse/theme/theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
@@ -137,7 +138,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
             return AlertDialog(
               insetPadding: EdgeInsets.symmetric(horizontal: 40, vertical: 40),
               contentPadding: EdgeInsets.all(24),
-              backgroundColor: isDark ? Colors.grey[900] : Colors.white,
+              backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16)),
               content: SizedBox(
@@ -494,7 +495,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                               const SizedBox(height: 16),
                               Container(
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.grey[900] : Colors.white,
+                                  color: isDark ? AppColors.cardDark : AppColors.cardLight,
                                   boxShadow: [
                                     BoxShadow(
                                       color: Colors.black.withOpacity(0.1),

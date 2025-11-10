@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/models/user_post_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class UserPost extends StatelessWidget {
   final String message;
@@ -83,8 +84,8 @@ class UserPost extends StatelessWidget {
               hoverColor: Colors.transparent,
               child: Card(
                 color: Theme.of(context).brightness == Brightness.dark
-                    ? Color(0xFF252525)
-                    : Colors.white,
+                    ? AppColors.cardDark
+                    : AppColors.cardLight,
                 margin: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

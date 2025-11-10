@@ -876,8 +876,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                                                         Brightness.dark;
                                                                 return AlertDialog(
                                                                   backgroundColor: isDark
-                                                                      ? Colors.grey[900]
-                                                                      : Colors.white,
+                                                                      ? AppColors.cardDark
+                                                                      : AppColors.cardLight,
                                                                   shape:
                                                                       RoundedRectangleBorder(
                                                                     borderRadius:
@@ -1393,11 +1393,17 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
                     decoration: InputDecoration(
                       hintText: "Type a message...",
                       hintStyle: TextStyle(
-                        color: isFocused ? Colors.grey[700] : Colors.grey[600],
+                        color: isFocused 
+                            ? (Theme.of(context).brightness == Brightness.dark 
+                                ? AppColors.textSecondaryDark 
+                                : Colors.grey[700])
+                            : (Theme.of(context).brightness == Brightness.dark 
+                                ? AppColors.textSecondaryDark 
+                                : Colors.grey[600]),
                       ),
                       filled: true,
                       fillColor: Theme.of(context).brightness == Brightness.dark
-                          ? Colors.grey[800]
+                          ? AppColors.surfaceDark
                           : (isFocused ? Colors.white : Colors.grey[100]),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 18,
@@ -1447,31 +1453,39 @@ class _ChatInputWidgetState extends State<_ChatInputWidget> {
               onTap: () {}, // Prevent dismissing when tapping inside the picker
               child: SizedBox(
                 height: 250, // Adjust height as needed
-                child: EmojiPicker(
-                  onEmojiSelected: (category, emoji) => _onEmojiSelected(emoji),
-                  config: const Config(
-                    columns: 7,
-                    emojiSizeMax: 32,
-                    verticalSpacing: 8,
-                    horizontalSpacing: 8,
-                    gridPadding: EdgeInsets.all(8),
-                    bgColor: Color(0xFFF2F2F2),
-                    indicatorColor: Color(0xFF386A53),
-                    iconColor: Colors.grey,
-                    iconColorSelected: Color(0xFF386A53),
-                    backspaceColor: Color(0xFF386A53),
-                    skinToneDialogBgColor: Colors.white,
-                    enableSkinTones: true,
-                    recentsLimit: 28,
-                    noRecents: Text(
-                      'No Recents',
-                      style: TextStyle(fontSize: 20, color: Colors.black26),
-                      textAlign: TextAlign.center,
-                    ),
-                    tabIndicatorAnimDuration: kTabScrollDuration,
-                    categoryIcons: CategoryIcons(),
-                    buttonMode: ButtonMode.MATERIAL,
-                  ),
+                child: Builder(
+                  builder: (context) {
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
+                    return EmojiPicker(
+                      onEmojiSelected: (category, emoji) => _onEmojiSelected(emoji),
+                      config: Config(
+                        columns: 7,
+                        emojiSizeMax: 32,
+                        verticalSpacing: 8,
+                        horizontalSpacing: 8,
+                        gridPadding: const EdgeInsets.all(8),
+                        bgColor: isDark ? AppColors.cardDark : const Color(0xFFF2F2F2),
+                        indicatorColor: const Color(0xFF386A53),
+                        iconColor: Colors.grey,
+                        iconColorSelected: const Color(0xFF386A53),
+                        backspaceColor: const Color(0xFF386A53),
+                        skinToneDialogBgColor: isDark ? AppColors.cardDark : Colors.white,
+                        enableSkinTones: true,
+                        recentsLimit: 28,
+                        noRecents: Text(
+                          'No Recents',
+                          style: TextStyle(
+                            fontSize: 20,
+                            color: isDark ? AppColors.textSecondaryDark : Colors.black26,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        tabIndicatorAnimDuration: kTabScrollDuration,
+                        categoryIcons: CategoryIcons(),
+                        buttonMode: ButtonMode.MATERIAL,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -1507,6 +1521,7 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentUserEmail = AuthService().currentUser?.email;
     final data = message.data() as Map<String, dynamic>;
     final isMe = data['sender'] == currentUserEmail;
@@ -1519,7 +1534,9 @@ class _MessageBubble extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 12),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         decoration: BoxDecoration(
-          color: isMe ? const Color(0xFF386A53) : Colors.white,
+          color: isMe 
+              ? const Color(0xFF386A53) 
+              : (isDark ? AppColors.surfaceDark : Colors.white),
           borderRadius: BorderRadius.circular(18),
           boxShadow: [
             BoxShadow(
@@ -1565,7 +1582,9 @@ class _MessageBubble extends StatelessWidget {
               Text(
                 text,
                 style: TextStyle(
-                  color: isMe ? Colors.white : Colors.black87,
+                  color: isMe 
+                      ? Colors.white 
+                      : (isDark ? AppColors.textPrimaryDark : Colors.black87),
                   fontSize: 16,
                 ),
               ),

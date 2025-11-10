@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class UserSearch extends StatefulWidget {
   const UserSearch({super.key});
@@ -225,6 +226,7 @@ class _UserSearchState extends State<UserSearch> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return CompositedTransformTarget(
       link: _layerLink,
       child: Padding(
@@ -234,28 +236,37 @@ class _UserSearchState extends State<UserSearch> {
           child: TextField(
             controller: _controller,
             focusNode: _focusNode,
-            cursorColor: const Color(0xFF386A53),
+            cursorColor: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+            style: TextStyle(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+            ),
             decoration: InputDecoration(
               hintText: 'Search users by username...',
-              hintStyle: const TextStyle(color: Colors.grey),
+              hintStyle: TextStyle(
+                color: isDark ? AppColors.textSecondaryDark : Colors.grey,
+              ),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
               contentPadding:
                   const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    BorderSide(color: Colors.green[200] ?? Colors.green),
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.borderDark : (Colors.green[200] ?? Colors.green),
+                ),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
-                borderSide:
-                    BorderSide(color: Colors.green[200] ?? Colors.green),
+                borderSide: BorderSide(
+                  color: isDark ? AppColors.borderDark : (Colors.green[200] ?? Colors.green),
+                ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
                 borderSide: BorderSide(
-                    color: Colors.green[200] ?? Colors.green, width: 2),
+                  color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                  width: 2,
+                ),
               ),
               suffixIcon: (_controller.text.isNotEmpty)
                   ? IconButton(
