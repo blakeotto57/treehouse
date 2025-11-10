@@ -459,8 +459,10 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
 
   @override
   Widget build(BuildContext context) {
-    final background =
-        isDark ? const Color(0xFF181818) : const Color(0xFFF5FBF7);
+    // Match the header background color exactly
+    final background = isDark 
+        ? AppColors.backgroundDark 
+        : AppColors.backgroundLight;
 
     final navbar = ProfessionalNavbar(drawerKey: _drawerKey);
     final headerHeight = navbar.preferredSize.height;
