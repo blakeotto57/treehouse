@@ -1,18 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/models/user_post_page.dart';
 import 'package:treehouse/theme/theme.dart';
+import 'package:treehouse/theme/drawer_width_provider.dart';
 
 Widget customDrawer(BuildContext context) {
-  return Drawer(
-    elevation: 0,
-    backgroundColor: Colors.transparent,
-    width: 220,
-    child: _TriagedDrawerContent(),
+  return Consumer<DrawerWidthProvider>(
+    builder: (context, widthProvider, child) {
+      return Drawer(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        width: widthProvider.drawerWidth,
+        child: _TriagedDrawerContent(),
+      );
+    },
   );
 }
 

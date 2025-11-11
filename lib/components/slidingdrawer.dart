@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:treehouse/theme/drawer_width_provider.dart';
+import 'package:treehouse/theme/theme.dart';
 
 // Global state to track if drawer should be open
 class DrawerState {
@@ -112,12 +115,9 @@ class SlidingDrawerState extends State<SlidingDrawer> {
     final headerTotalHeight = topPadding + appBarHeight;
     final contentHeight = height - headerTotalHeight;
     
-    // Calculate drawer width with constraints
-    final calculatedRatioWidth = width * widget.drawerRatio;
-    final drawerWidth = calculatedRatioWidth.clamp(
-      widget.minDrawerWidth,
-      widget.maxDrawerWidth,
-    );
+    // Get drawer width from provider
+    final widthProvider = Provider.of<DrawerWidthProvider>(context);
+    final drawerWidth = widthProvider.drawerWidth;
 
     return SizedBox(
       width: width,
@@ -139,6 +139,12 @@ class SlidingDrawerState extends State<SlidingDrawer> {
               child: widget.drawer,
             ),
           ),
+          // Resize handle - only visible when drawer is open
+          if (_opened)
+            _DrawerResizeHandle(
+              top: headerTotalHeight,
+              height: contentHeight,
+            ),
           // Main content - constrained to fit between drawer and right edge
           AnimatedPositioned(
             height: height,
@@ -154,6 +160,118 @@ class SlidingDrawerState extends State<SlidingDrawer> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// Resizable handle widget for the drawer
+class _DrawerResizeHandle extends StatefulWidget {
+  final double top;
+  final double height;
+
+  const _DrawerResizeHandle({
+    required this.top,
+    required this.height,
+  });
+
+  @override
+  State<_DrawerResizeHandle> createState() => _DrawerResizeHandleState();
+}
+
+class _DrawerResizeHandleState extends State<_DrawerResizeHandle> {
+  bool _isHovering = false;
+  bool _isDragging = false;
+  double _dragStartX = 0;
+  double _dragStartWidth = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final widthProvider = Provider.of<DrawerWidthProvider>(context);
+
+    return Positioned(
+      left: widthProvider.drawerWidth - 3,
+      top: widget.top,
+      height: widget.height,
+      width: 6, // Wider hit area for easier interaction
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onPanStart: (details) {
+          setState(() {
+            _isDragging = true;
+            _dragStartX = details.globalPosition.dx;
+            _dragStartWidth = widthProvider.drawerWidth;
+          });
+        },
+        onPanUpdate: (details) {
+          if (_isDragging) {
+            final deltaX = details.globalPosition.dx - _dragStartX;
+            final newWidth = (_dragStartWidth + deltaX).clamp(
+              widthProvider.minWidth,
+              widthProvider.maxWidth,
+            );
+            widthProvider.setDrawerWidth(newWidth);
+          }
+        },
+        onPanEnd: (details) {
+          setState(() {
+            _isDragging = false;
+            _isHovering = false;
+          });
+        },
+        onPanCancel: () {
+          setState(() {
+            _isDragging = false;
+            _isHovering = false;
+          });
+        },
+        child: MouseRegion(
+          cursor: SystemMouseCursors.resizeColumn,
+          onEnter: (_) {
+            setState(() {
+              _isHovering = true;
+            });
+          },
+          onExit: (_) {
+            if (!_isDragging) {
+              setState(() {
+                _isHovering = false;
+              });
+            }
+          },
+          child: Container(
+            color: Colors.transparent,
+            child: Center(
+              child: Container(
+                width: _isHovering || _isDragging ? 3 : 2,
+                height: double.infinity,
+                margin: EdgeInsets.symmetric(vertical: _isHovering || _isDragging ? 4 : 8),
+                decoration: BoxDecoration(
+                  color: _isHovering || _isDragging
+                      ? (isDark 
+                          ? AppColors.primaryGreenLight.withOpacity(0.9)
+                          : AppColors.primaryGreen.withOpacity(0.9))
+                      : (isDark 
+                          ? AppColors.borderDark.withOpacity(0.4)
+                          : AppColors.borderLight.withOpacity(0.5)),
+                  borderRadius: BorderRadius.circular(1.5),
+                  boxShadow: _isHovering || _isDragging
+                      ? [
+                          BoxShadow(
+                            color: (isDark 
+                                ? AppColors.primaryGreenLight 
+                                : AppColors.primaryGreen).withOpacity(0.4),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:treehouse/auth/login_page.dart';
 import 'package:treehouse/auth/register_page.dart';
 import 'package:treehouse/theme/theme.dart';
 import 'package:treehouse/theme/theme_provider.dart';
+import 'package:treehouse/theme/drawer_width_provider.dart';
 import 'package:treehouse/auth/auth.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/pages/user_profile.dart';
@@ -50,8 +51,11 @@ void main() async {
   }
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => ThemeProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
+        ChangeNotifierProvider(create: (context) => DrawerWidthProvider()),
+      ],
       child: const MyApp(),
     ),
   ); // Run the app after Firebase is initialized
