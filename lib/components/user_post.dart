@@ -52,346 +52,196 @@ class UserPost extends StatelessWidget {
 
         // Format date and time
         final postDate = timestamp.toDate();
-        final now = DateTime.now();
-        String dateTimeString;
-        if (postDate.year == now.year &&
-            postDate.month == now.month &&
-            postDate.day == now.day) {
-          dateTimeString = DateFormat('h:mm a').format(postDate);
-        } else {
-          dateTimeString = DateFormat('MMM d, y').format(postDate);
-        }
 
-        return Stack(
-          children: [
-            InkWell(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) => UserPostPage(
-                      postId: documentId,
-                      categoryColor: forumIconColor,
-                      firestoreCollection: category,
-                    ),
-                    transitionDuration: Duration.zero,
-                    reverseTransitionDuration: Duration.zero,
+        return Card(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.cardDark
+              : AppColors.cardLight,
+          margin: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          elevation: 2,
+          shadowColor: Colors.black.withOpacity(0.08),
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                PageRouteBuilder(
+                  pageBuilder: (context, animation1, animation2) => UserPostPage(
+                    postId: documentId,
+                    categoryColor: forumIconColor,
+                    firestoreCollection: category,
                   ),
-                );
-              },
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-              hoverColor: Colors.transparent,
-              child: Card(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.cardDark
-                    : AppColors.cardLight,
-                margin: EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: forumIconColor.withOpacity(0.2),
-                    width: 1,
-                  ),
+                  transitionDuration: Duration.zero,
+                  reverseTransitionDuration: Duration.zero,
                 ),
-                elevation: 3,
-                shadowColor: forumIconColor.withOpacity(0.2),
-                child: Column(
-                  children: [
-                    // Post content
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 0, 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header with user info
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // User profile picture and username wrapped in InkWell
-                              InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      pageBuilder: (context, animation1, animation2) =>
-                                          OtherUsersProfilePage(username: user),
-                                      transitionDuration: Duration.zero,
-                                      reverseTransitionDuration: Duration.zero,
-                                    ),
-                                  );
-                                },
-                                hoverColor: Colors.transparent,
-                                focusColor: Colors.transparent,
-                                highlightColor: Colors.transparent,
-                                splashColor: Colors.transparent,
-                                child: Row(
-                                  children: [
-                                    // User profile picture
-                                    FutureBuilder<QuerySnapshot>(
-                                      future: FirebaseFirestore.instance
-                                          .collection('users')
-                                          .where('username', isEqualTo: user)
-                                          .limit(1)
-                                          .get(),
-                                      builder: (context, userSnapshot) {
-                                        String? photoUrl;
-                                        if (userSnapshot.hasData &&
-                                            userSnapshot
-                                                .data!.docs.isNotEmpty) {
-                                          final userData = userSnapshot
-                                              .data!.docs.first
-                                              .data() as Map<String, dynamic>;
-                                          photoUrl = userData['profileImageUrl']
-                                              as String?;
-                                        }
-                                        return CircleAvatar(
-                                          backgroundColor:
-                                              forumIconColor.withOpacity(0.2),
-                                          radius: 12,
-                                          backgroundImage: photoUrl != null &&
-                                                  photoUrl.isNotEmpty
-                                              ? NetworkImage(photoUrl)
-                                              : null,
-                                          child: (photoUrl == null ||
-                                                  photoUrl.isEmpty)
-                                              ? Text(
-                                                  user.isNotEmpty
-                                                      ? user[0].toUpperCase()
-                                                      : '?',
-                                                  style: TextStyle(
-                                                    color: forumIconColor,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                )
-                                              : null,
-                                        );
-                                      },
-                                    ),
-                                    const SizedBox(width: 10),
-                                    // Username and timestamp
-                                    Row(
-                                      children: [
-                                        Text(
-                                          user, // Username
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                            color: Theme.of(context).brightness == Brightness.dark
-                                                ? Colors.white
-                                                : Colors.black87,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        const Text(
-                                          "•",
-                                          style: TextStyle(
-                                            color: Colors.grey,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          timeAgo(postDate), // Format the timestamp
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // User initial circle
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation1, animation2) =>
+                              OtherUsersProfilePage(username: user),
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: FutureBuilder<QuerySnapshot>(
+                      future: FirebaseFirestore.instance
+                          .collection('users')
+                          .where('username', isEqualTo: user)
+                          .limit(1)
+                          .get(),
+                      builder: (context, userSnapshot) {
+                        String? photoUrl;
+                        if (userSnapshot.hasData &&
+                            userSnapshot.data!.docs.isNotEmpty) {
+                          final userData = userSnapshot.data!.docs.first
+                              .data() as Map<String, dynamic>;
+                          photoUrl = userData['profileImageUrl'] as String?;
+                        }
+                        return Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: forumIconColor,
+                            shape: BoxShape.circle,
+                          ),
+                          child: photoUrl != null && photoUrl.isNotEmpty
+                              ? ClipOval(
+                                  child: Image.network(
+                                    photoUrl,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Center(
+                                        child: Text(
+                                          user.isNotEmpty
+                                              ? user[0].toUpperCase()
+                                              : '?',
                                           style: const TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 12,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
                                           ),
                                         ),
-                                      ],
+                                      );
+                                    },
+                                  ),
+                                )
+                              : Center(
+                                  child: Text(
+                                    user.isNotEmpty
+                                        ? user[0].toUpperCase()
+                                        : '?',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
                                     ),
-                                  ],
-                                ),
-                              ),
-                              const Spacer(), // Push the following items to the right side
-                              // Category badge
-                              Container(
-                                padding: EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: forumIconColor.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: forumIconColor.withOpacity(0.3),
-                                    width: 1,
                                   ),
                                 ),
-                                child: Text(
-                                  category,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: forumIconColor,
-                                  ),
-                                ),
-                              ),
-                              // Replace the IconButton with PopupMenuButton
-                              PopupMenuButton<String>(
-                                icon: const Icon(Icons.more_vert),
-                                padding: EdgeInsets.zero,
-                                onSelected: (value) {
-                                  switch (value) {
-                                    case 'send':
-                                      _showSendToUserDialog(context);
-                                      break;
-                                    case 'delete':
-                                      // Handle delete post
-                                      break;
-                                    case 'report':
-                                      // Handle report post
-                                      break;
-                                    case 'save':
-                                      // Handle save post
-                                      break;
-                                  }
-                                },
-                                itemBuilder: (context) {
-                                  final List<PopupMenuEntry<String>> options = [
-                                    const PopupMenuItem<String>(
-                                      value: 'send',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.send, size: 20),
-                                          SizedBox(width: 8),
-                                          Text('Send to User'),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem<String>(
-                                      value: 'report',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.flag_outlined, size: 20),
-                                          SizedBox(width: 8),
-                                          Text('Report'),
-                                        ],
-                                      ),
-                                    ),
-                                    const PopupMenuItem<String>(
-                                      value: 'save',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.bookmark_border, size: 20),
-                                          SizedBox(width: 8),
-                                          Text('Save'),
-                                        ],
-                                      ),
-                                    ),
-                                  ];
-
-                                  // Add delete option only if current user is the post owner
-                                  if (FirebaseAuth.instance.currentUser?.email == user) {
-                                    options.insert(1, const PopupMenuItem<String>(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.delete, color: Colors.red, size: 20),
-                                          SizedBox(width: 8),
-                                          Text('Delete', style: TextStyle(color: Colors.red)),
-                                        ],
-                                      ),
-                                    ));
-                                  }
-
-                                  return options;
-                                },
-                              ),
-                            ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Post content
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Post title/question
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                            color: forumIconColor,
+                            height: 1.3,
                           ),
-                          SizedBox(height: 16),
-                          // Post title in bold
-                          Text(
-                            title,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white
-                                  : Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 8),
-                          // Post message/content
-                          Text(
-                            message,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: Theme.of(context).brightness ==
-                                      Brightness.dark
-                                  ? Colors.white70
-                                  : Colors.black87,
-                            ),
-                          ),
-                          SizedBox(height: 16),
-                          // Actions row (likes, comments)
-                          Row(
-                            children: [
-                              // Like button
-                              InkWell(
-                                onTap: () => toggleLike(likes, isLiked),
-                                borderRadius: BorderRadius.circular(20),
-                                child: Padding(
-                                  padding: EdgeInsets.all(0),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        isLiked
-                                            ? Icons.favorite
-                                            : Icons.favorite_border,
-                                        size: 18,
-                                        color:
-                                            isLiked ? Colors.red : Colors.grey,
-                                      ),
-                                      SizedBox(width: 4),
-                                      Text(
-                                        '${likes.length}',
-                                        style: TextStyle(
-                                          color: isLiked
-                                              ? Colors.red
-                                              : Colors.grey,
-                                          fontWeight: isLiked
-                                              ? FontWeight.bold
-                                              : FontWeight.normal,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 8),
+                        // Timestamp and replies
+                        StreamBuilder<QuerySnapshot>(
+                          stream: FirebaseFirestore.instance
+                              .collection(category)
+                              .doc(documentId)
+                              .collection("comments")
+                              .snapshots(),
+                          builder: (context, commentsSnapshot) {
+                            final repliesCount = commentsSnapshot.hasData
+                                ? commentsSnapshot.data!.docs.length
+                                : 0;
+                            final repliesText =
+                                repliesCount == 1 ? '1 reply' : '$repliesCount replies';
+                            final timeAgoText = timeAgo(postDate);
+                            return Text(
+                              '$timeAgoText - $repliesText',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[600],
                               ),
-                              SizedBox(width: 16),
-                              // Comments count
-                              Row(
-                                children: [
-                                  Icon(Icons.comment_outlined,
-                                      size: 18, color: Colors.grey),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    '${comments.length}',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ],
-                              ),
-                            ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Reply button
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (context, animation1, animation2) =>
+                              UserPostPage(
+                            postId: documentId,
+                            categoryColor: forumIconColor,
+                            firestoreCollection: category,
                           ),
-                        ],
+                          transitionDuration: Duration.zero,
+                          reverseTransitionDuration: Duration.zero,
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: forumIconColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      minimumSize: const Size(70, 36),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Reply',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            if (isOwner)
-              Positioned(
-                top: 0,
-                right: 0,
-                child: IconButton(
-                  icon: const Icon(Icons.delete, color: Colors.red),
-                  onPressed: () {
-                    // handle delete logic here
-                  },
-                ),
-              ),
-          ],
+          ),
         );
       },
     );
@@ -418,10 +268,15 @@ class UserPost extends StatelessWidget {
     final now = DateTime.now();
     final diff = now.difference(date);
     if (diff.inMinutes < 1) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-    if (diff.inHours < 24) return '${diff.inHours} hr ago';
-    if (diff.inDays < 7)
-      return '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago';
+    if (diff.inMinutes < 60) {
+      return diff.inMinutes == 1 ? '1 minute ago' : '${diff.inMinutes} minutes ago';
+    }
+    if (diff.inHours < 24) {
+      return diff.inHours == 1 ? '1 hour ago' : '${diff.inHours} hours ago';
+    }
+    if (diff.inDays < 7) {
+      return diff.inDays == 1 ? '1 day ago' : '${diff.inDays} days ago';
+    }
     return '${date.month}/${date.day}/${date.year}';
   }
 
