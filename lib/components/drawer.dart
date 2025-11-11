@@ -11,7 +11,7 @@ Widget customDrawer(BuildContext context) {
   return Drawer(
     elevation: 0,
     backgroundColor: Colors.transparent,
-    width: 280,
+    width: 220,
     child: _TriagedDrawerContent(),
   );
 }
@@ -134,26 +134,26 @@ class _TriagedDrawerContentState extends State<_TriagedDrawerContent> {
         children: [
           // Header Section
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
             child: Row(
               children: [
                 Icon(
                   Icons.folder_outlined,
-                  size: 20,
+                  size: 16,
                   color: isDark 
                       ? AppColors.textSecondaryDark 
                       : AppColors.textSecondaryLight,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 Text(
                   'CATEGORIES',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
                     color: isDark 
                         ? AppColors.textSecondaryDark 
                         : AppColors.textSecondaryLight,
-                    letterSpacing: 1.5,
+                    letterSpacing: 1.2,
                   ),
                 ),
               ],
@@ -163,7 +163,7 @@ class _TriagedDrawerContentState extends State<_TriagedDrawerContent> {
           // Expandable Categories List
           Expanded(
             child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               itemCount: CategoryModel.getCategories().length,
               itemBuilder: (context, index) {
                 final category = CategoryModel.getCategories()[index];
@@ -241,7 +241,7 @@ class _ExpandableCategorySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 4),
+      margin: const EdgeInsets.only(bottom: 2),
       child: Column(
         children: [
           // Category Header - Clickable to navigate to category page
@@ -249,11 +249,11 @@ class _ExpandableCategorySection extends StatelessWidget {
             color: Colors.transparent,
             child: InkWell(
               onTap: onCategoryTap,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                   color: isExpanded
                       ? (isDark 
                           ? AppColors.cardDark.withOpacity(0.5)
@@ -268,33 +268,33 @@ class _ExpandableCategorySection extends StatelessWidget {
                       duration: const Duration(milliseconds: 200),
                       child: Icon(
                         Icons.keyboard_arrow_right,
-                        size: 20,
+                        size: 18,
                         color: isDark 
                             ? AppColors.textSecondaryDark 
                             : AppColors.textSecondaryLight,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     // Category Icon
                     Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         color: iconColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(5),
                       ),
                       child: Icon(
                         icon,
-                        size: 16,
+                        size: 14,
                         color: iconColor,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                     // Category Name
                     Expanded(
                       child: Text(
                         categoryName,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: isDark 
                               ? AppColors.textPrimaryDark 
@@ -320,10 +320,10 @@ class _ExpandableCategorySection extends StatelessWidget {
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return Padding(
-                          padding: const EdgeInsets.only(left: 40, top: 8, bottom: 8),
+                          padding: const EdgeInsets.only(left: 32, top: 6, bottom: 6),
                           child: SizedBox(
-                            width: 16,
-                            height: 16,
+                            width: 14,
+                            height: 14,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(iconColor),
@@ -334,11 +334,11 @@ class _ExpandableCategorySection extends StatelessWidget {
 
                       if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                         return Padding(
-                          padding: const EdgeInsets.only(left: 40, top: 8, bottom: 8),
+                          padding: const EdgeInsets.only(left: 32, top: 6, bottom: 6),
                           child: Text(
                             'No posts yet',
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               color: isDark 
                                   ? AppColors.textSecondaryDark 
                                   : AppColors.textSecondaryLight,
@@ -372,35 +372,35 @@ class _ExpandableCategorySection extends StatelessWidget {
                           }).toList(),
                           // View all link at the bottom
                           Padding(
-                            padding: const EdgeInsets.only(left: 40, top: 4, bottom: 8),
+                            padding: const EdgeInsets.only(left: 32, top: 2, bottom: 6),
                             child: Material(
                               color: Colors.transparent,
                               child: InkWell(
                                 onTap: onCategoryTap,
                                 borderRadius: BorderRadius.circular(6),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
                                         Icons.list_outlined,
-                                        size: 14,
+                                        size: 12,
                                         color: iconColor,
                                       ),
-                                      const SizedBox(width: 6),
+                                      const SizedBox(width: 4),
                                       Text(
                                         'View all posts',
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 11,
                                           color: iconColor,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
+                                      const SizedBox(width: 3),
                                       Icon(
                                         Icons.chevron_right,
-                                        size: 14,
+                                        size: 12,
                                         color: iconColor,
                                       ),
                                     ],
@@ -446,22 +446,22 @@ class _PostListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayTitle = title.length > 25 ? '${title.substring(0, 25)}...' : title;
+    final displayTitle = title.length > 20 ? '${title.substring(0, 20)}...' : title;
     
     return Material(
       color: Colors.transparent,
-      child: InkWell(
+          child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         child: Semantics(
           button: true,
           selected: isSelected,
           label: '$displayTitle${commentCount > 0 ? ", $commentCount comments" : ""}',
           child: Container(
-            margin: const EdgeInsets.only(left: 40, right: 8, top: 2, bottom: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.only(left: 32, right: 6, top: 1, bottom: 1),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(6),
               color: isSelected
                   ? (isDark 
                       ? AppColors.primaryGreenDark.withOpacity(0.3)
@@ -479,20 +479,20 @@ class _PostListItem extends StatelessWidget {
                 // Document Icon
                 Icon(
                   Icons.description_outlined,
-                  size: 16,
+                  size: 14,
                   color: isSelected 
                       ? iconColor 
                       : (isDark 
                           ? AppColors.textSecondaryDark 
                           : AppColors.textSecondaryLight),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 // Post Title
                 Expanded(
                   child: Text(
                     displayTitle,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                       color: isSelected
                           ? (isDark 
@@ -506,16 +506,16 @@ class _PostListItem extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 // Comment Count Badge
                 if (commentCount > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
                       color: isDark 
                           ? AppColors.cardDark 
                           : AppColors.cardLight,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isDark 
                             ? AppColors.borderDark.withOpacity(0.3)
@@ -525,7 +525,7 @@ class _PostListItem extends StatelessWidget {
                     child: Text(
                       commentCount > 99 ? '99+' : commentCount.toString(),
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: isDark 
                             ? AppColors.textSecondaryDark 

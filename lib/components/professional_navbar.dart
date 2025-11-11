@@ -17,7 +17,7 @@ class ProfessionalNavbar extends StatefulWidget implements PreferredSizeWidget {
   const ProfessionalNavbar({super.key, this.drawerKey});
 
   @override
-  Size get preferredSize => const Size.fromHeight(60);
+  Size get preferredSize => const Size.fromHeight(48);
 
   @override
   State<ProfessionalNavbar> createState() => _ProfessionalNavbarState();
@@ -70,8 +70,8 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 20,
-        vertical: 8,
+        horizontal: isMobile ? 16 : 16,
+        vertical: 6,
       ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -112,7 +112,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                             child: Icon(
                               Icons.menu,
                               color: iconColor,
-                              size: 24,
+                              size: 20,
                             ),
                           ),
                           onPressed: () {
@@ -132,7 +132,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                     icon: Icon(
                       Icons.menu,
                       color: iconColor,
-                      size: 24,
+                      size: 20,
                     ),
                     onPressed: () {
                       if (widget.drawerKey?.currentState != null) {
@@ -144,7 +144,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                   );
                 },
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               // Treehouse Connect branding (matching landing page)
               MouseRegion(
                 cursor: SystemMouseCursors.click,
@@ -157,17 +157,17 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                       Text(
                         'Treehouse',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
                           letterSpacing: -0.5,
                         ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 5),
                       Text(
                         'Connect',
                         style: TextStyle(
-                          fontSize: 20,
+                          fontSize: 18,
                           fontWeight: FontWeight.w300,
                           color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                           letterSpacing: -0.3,
@@ -197,13 +197,15 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                     );
                   },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Text(
                     'Explore',
                     style: TextStyle(
                       color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      fontSize: 14,
+                      fontSize: 13,
                       fontFamily: 'Roboto',
                     ),
                   ),
@@ -221,18 +223,20 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                     );
                   },
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
                   child: Text(
                     'Messages',
                     style: TextStyle(
                       color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                      fontSize: 14,
+                      fontSize: 13,
                       fontFamily: 'Roboto',
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
                 // Profile Section
                 _buildProfileSection(context, isDark),
               ],
@@ -300,7 +304,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
               padding: EdgeInsets.zero,
               alignment: Alignment.center,
               child: CircleAvatar(
-                radius: 16,
+                radius: 14,
                 backgroundColor: isDark 
                     ? AppColors.cardDark 
                     : AppColors.backgroundLight,
@@ -315,7 +319,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                               ? AppColors.primaryGreenLight 
                               : AppColors.primaryGreen,
                           fontWeight: FontWeight.bold,
-                          fontSize: 13, // Reduced to match smaller avatar
+                          fontSize: 12,
                         ),
                       )
                     : null,
@@ -443,7 +447,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
           child: Row(
             children: [
               CircleAvatar(
-                radius: 16, // Reduced by 2 from 18
+                radius: 14,
                 backgroundColor: widget.isDark 
                     ? AppColors.cardDark 
                     : AppColors.backgroundLight,
@@ -458,12 +462,12 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
                               ? AppColors.primaryGreenLight 
                               : AppColors.primaryGreen,
                           fontWeight: FontWeight.bold,
-                          fontSize: 16, // Reduced to match smaller avatar
+                          fontSize: 14,
                         ),
                       )
                     : null,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,7 +475,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
                     Text(
                       widget.userName,
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.bold,
                         color: widget.isDark 
                             ? AppColors.textPrimaryDark 
@@ -482,7 +486,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
                     Text(
                       widget.userEmail,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         color: widget.isDark 
                             ? AppColors.textSecondaryDark 
                             : AppColors.textSecondaryLight,
@@ -522,7 +526,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
         ),
         _MenuItem(
           icon: Icons.settings_outlined,
-          label: 'Account settings',
+          label: 'Settings',
           isDark: widget.isDark,
           onTap: () {
             Navigator.of(context).pop();
@@ -605,7 +609,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
             _handleLogout(context);
           },
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
       ],
     );
   }
@@ -658,23 +662,23 @@ class _MenuItem extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           child: Row(
             children: [
               if (icon != null) ...[
                 Icon(
                   icon,
-                  size: 20,
+                  size: 18,
                   color: defaultIconColor,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 10),
               ] else
-                const SizedBox(width: 32),
+                const SizedBox(width: 28),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: defaultTextColor,
                   ),
                 ),
@@ -685,7 +689,7 @@ class _MenuItem extends StatelessWidget {
                   duration: const Duration(milliseconds: 200),
                   child: Icon(
                     Icons.chevron_right,
-                    size: 20,
+                    size: 18,
                     color: isDark 
                         ? AppColors.textSecondaryDark 
                         : AppColors.textSecondaryLight,
@@ -721,13 +725,13 @@ class _ThemeOption extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          margin: const EdgeInsets.only(left: 32),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          margin: const EdgeInsets.only(left: 28),
           child: Row(
             children: [
               Icon(
                 icon,
-                size: 18,
+                size: 16,
                 color: isSelected
                     ? (isDark 
                         ? AppColors.primaryGreenLight 
@@ -736,12 +740,12 @@ class _ThemeOption extends StatelessWidget {
                         ? AppColors.textSecondaryDark 
                         : AppColors.textSecondaryLight),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     color: isSelected
                         ? (isDark 
                             ? AppColors.primaryGreenLight 
@@ -756,7 +760,7 @@ class _ThemeOption extends StatelessWidget {
               if (isSelected)
                 Icon(
                   Icons.check,
-                  size: 18,
+                  size: 16,
                   color: isDark 
                       ? AppColors.primaryGreenLight 
                       : AppColors.primaryGreen,

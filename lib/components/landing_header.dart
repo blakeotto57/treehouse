@@ -47,8 +47,8 @@ class LandingHeader extends StatelessWidget {
 
     return Container(
       padding: EdgeInsets.symmetric(
-        horizontal: isMobile ? 20 : 32,
-        vertical: 12,
+        horizontal: isMobile ? 16 : 24,
+        vertical: 10,
       ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
@@ -75,17 +75,17 @@ class LandingHeader extends StatelessWidget {
                     Text(
                       'Treehouse',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
                         letterSpacing: -0.5,
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 5),
                     Text(
                       'Connect',
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 18,
                         fontWeight: FontWeight.w300,
                         color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
                         letterSpacing: -0.3,
@@ -100,19 +100,19 @@ class LandingHeader extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 color: AppColors.primaryGreenDark,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
               ),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: onRightButtonTap ?? () => navigateToHome(context),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Text(
                       rightButtonText ?? 'Home',
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
