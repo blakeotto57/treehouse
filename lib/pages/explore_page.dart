@@ -301,16 +301,103 @@ class _ExplorePageState extends State<ExplorePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // "Today's Posts" heading
-                          Text(
-                            "Today's Posts",
-                            style: TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w700,
-                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
-                              fontFamily: 'Roboto',
-                              letterSpacing: -0.5,
-                            ),
+                          // Header row with title and New Post button
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // "Today's Posts" heading
+                              Text(
+                                "Today's Posts",
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w700,
+                                  color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                  fontFamily: 'Roboto',
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
+                              const Spacer(),
+                              // New Post button
+                              ElevatedButton.icon(
+                                icon: const Icon(Icons.add, size: 20),
+                                label: const Text(
+                                  'New Post',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  elevation: 2,
+                                  shadowColor: (isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen).withOpacity(0.3),
+                                ),
+                                onPressed: () async {
+                                  final user = FirebaseAuth.instance.currentUser;
+                                  if (user == null) return;
+
+                                  final query = await FirebaseFirestore.instance
+                                      .collection('bulletin_posts')
+                                      .where('userEmail', isEqualTo: user.email)
+                                      .get();
+
+                                  if (query.docs.isNotEmpty) {
+                                    final lastPost = query.docs.first.data() as Map<String, dynamic>;
+                                    final lastTimestamp = (lastPost['timestamp'] as Timestamp).toDate();
+                                    final now = DateTime.now();
+                                    final difference = now.difference(lastTimestamp);
+                                    if (difference.inHours < 24) {
+                                      final remaining = Duration(hours: 24) - difference;
+                                      final hours = remaining.inHours;
+                                      final minutes = remaining.inMinutes.remainder(60);
+                                      showDialog(
+                                        context: context,
+                                        builder: (context) {
+                                          return AlertDialog(
+                                            backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+                                            title: Text(
+                                              "Already Posted",
+                                              style: TextStyle(
+                                                fontSize: 18,
+                                                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                                              ),
+                                            ),
+                                            content: Text(
+                                              "You already posted today.\nYou have ${hours}h ${minutes}m remaining before you can post again.",
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                              ),
+                                            ),
+                                            actions: [
+                                              TextButton(
+                                                onPressed: () => Navigator.pop(context),
+                                                child: Text(
+                                                  "OK",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    color: isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      );
+                                      return;
+                                    }
+                                  }
+                                  _showPostDialog();
+                                },
+                              ),
+                            ],
                           ),
                           const SizedBox(height: 12),
 
@@ -528,58 +615,6 @@ class _ExplorePageState extends State<ExplorePage> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final user = FirebaseAuth.instance.currentUser;
-          if (user == null) return;
-
-          final query = await FirebaseFirestore.instance
-              .collection('bulletin_posts')
-              .where('userEmail', isEqualTo: user.email)
-              .get();
-
-          if (query.docs.isNotEmpty) {
-            final lastPost = query.docs.first.data() as Map<String, dynamic>;
-            final lastTimestamp = (lastPost['timestamp'] as Timestamp).toDate();
-            final now = DateTime.now();
-            final difference = now.difference(lastTimestamp);
-            if (difference.inHours < 24) {
-              final remaining = Duration(hours: 24) - difference;
-              final hours = remaining.inHours;
-              final minutes = remaining.inMinutes.remainder(60);
-              showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    backgroundColor: AppColors.cardLight,
-                    title: const Text(
-                      "Already Posted",
-                      style: TextStyle(fontSize: 18, color: AppColors.textPrimaryLight),
-                    ),
-                    content: Text(
-                      "You already posted today.\nYou have ${hours}h ${minutes}m remaining before you can post again.",
-                      style: const TextStyle(fontSize: 14, color: AppColors.textSecondaryLight),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          "OK",
-                          style: TextStyle(fontSize: 14, color: AppColors.primaryGreen),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              );
-              return;
-            }
-          }
-          _showPostDialog();
-        },
-        backgroundColor: AppColors.buttonGreen,
-        child: const Icon(Icons.add, color: Colors.white, size: 24),
       ),
     );
   }

@@ -495,58 +495,30 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                           child: Column(
                             children: [
                               const SizedBox(height: 20),
-                              // Category tag and title row
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  // Category tag
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: widget.forumIconColor.withOpacity(0.15),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: widget.forumIconColor.withOpacity(0.3),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      widget.title,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: widget.forumIconColor,
-                                        letterSpacing: 0.3,
-                                      ),
+                              // Category tag
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: widget.forumIconColor.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: widget.forumIconColor.withOpacity(0.3),
+                                      width: 1,
                                     ),
                                   ),
-                                  const Spacer(),
-                                  // New Post button
-                                  ElevatedButton.icon(
-                                    icon: const Icon(Icons.add, size: 20),
-                                    label: const Text(
-                                      'New Post',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 14,
-                                        letterSpacing: 0.5,
-                                      ),
+                                  child: Text(
+                                    widget.title,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: widget.forumIconColor,
+                                      letterSpacing: 0.3,
                                     ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: widget.forumIconColor,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16, vertical: 10),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      elevation: 2,
-                                      shadowColor: widget.forumIconColor.withOpacity(0.3),
-                                    ),
-                                    onPressed: _showCreatePostDialog,
                                   ),
-                                ],
+                                ),
                               ),
                               const SizedBox(height: 16),
                               // Page title

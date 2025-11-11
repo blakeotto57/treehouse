@@ -17,7 +17,7 @@ class ProfessionalNavbar extends StatefulWidget implements PreferredSizeWidget {
   const ProfessionalNavbar({super.key, this.drawerKey});
 
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => const Size.fromHeight(60);
 
   @override
   State<ProfessionalNavbar> createState() => _ProfessionalNavbarState();
@@ -86,9 +86,11 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Left side: Menu button and branding
           Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Menu button for drawer with icon transition
               Builder(
@@ -180,6 +182,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
           // Right side: Action buttons
           if (!isMobile)
             Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Explore button
                 TextButton(
@@ -229,41 +232,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                     ),
                   ),
                 ),
-                // New Post button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      // This will be handled by the explore page's FAB or dialog
-                      Navigator.pushReplacement(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation1, animation2) => const ExplorePage(),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text(
-                      'New Post',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontFamily: 'Roboto',
-                      ),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreenDark,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 4),
+                const SizedBox(width: 12),
                 // Profile Section
                 _buildProfileSection(context, isDark),
               ],
@@ -329,8 +298,9 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
             child: Container(
               key: _profileKey,
               padding: EdgeInsets.zero,
+              alignment: Alignment.center,
               child: CircleAvatar(
-                radius: 18, // Reduced to match New Post button height (~36px diameter)
+                radius: 16,
                 backgroundColor: isDark 
                     ? AppColors.cardDark 
                     : AppColors.backgroundLight,
@@ -345,7 +315,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                               ? AppColors.primaryGreenLight 
                               : AppColors.primaryGreen,
                           fontWeight: FontWeight.bold,
-                          fontSize: 14, // Reduced to match smaller avatar
+                          fontSize: 13, // Reduced to match smaller avatar
                         ),
                       )
                     : null,
@@ -473,7 +443,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
           child: Row(
             children: [
               CircleAvatar(
-                radius: 18, // Reduced to match New Post button height (~36px diameter)
+                radius: 16, // Reduced by 2 from 18
                 backgroundColor: widget.isDark 
                     ? AppColors.cardDark 
                     : AppColors.backgroundLight,
@@ -488,7 +458,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
                               ? AppColors.primaryGreenLight 
                               : AppColors.primaryGreen,
                           fontWeight: FontWeight.bold,
-                          fontSize: 18, // Reduced to match smaller avatar
+                          fontSize: 16, // Reduced to match smaller avatar
                         ),
                       )
                     : null,
