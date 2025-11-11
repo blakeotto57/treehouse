@@ -88,8 +88,7 @@ class _TriagedDrawerContentState extends State<_TriagedDrawerContent> {
       _selectedCategory = category;
       _selectedPostId = postId;
     });
-    Navigator.pop(context);
-    // Navigate to the post page
+    // Navigate to the post page without closing drawer
     Navigator.push(
       context,
       PageRouteBuilder(
@@ -199,7 +198,7 @@ class _TriagedDrawerContentState extends State<_TriagedDrawerContent> {
                     firestoreCollection,
                   ),
                   onCategoryTap: () {
-                    Navigator.pop(context);
+                    // Navigate to category page without closing drawer
                     category.onTap(context);
                   },
                 );

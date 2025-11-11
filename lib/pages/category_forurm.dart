@@ -58,6 +58,13 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
       setState(() {}); // Triggers rebuild to update button state
     });
 
+    // Ensure drawer opens immediately if it should be open (no animation delay)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && DrawerState.shouldBeOpen && !(_drawerKey.currentState?.isOpen ?? false)) {
+        _drawerKey.currentState?.open();
+      }
+    });
+
     // Add listener to apply bold mode to future text
     bodyController.addListener(() {
       if (isBoldMode) {
