@@ -7,6 +7,7 @@ import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/theme/theme.dart';
+import 'package:treehouse/models/user_post_page.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({Key? key}) : super(key: key);
@@ -197,6 +198,8 @@ class _ExplorePageState extends State<ExplorePage> {
                           'timestamp': Timestamp.now(),
                           'userEmail': user.email,
                           'imageUrl': null, // Can be added later with image upload
+                          'likes': [], // Initialize empty likes array
+                          'comments': [], // Initialize empty comments array
                         });
                         setState(() => _isPosting = false);
                         Navigator.pop(context);
@@ -279,7 +282,7 @@ class _ExplorePageState extends State<ExplorePage> {
     final headerTotalHeight = topPadding + headerHeight;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Sliding drawer and content - full screen
@@ -560,7 +563,7 @@ class _ExplorePageState extends State<ExplorePage> {
                                         crossAxisCount: crossAxisCount,
                                         crossAxisSpacing: 16,
                                         mainAxisSpacing: 16,
-                                        childAspectRatio: 0.75,
+                                        childAspectRatio: 0.5, // Adjusted for Reddit-style layout
                                       ),
                                       itemBuilder: (context, idx) {
                                         final postDoc = filteredPosts[idx];
@@ -569,6 +572,12 @@ class _ExplorePageState extends State<ExplorePage> {
                                         final message = post['message'] ?? '';
                                         final category = _getCategoryFromMessage(message);
                                         final imageUrl = post['imageUrl'] as String?;
+                                        final userEmail = post['userEmail'] ?? '';
+                                        final postId = postDoc.id;
+                                        
+                                        // Get likes and comments from post data
+                                        final likes = List<String>.from(post['likes'] ?? []);
+                                        final comments = List<Map<String, dynamic>>.from(post['comments'] ?? []);
 
                                         // Extract title and description from message
                                         final lines = message.split('\n');
@@ -580,11 +589,15 @@ class _ExplorePageState extends State<ExplorePage> {
                                             : (message.length > 30 ? message.substring(30) : '');
 
                                         return PostCard(
+                                          postId: postId,
                                           title: title,
                                           description: description.isEmpty ? message : description,
                                           imageUrl: imageUrl,
                                           date: timestamp,
                                           category: category,
+                                          userEmail: userEmail,
+                                          likes: likes,
+                                          commentCount: comments.length,
                                         );
                                       },
                                     );
@@ -620,131 +633,487 @@ class _ExplorePageState extends State<ExplorePage> {
   }
 }
 
-class PostCard extends StatelessWidget {
+class PostCard extends StatefulWidget {
+  final String postId;
   final String title;
   final String description;
   final String? imageUrl;
   final DateTime date;
   final String category;
+  final String userEmail;
+  final List<String> likes;
+  final int commentCount;
 
   const PostCard({
     Key? key,
+    required this.postId,
     required this.title,
     required this.description,
     this.imageUrl,
     required this.date,
     required this.category,
+    required this.userEmail,
+    required this.likes,
+    required this.commentCount,
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final dateStr = DateFormat('MMM d, h:mm a').format(date);
+  State<PostCard> createState() => _PostCardState();
+}
 
-    return Material(
-      borderRadius: BorderRadius.circular(12),
-      elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.08),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+class _PostCardState extends State<PostCard> {
+  bool _isLiked = false;
+  int _likeCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final currentUser = FirebaseAuth.instance.currentUser;
+    _isLiked = currentUser != null && widget.likes.contains(currentUser.email);
+    _likeCount = widget.likes.length;
+  }
+
+  @override
+  void didUpdateWidget(PostCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update like state if widget data changes
+    if (oldWidget.likes != widget.likes) {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      _isLiked = currentUser != null && widget.likes.contains(currentUser.email);
+      _likeCount = widget.likes.length;
+    }
+  }
+
+  Future<void> _toggleLike() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    setState(() {
+      if (_isLiked) {
+        _isLiked = false;
+        _likeCount--;
+      } else {
+        _isLiked = true;
+        _likeCount++;
+      }
+    });
+
+    try {
+      final postRef = FirebaseFirestore.instance
+          .collection('bulletin_posts')
+          .doc(widget.postId);
+
+      if (_isLiked) {
+        await postRef.update({
+          'likes': FieldValue.arrayUnion([currentUser.email]),
+        });
+      } else {
+        await postRef.update({
+          'likes': FieldValue.arrayRemove([currentUser.email]),
+        });
+      }
+    } catch (e) {
+      // Revert on error
+      setState(() {
+        if (_isLiked) {
+          _isLiked = false;
+          _likeCount--;
+        } else {
+          _isLiked = true;
+          _likeCount++;
+        }
+      });
+    }
+  }
+
+  void _sharePost() {
+    // Generate post URL based on your app's routing
+    // Adjust the domain/URL structure as needed for your deployment
+    final baseUrl = Uri.base.origin;
+    final postUrl = '$baseUrl/post/${widget.postId}';
+    Clipboard.setData(ClipboardData(text: postUrl));
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Post URL copied to clipboard'),
+        duration: const Duration(seconds: 2),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.cardDark
+            : AppColors.cardLight,
+      ),
+    );
+  }
+
+  void _navigateToComments() {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation1, animation2) => UserPostPage(
+          postId: widget.postId,
+          categoryColor: AppColors.primaryGreen,
+          firestoreCollection: 'bulletin_posts',
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-              child: AspectRatio(
-                aspectRatio: 16 / 9,
-                child: imageUrl != null && imageUrl!.isNotEmpty
-                    ? Image.network(
-                        imageUrl!,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
-                        },
-                        errorBuilder: (c, e, s) => Container(
-                          color: Colors.grey[200],
-                          child: Center(
-                            child: Icon(Icons.image, size: 32, color: Colors.grey[400]),
-                          ),
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[200],
-                        child: Center(
-                          child: Icon(Icons.image, size: 32, color: Colors.grey[400]),
-                        ),
-                      ),
-              ),
-            ),
+        transitionDuration: const Duration(milliseconds: 200),
+        reverseTransitionDuration: const Duration(milliseconds: 200),
+      ),
+    );
+  }
 
-            // Content
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                      fontFamily: 'Roboto',
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final dateStr = DateFormat('MMM d, h:mm a').format(widget.date);
+    final timeAgo = _getTimeAgo(widget.date);
+
+    // Listen to both user data and post data for real-time updates
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('bulletin_posts')
+          .doc(widget.postId)
+          .snapshots(),
+      builder: (context, postSnapshot) {
+        // Get updated likes and comments from post
+        List<String> currentLikes = widget.likes;
+        int currentCommentCount = widget.commentCount;
+        
+        if (postSnapshot.hasData && postSnapshot.data!.exists) {
+          final postData = postSnapshot.data!.data() as Map<String, dynamic>;
+          currentLikes = List<String>.from(postData['likes'] ?? []);
+          final comments = List<Map<String, dynamic>>.from(postData['comments'] ?? []);
+          currentCommentCount = comments.length;
+          
+          // Update local state if changed
+          final currentUser = FirebaseAuth.instance.currentUser;
+          if (mounted) {
+            final newIsLiked = currentUser != null && currentLikes.contains(currentUser.email);
+            if (newIsLiked != _isLiked || currentLikes.length != _likeCount) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  setState(() {
+                    _isLiked = newIsLiked;
+                    _likeCount = currentLikes.length;
+                  });
+                }
+              });
+            }
+          }
+        }
+
+        return StreamBuilder<DocumentSnapshot>(
+          stream: FirebaseFirestore.instance
+              .collection('users')
+              .doc(widget.userEmail)
+              .snapshots(),
+          builder: (context, userSnapshot) {
+            String username = widget.userEmail.split('@')[0];
+            String? profileImageUrl;
+            
+            if (userSnapshot.hasData && userSnapshot.data!.exists) {
+              final userData = userSnapshot.data!.data() as Map<String, dynamic>?;
+              username = userData?['username'] ?? username;
+              profileImageUrl = userData?['profileImageUrl'] as String?;
+            }
+
+            // Get user initials for avatar
+            final parts = username.split(' ');
+            String initials = '';
+            if (parts.length >= 2) {
+              initials = '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+            } else if (parts.isNotEmpty && parts[0].isNotEmpty) {
+              initials = parts[0][0].toUpperCase();
+            }
+
+            return Material(
+              borderRadius: BorderRadius.circular(8),
+              elevation: 0,
+              color: isDark ? AppColors.cardDark : Colors.white,
+              child: InkWell(
+                onTap: _navigateToComments, // Make entire card clickable
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.cardDark : Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: isDark 
+                          ? AppColors.borderDark.withOpacity(0.2)
+                          : Colors.grey.shade200,
+                      width: 1,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    description,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.black54,
-                      fontFamily: 'Roboto',
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        dateStr,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey[600],
-                          fontFamily: 'Roboto',
+                      // Header: Profile picture, username, time, menu
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                        child: Row(
+                          children: [
+                            // Profile picture
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: isDark 
+                                  ? AppColors.cardDark 
+                                  : Colors.grey.shade200,
+                              backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
+                                  ? NetworkImage(profileImageUrl)
+                                  : null,
+                              child: profileImageUrl == null || profileImageUrl.isEmpty
+                                  ? Text(
+                                      initials.isNotEmpty ? initials : '?',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark 
+                                            ? AppColors.primaryGreenLight 
+                                            : AppColors.primaryGreen,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            const SizedBox(width: 8),
+                            // Username and time
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'u/$username',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
+                                      color: isDark 
+                                          ? AppColors.textPrimaryDark 
+                                          : AppColors.textPrimaryLight,
+                                    ),
+                                  ),
+                                  Text(
+                                    timeAgo,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: isDark 
+                                          ? AppColors.textSecondaryDark 
+                                          : AppColors.textSecondaryLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Menu dots (optional)
+                            IconButton(
+                              icon: Icon(
+                                Icons.more_vert,
+                                size: 18,
+                                color: isDark 
+                                    ? AppColors.textSecondaryDark 
+                                    : AppColors.textSecondaryLight,
+                              ),
+                              onPressed: () {
+                                // Menu functionality can be added here
+                              },
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                            ),
+                          ],
                         ),
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.green[50],
-                          borderRadius: BorderRadius.circular(6),
-                        ),
+
+                      // Title
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                         child: Text(
-                          category,
+                          widget.title,
                           style: TextStyle(
-                            fontSize: 11,
-                            color: Colors.green[800],
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
+                            color: isDark 
+                                ? AppColors.textPrimaryDark 
+                                : AppColors.textPrimaryLight,
                             fontFamily: 'Roboto',
                           ),
                         ),
                       ),
+
+                      // Description/Content
+                      if (widget.description.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                          child: Text(
+                            widget.description,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDark 
+                                  ? AppColors.textSecondaryDark 
+                                  : AppColors.textSecondaryLight,
+                              fontFamily: 'Roboto',
+                              height: 1.4,
+                            ),
+                            maxLines: 5,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+
+                      // Category flair
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryGreen.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            widget.category,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.primaryGreen,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Roboto',
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Footer: Likes, Comments, Share
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            top: BorderSide(
+                              color: isDark 
+                                  ? AppColors.borderDark.withOpacity(0.2)
+                                  : Colors.grey.shade200,
+                              width: 1,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            // Like button
+                            GestureDetector(
+                              onTap: _toggleLike,
+                              behavior: HitTestBehavior.opaque,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _isLiked ? Icons.arrow_upward : Icons.arrow_upward_outlined,
+                                      size: 18,
+                                      color: _isLiked 
+                                          ? AppColors.primaryGreen
+                                          : (isDark 
+                                              ? AppColors.textSecondaryDark 
+                                              : AppColors.textSecondaryLight),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '$_likeCount',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: _isLiked 
+                                            ? AppColors.primaryGreen
+                                            : (isDark 
+                                                ? AppColors.textSecondaryDark 
+                                                : AppColors.textSecondaryLight),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Comments button
+                            GestureDetector(
+                              onTap: _navigateToComments,
+                              behavior: HitTestBehavior.opaque,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.comment_outlined,
+                                      size: 18,
+                                      color: isDark 
+                                          ? AppColors.textSecondaryDark 
+                                          : AppColors.textSecondaryLight,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '$currentCommentCount',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark 
+                                            ? AppColors.textSecondaryDark 
+                                            : AppColors.textSecondaryLight,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            // Share button
+                            GestureDetector(
+                              onTap: _sharePost,
+                              behavior: HitTestBehavior.opaque,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.share_outlined,
+                                      size: 18,
+                                      color: isDark 
+                                          ? AppColors.textSecondaryDark 
+                                          : AppColors.textSecondaryLight,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Share',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: isDark 
+                                            ? AppColors.textSecondaryDark 
+                                            : AppColors.textSecondaryLight,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
+  }
+
+  String _getTimeAgo(DateTime date) {
+    final now = DateTime.now();
+    final difference = now.difference(date);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}hr ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'just now';
+    }
   }
 }

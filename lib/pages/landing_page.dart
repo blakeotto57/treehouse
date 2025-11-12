@@ -17,7 +17,7 @@ class LandingPage extends StatelessWidget {
     final isMobile = screenWidth < 768;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -157,60 +157,6 @@ class LandingPage extends StatelessWidget {
                                 height: 1.8,
                               ),
                               textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Call to Action Section
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: isMobile ? 20 : 60,
-                        vertical: 80,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isDark
-                              ? [
-                                  AppColors.primaryGreenDark,
-                                  AppColors.primaryGreen,
-                                ]
-                              : [
-                                  AppColors.primaryGreen.withOpacity(0.1),
-                                  AppColors.primaryGreenLight.withOpacity(0.1),
-                                ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            'Ready to get started?',
-                            style: TextStyle(
-                              fontSize: isMobile ? 32 : 42,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? AppColors.textPrimaryDark : AppColors.primaryGreen,
-                              letterSpacing: -1.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Join the Treehouse Connect community today',
-                            style: TextStyle(
-                              fontSize: isMobile ? 18 : 20,
-                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 40),
-                          SizedBox(
-                            width: isMobile ? double.infinity : 300,
-                            child: MyButton(
-                              onTap: () => navigateToLogin(context),
-                              text: 'Get Started',
                             ),
                           ),
                         ],

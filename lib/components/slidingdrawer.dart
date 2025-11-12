@@ -219,8 +219,7 @@ class SlidingDrawerState extends State<SlidingDrawer> {
                   height: contentHeight,
                   top: headerTotalHeight,
                   left: _opened ? 0 : -drawerWidth,
-                  child: Container(
-                    color: Colors.transparent,
+                  child: _DrawerContainer(
                     child: widget.drawer,
                   ),
                 )
@@ -233,8 +232,7 @@ class SlidingDrawerState extends State<SlidingDrawer> {
                       ? Duration(milliseconds: widget.animationDuration)
                       : Duration.zero,
                   curve: widget.animationCurve,
-                  child: Container(
-                    color: Colors.transparent,
+                  child: _DrawerContainer(
                     child: widget.drawer,
                   ),
                 ),
@@ -280,6 +278,35 @@ class SlidingDrawerState extends State<SlidingDrawer> {
   }
 }
 
+// Container widget for the drawer with border styling
+class _DrawerContainer extends StatelessWidget {
+  final Widget child;
+
+  const _DrawerContainer({
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          right: BorderSide(
+            color: isDark 
+                ? AppColors.borderDark.withOpacity(0.3) 
+                : AppColors.borderLight.withOpacity(0.5),
+            width: 1,
+          ),
+        ),
+      ),
+      child: child,
+    );
+  }
+}
+
 // Resizable handle widget for the drawer
 class _DrawerResizeHandle extends StatefulWidget {
   final double top;
@@ -312,8 +339,8 @@ class _DrawerResizeHandleState extends State<_DrawerResizeHandle> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final widthProvider = Provider.of<DrawerWidthProvider>(context, listen: false);
+    final shouldHighlight = _isHovering || _isDragging;
     
     return Positioned(
       left: widget.currentWidth - 5,
@@ -341,6 +368,7 @@ class _DrawerResizeHandleState extends State<_DrawerResizeHandle> {
           onPanStart: (details) {
             setState(() {
               _isDragging = true;
+              _isHovering = true;
               _dragStartX = details.globalPosition.dx;
               _dragStartWidth = widget.currentWidth;
             });
@@ -380,30 +408,16 @@ class _DrawerResizeHandleState extends State<_DrawerResizeHandle> {
           },
           child: Container(
             color: Colors.transparent,
-            child: Stack(
-              children: [
-                // Expanded hit area (transparent but draggable - covers full width)
-                Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  color: Colors.transparent,
-                ),
-                // Visible drag handle indicator
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(
-                    width: 1,
-                    margin: EdgeInsets.symmetric(vertical: 0),
-                    decoration: BoxDecoration(
-                      color: isDark 
-                          ? Colors.grey.withOpacity(0.4)
-                          : Colors.grey.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(0.5),
+            child: shouldHighlight
+                ? Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      width: 2,
+                      height: double.infinity,
+                      color: Colors.grey.shade700,
                     ),
-                  ),
-                ),
-              ],
-            ),
+                  )
+                : null,
           ),
         ),
       ),

@@ -163,7 +163,7 @@ class _LoginPageState extends State<LoginPage> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -191,8 +191,8 @@ class _LoginPageState extends State<LoginPage> {
                       maxWidth: 420,
                     ),
                     child: Card(
-                      elevation: 8,
-                      shadowColor: Colors.black.withOpacity(0.2),
+                      elevation: 0,
+                      shadowColor: Colors.transparent,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),

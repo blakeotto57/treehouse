@@ -51,7 +51,7 @@ class LandingHeader extends StatelessWidget {
         vertical: 10,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        color: Colors.white,
         border: Border(
           bottom: BorderSide(
             color: isDark 

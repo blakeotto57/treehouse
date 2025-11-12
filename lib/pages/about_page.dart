@@ -12,7 +12,7 @@ class AboutPage extends StatelessWidget {
     final isMobile = screenWidth < 768;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Column(
           children: [

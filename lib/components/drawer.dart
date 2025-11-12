@@ -124,16 +124,8 @@ class _TriagedDrawerContentState extends State<_TriagedDrawerContent> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
-        border: Border(
-          right: BorderSide(
-            color: isDark 
-                ? AppColors.borderDark.withOpacity(0.3) 
-                : AppColors.borderLight.withOpacity(0.5),
-            width: 1,
-          ),
-        ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

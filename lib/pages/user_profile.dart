@@ -322,7 +322,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final headerTotalHeight = topPadding + headerHeight;
     
     return Scaffold(
-      backgroundColor: isDarkMode ? darkBackground : pastelGreen,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Sliding drawer and content - full screen

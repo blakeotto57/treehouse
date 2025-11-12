@@ -74,7 +74,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
         vertical: 6,
       ),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
+        color: Colors.white,
         border: Border(
           bottom: BorderSide(
             color: isDark 

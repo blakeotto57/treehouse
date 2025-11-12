@@ -52,17 +52,26 @@ class UserPost extends StatelessWidget {
 
         // Format date and time
         final postDate = timestamp.toDate();
+        final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        return Card(
-          color: Theme.of(context).brightness == Brightness.dark
-              ? AppColors.cardDark
-              : AppColors.cardLight,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.cardDark : AppColors.cardLight,
+            border: Border(
+              top: BorderSide(
+                color: isDark 
+                    ? AppColors.borderDark.withOpacity(0.3)
+                    : AppColors.borderLight.withOpacity(0.5),
+                width: 1,
+              ),
+              bottom: BorderSide(
+                color: isDark 
+                    ? AppColors.borderDark.withOpacity(0.3)
+                    : AppColors.borderLight.withOpacity(0.5),
+                width: 1,
+              ),
+            ),
           ),
-          elevation: 2,
-          shadowColor: Colors.black.withOpacity(0.08),
           child: InkWell(
             onTap: () {
               Navigator.push(
@@ -78,164 +87,177 @@ class UserPost extends StatelessWidget {
                 ),
               );
             },
-            borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Stack(
                 children: [
-                  // User initial circle
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation1, animation2) =>
-                              OtherUsersProfilePage(username: user),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
-                        ),
-                      );
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: FutureBuilder<QuerySnapshot>(
-                      future: FirebaseFirestore.instance
-                          .collection('users')
-                          .where('username', isEqualTo: user)
-                          .limit(1)
-                          .get(),
-                      builder: (context, userSnapshot) {
-                        String? photoUrl;
-                        if (userSnapshot.hasData &&
-                            userSnapshot.data!.docs.isNotEmpty) {
-                          final userData = userSnapshot.data!.docs.first
-                              .data() as Map<String, dynamic>;
-                          photoUrl = userData['profileImageUrl'] as String?;
-                        }
-                        return Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: forumIconColor,
-                            shape: BoxShape.circle,
-                          ),
-                          child: photoUrl != null && photoUrl.isNotEmpty
-                              ? ClipOval(
-                                  child: Image.network(
-                                    photoUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Center(
-                                        child: Text(
-                                          user.isNotEmpty
-                                              ? user[0].toUpperCase()
-                                              : '?',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 18,
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                )
-                              : Center(
-                                  child: Text(
-                                    user.isNotEmpty
-                                        ? user[0].toUpperCase()
-                                        : '?',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                ),
-                        );
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Post content
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Post title/question
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            color: forumIconColor,
-                            height: 1.3,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 8),
-                        // Timestamp and replies
-                        StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection(category)
-                              .doc(documentId)
-                              .collection("comments")
-                              .snapshots(),
-                          builder: (context, commentsSnapshot) {
-                            final repliesCount = commentsSnapshot.hasData
-                                ? commentsSnapshot.data!.docs.length
-                                : 0;
-                            final repliesText =
-                                repliesCount == 1 ? '1 reply' : '$repliesCount replies';
-                            final timeAgoText = timeAgo(postDate);
-                            return Text(
-                              '$timeAgoText - $repliesText',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[600],
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // User initial circle
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              pageBuilder: (context, animation1, animation2) =>
+                                  OtherUsersProfilePage(username: user),
+                              transitionDuration: Duration.zero,
+                              reverseTransitionDuration: Duration.zero,
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(20),
+                        child: FutureBuilder<QuerySnapshot>(
+                          future: FirebaseFirestore.instance
+                              .collection('users')
+                              .where('username', isEqualTo: user)
+                              .limit(1)
+                              .get(),
+                          builder: (context, userSnapshot) {
+                            String? photoUrl;
+                            if (userSnapshot.hasData &&
+                                userSnapshot.data!.docs.isNotEmpty) {
+                              final userData = userSnapshot.data!.docs.first
+                                  .data() as Map<String, dynamic>;
+                              photoUrl = userData['profileImageUrl'] as String?;
+                            }
+                            return Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: forumIconColor,
+                                shape: BoxShape.circle,
                               ),
+                              child: photoUrl != null && photoUrl.isNotEmpty
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        photoUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) {
+                                          return Center(
+                                            child: Text(
+                                              user.isNotEmpty
+                                                  ? user[0].toUpperCase()
+                                                  : '?',
+                                              style: const TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    )
+                                  : Center(
+                                      child: Text(
+                                        user.isNotEmpty
+                                            ? user[0].toUpperCase()
+                                            : '?',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ),
                             );
                           },
                         ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  // Reply button
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        PageRouteBuilder(
-                          pageBuilder: (context, animation1, animation2) =>
-                              UserPostPage(
-                            postId: documentId,
-                            categoryColor: forumIconColor,
-                            firestoreCollection: category,
-                          ),
-                          transitionDuration: Duration.zero,
-                          reverseTransitionDuration: Duration.zero,
+                      ),
+                      const SizedBox(width: 12),
+                      // Post content
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Post title/question
+                            Text(
+                              title,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                                color: forumIconColor,
+                                height: 1.3,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 8),
+                            // Date and time
+                            Text(
+                              _formatDateTime(postDate),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            // Like counter
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.favorite,
+                                  size: 16,
+                                  color: forumIconColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${likes.length}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey[700],
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: forumIconColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      minimumSize: const Size(70, 36),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
                       ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      'Reply',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                      const SizedBox(width: 40), // Space for 3-dot menu
+                    ],
+                  ),
+                  // 3-dot menu icon in top right
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: PopupMenuButton<String>(
+                      icon: Icon(
+                        Icons.more_vert,
+                        color: Colors.grey[600],
+                        size: 20,
                       ),
+                      onSelected: (value) {
+                        if (value == 'share') {
+                          _showShareLinkDialog(context);
+                        } else if (value == 'send') {
+                          _showSendToUserDialog(context);
+                        }
+                      },
+                      itemBuilder: (BuildContext context) => [
+                        PopupMenuItem<String>(
+                          value: 'share',
+                          child: Row(
+                            children: [
+                              Icon(Icons.share, size: 18, color: Colors.grey[700]),
+                              const SizedBox(width: 8),
+                              const Text('Share'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem<String>(
+                          value: 'send',
+                          child: Row(
+                            children: [
+                              Icon(Icons.send, size: 18, color: Colors.grey[700]),
+                              const SizedBox(width: 8),
+                              const Text('Send to user'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -278,6 +300,12 @@ class UserPost extends StatelessWidget {
       return diff.inDays == 1 ? '1 day ago' : '${diff.inDays} days ago';
     }
     return '${date.month}/${date.day}/${date.year}';
+  }
+
+  String _formatDateTime(DateTime date) {
+    final dateFormat = DateFormat('MMM d, yyyy');
+    final timeFormat = DateFormat('h:mm a');
+    return '${dateFormat.format(date)} at ${timeFormat.format(date)}';
   }
 
   void _showOptionsDialog(BuildContext context) {

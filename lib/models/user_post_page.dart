@@ -28,143 +28,176 @@ class UserPostPage extends StatelessWidget {
     final GlobalKey<SlidingDrawerState> _drawerKey =
         GlobalKey<SlidingDrawerState>();
 
-    return SlidingDrawer(
-      key: _drawerKey,
-      drawer: customDrawer(context),
-      child: Scaffold(
-        backgroundColor: isDark ? darkBackground : pastelGreen,
-        drawer: customDrawer(context),
-        appBar: ProfessionalNavbar(drawerKey: _drawerKey),
-        body: FutureBuilder<DocumentSnapshot>(
-          future: _getPostDocument(postId, firestoreCollection),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (!snapshot.hasData || !snapshot.data!.exists) {
-              return const Center(child: Text('Post not found.'));
-            }
-            final postData = snapshot.data!.data() as Map<String, dynamic>;
-            return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 600),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 10),
-                    UserPost(
-                      message: postData["body_text"] ?? '',
-                      user: postData["username"] ?? '',
-                      title: postData["title"] ?? '',
-                      likes: List<String>.from(postData["likes"] ?? []),
-                      timestamp: postData["timestamp"] ?? Timestamp.now(),
-                      category: firestoreCollection,
-                      forumIconColor: categoryColor,
-                      documentId: postId,
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                      child: Row(
-                        children: [
-                          StreamBuilder<QuerySnapshot>(
-                            stream: FirebaseFirestore.instance
-                                .collection(firestoreCollection)
-                                .doc(postId)
-                                .collection("comments")
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              final commentsCount = snapshot.hasData
-                                  ? snapshot.data!.docs.length
-                                  : 0;
-                              return Text(
-                                "Comments ($commentsCount)",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  color: isDark ? Colors.white : categoryColor,
+    final navbar = ProfessionalNavbar(drawerKey: _drawerKey);
+    final headerHeight = navbar.preferredSize.height;
+    final topPadding = MediaQuery.of(context).padding.top;
+    final headerTotalHeight = topPadding + headerHeight;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // Sliding drawer and content - full screen
+          SlidingDrawer(
+            key: _drawerKey,
+            drawer: customDrawer(context),
+            appBarHeight: headerTotalHeight,
+            child: Column(
+              children: [
+                // Spacer for header (SafeArea + navbar)
+                SizedBox(height: headerTotalHeight),
+                // Content area
+                Expanded(
+                  child: SafeArea(
+                    top: false,
+                    bottom: true,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: FutureBuilder<DocumentSnapshot>(
+                        future: _getPostDocument(postId, firestoreCollection),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const Center(child: CircularProgressIndicator());
+                          }
+                          if (!snapshot.hasData || !snapshot.data!.exists) {
+                            return const Center(child: Text('Post not found.'));
+                          }
+                          final postData = snapshot.data!.data() as Map<String, dynamic>;
+                          return Column(
+                            children: [
+                              const SizedBox(height: 10),
+                              UserPost(
+                                message: postData["body_text"] ?? '',
+                                user: postData["username"] ?? '',
+                                title: postData["title"] ?? '',
+                                likes: List<String>.from(postData["likes"] ?? []),
+                                timestamp: postData["timestamp"] ?? Timestamp.now(),
+                                category: firestoreCollection,
+                                forumIconColor: categoryColor,
+                                documentId: postId,
+                              ),
+                              const SizedBox(height: 8),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                child: Row(
+                                  children: [
+                                    StreamBuilder<QuerySnapshot>(
+                                      stream: FirebaseFirestore.instance
+                                          .collection(firestoreCollection)
+                                          .doc(postId)
+                                          .collection("comments")
+                                          .snapshots(),
+                                      builder: (context, snapshot) {
+                                        final commentsCount = snapshot.hasData
+                                            ? snapshot.data!.docs.length
+                                            : 0;
+                                        return Text(
+                                          "Comments ($commentsCount)",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                            color: isDark ? Colors.white : categoryColor,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Divider(
+                                        color: categoryColor.withOpacity(0.2),
+                                        thickness: 1,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Divider(
-                              color: categoryColor.withOpacity(0.2),
-                              thickness: 1,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: isDark ? AppColors.cardDark : AppColors.cardLight,
-                          borderRadius: BorderRadius.circular(12),
-                          border:
-                              Border.all(color: categoryColor.withOpacity(0.2)),
-                        ),
-                        child: StreamBuilder<QuerySnapshot>(
-                          stream: FirebaseFirestore.instance
-                              .collection(firestoreCollection)
-                              .doc(postId)
-                              .collection("comments")
-                              .orderBy("created on", descending: true)
-                              .snapshots(),
-                          builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              final docs = snapshot.data!.docs;
-                              if (docs.isEmpty) {
-                                return const Center(
-                                  child: Text(
-                                    "No comments yet.",
-                                    style: TextStyle(
-                                        color: Colors.grey, fontSize: 16),
+                              ),
+                              const SizedBox(height: 8),
+                              Expanded(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: isDark ? AppColors.cardDark : AppColors.cardLight,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border:
+                                        Border.all(color: categoryColor.withOpacity(0.2)),
                                   ),
-                                );
-                              }
-                              return ListView.separated(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
-                                itemCount: docs.length,
-                                separatorBuilder: (context, index) =>
-                                    const SizedBox(height: 8),
-                                itemBuilder: (context, index) {
-                                  final commentData = docs[index].data()
-                                      as Map<String, dynamic>;
-                                  return ListTile(
-                                    title: Text(commentData["comment"] ?? ''),
-                                    subtitle: Text(commentData["comment by"] ?? ''),
-                                  );
-                                },
-                              );
-                            } else if (snapshot.hasError) {
-                              return Center(
-                                child: Text("Error: ${snapshot.error}"),
-                              );
-                            }
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          },
-                        ),
+                                  child: StreamBuilder<QuerySnapshot>(
+                                    stream: FirebaseFirestore.instance
+                                        .collection(firestoreCollection)
+                                        .doc(postId)
+                                        .collection("comments")
+                                        .orderBy("created on", descending: true)
+                                        .snapshots(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.hasData) {
+                                        final docs = snapshot.data!.docs;
+                                        if (docs.isEmpty) {
+                                          return const Center(
+                                            child: Text(
+                                              "No comments yet.",
+                                              style: TextStyle(
+                                                  color: Colors.grey, fontSize: 16),
+                                            ),
+                                          );
+                                        }
+                                        return ListView.separated(
+                                          padding:
+                                              const EdgeInsets.symmetric(vertical: 8),
+                                          itemCount: docs.length,
+                                          separatorBuilder: (context, index) =>
+                                              const SizedBox(height: 8),
+                                          itemBuilder: (context, index) {
+                                            final commentData = docs[index].data()
+                                                as Map<String, dynamic>;
+                                            return ListTile(
+                                              title: Text(commentData["comment"] ?? ''),
+                                              subtitle: Text(commentData["comment by"] ?? ''),
+                                            );
+                                          },
+                                        );
+                                      } else if (snapshot.hasError) {
+                                        return Center(
+                                          child: Text("Error: ${snapshot.error}"),
+                                        );
+                                      }
+                                      return const Center(
+                                          child: CircularProgressIndicator());
+                                    },
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: 16, left: 8, right: 8, top: 8),
+                                child: _CommentInput(
+                                  postId: postId,
+                                  firestoreCollection: firestoreCollection,
+                                  accentColor: categoryColor,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(
-                          bottom: 16, left: 8, right: 8, top: 8),
-                      child: _CommentInput(
-                        postId: postId,
-                        firestoreCollection: firestoreCollection,
-                        accentColor: categoryColor,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+              ],
+            ),
+          ),
+          // Fixed header on top - always visible above drawer
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Container(
+                height: headerHeight,
+                child: navbar,
               ),
-            );
-          },
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

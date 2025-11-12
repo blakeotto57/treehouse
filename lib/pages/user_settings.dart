@@ -249,7 +249,7 @@ class _UserSettingsPageState extends State<UserSettingsPage> {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textColor = isDarkMode ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final backgroundColor = Colors.white;
 
     final GlobalKey<SlidingDrawerState> _drawerKey =
         GlobalKey<SlidingDrawerState>();

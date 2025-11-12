@@ -279,7 +279,7 @@ class _MessagesPageState extends State<MessagesPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final backgroundColor = Colors.white;
     final cardColor = isDarkMode ? AppColors.cardDark : AppColors.cardLight;
     final dividerColor = isDarkMode ? AppColors.borderDark : AppColors.borderLight;
     final textColor = isDarkMode ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;

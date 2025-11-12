@@ -151,7 +151,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
       key: _drawerKey,
       drawer: customDrawer(context),
       child: Scaffold(
-        backgroundColor: isDarkMode ? darkBackground : pastelGreen,
+        backgroundColor: Colors.white,
         drawer: customDrawer(context),
         appBar: ProfessionalNavbar(drawerKey: _drawerKey),
         body: Stack(

@@ -155,7 +155,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Title Field
-                      Theme(
+                          Theme(
                         data: Theme.of(context).copyWith(
                           textSelectionTheme: TextSelectionThemeData(
                             cursorColor: widget.forumIconColor,
@@ -216,7 +216,7 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                             // FORMAT BUTTONS ROW
                             Row(
                               children: [
-                                IconButton(
+                                  IconButton(
                                   icon: Icon(Icons.format_bold),
                                   color: isBoldMode
                                       ? widget.forumIconColor
@@ -466,18 +466,13 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Match the header background color exactly
-    final background = isDark 
-        ? AppColors.backgroundDark 
-        : AppColors.backgroundLight;
-
     final navbar = ProfessionalNavbar(drawerKey: _drawerKey);
     final headerHeight = navbar.preferredSize.height;
     final topPadding = MediaQuery.of(context).padding.top;
     final headerTotalHeight = topPadding + headerHeight;
 
     return Scaffold(
-      backgroundColor: background,
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Sliding drawer and content - full screen
@@ -494,40 +489,13 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                   child: SafeArea(
                     top: false,
                     bottom: true,
-                    child: Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 600),
-                        child: GestureDetector(
-                          onTap: () => FocusScope.of(context).unfocus(),
-                          child: Column(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: GestureDetector(
+                        onTap: () => FocusScope.of(context).unfocus(),
+                        child: Column(
                             children: [
                               const SizedBox(height: 20),
-                              // Category tag
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 6),
-                                  decoration: BoxDecoration(
-                                    color: widget.forumIconColor.withOpacity(0.15),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(
-                                      color: widget.forumIconColor.withOpacity(0.3),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    widget.title,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: widget.forumIconColor,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 16),
                               // Page title
                               Align(
                                 alignment: Alignment.centerLeft,
@@ -731,7 +699,6 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
