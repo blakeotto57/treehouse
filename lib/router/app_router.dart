@@ -25,6 +25,23 @@ import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/theme/theme.dart';
 
+// Helper function to create routes without transitions
+Page<T> noTransitionPage<T extends Object?>({
+  required Widget child,
+  LocalKey? key,
+  String? name,
+  Object? arguments,
+  String? restorationId,
+}) {
+  return NoTransitionPage<T>(
+    key: key,
+    name: name,
+    arguments: arguments,
+    restorationId: restorationId,
+    child: child,
+  );
+}
+
 class AppRouter {
   static GoRouter get router => _router;
 
@@ -35,7 +52,10 @@ class AppRouter {
       GoRoute(
         path: '/',
         name: 'home',
-        builder: (context, state) => const InitialPage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: const InitialPage(),
+        ),
       ),
       GoRoute(
         path: '/home',
@@ -44,81 +64,120 @@ class AppRouter {
       GoRoute(
         path: '/landing',
         name: 'landing',
-        builder: (context, state) => const LandingPage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: const LandingPage(),
+        ),
       ),
 
       // Auth routes
       GoRoute(
         path: '/login',
         name: 'login',
-        builder: (context, state) => LoginPage(onTap: () {}),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: LoginPage(onTap: () {}),
+        ),
       ),
       GoRoute(
         path: '/register',
         name: 'register',
-        builder: (context, state) => RegisterPage(onTap: () {}),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: RegisterPage(onTap: () {}),
+        ),
       ),
 
       // Main pages
       GoRoute(
         path: '/explore',
         name: 'explore',
-        builder: (context, state) => const ExplorePage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: const ExplorePage(),
+        ),
       ),
       GoRoute(
         path: '/messages',
         name: 'messages',
-        builder: (context, state) => MessagesPage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: MessagesPage(),
+        ),
       ),
       GoRoute(
         path: '/profile',
         name: 'profile',
-        builder: (context, state) => UserProfilePage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: UserProfilePage(),
+        ),
       ),
       // Other users' profile pages
       GoRoute(
         path: '/profile/:username',
         name: 'user-profile',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final username = state.pathParameters['username']!;
-          return OtherUsersProfilePage(username: username);
+          return noTransitionPage(
+            key: state.pageKey,
+            child: OtherUsersProfilePage(username: username),
+          );
         },
       ),
       GoRoute(
         path: '/settings',
         name: 'settings',
-        builder: (context, state) => const UserSettingsPage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: const UserSettingsPage(),
+        ),
       ),
       GoRoute(
         path: '/feedback',
         name: 'feedback',
-        builder: (context, state) => FeedbackPage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: FeedbackPage(),
+        ),
       ),
 
       // Info pages
       GoRoute(
         path: '/about',
         name: 'about',
-        builder: (context, state) => const AboutPage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: const AboutPage(),
+        ),
       ),
       GoRoute(
         path: '/help',
         name: 'help',
-        builder: (context, state) => const HelpPage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: const HelpPage(),
+        ),
       ),
       GoRoute(
         path: '/terms',
         name: 'terms',
-        builder: (context, state) => const TermsPage(),
+        pageBuilder: (context, state) => noTransitionPage(
+          key: state.pageKey,
+          child: const TermsPage(),
+        ),
       ),
 
       // Category routes
       GoRoute(
         path: '/category/:categoryName',
         name: 'category',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final categoryName = state.pathParameters['categoryName']!;
-          return _getCategoryPage(categoryName);
+          return noTransitionPage(
+            key: state.pageKey,
+            child: _getCategoryPage(categoryName),
+          );
         },
       ),
 
@@ -126,13 +185,16 @@ class AppRouter {
       GoRoute(
         path: '/post/:postId',
         name: 'post',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final postId = state.pathParameters['postId']!;
           // Bulletin posts always use bulletin_posts collection and primary green color
-          return UserPostPage(
-            postId: postId,
-            categoryColor: AppColors.primaryGreen,
-            firestoreCollection: 'bulletin_posts',
+          return noTransitionPage(
+            key: state.pageKey,
+            child: UserPostPage(
+              postId: postId,
+              categoryColor: AppColors.primaryGreen,
+              firestoreCollection: 'bulletin_posts',
+            ),
           );
         },
       ),
@@ -141,16 +203,19 @@ class AppRouter {
       GoRoute(
         path: '/forum/:category/:postId',
         name: 'forum-post',
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final categoryRoute = state.pathParameters['category']!;
           final postId = state.pathParameters['postId']!;
           final collection = getCollectionFromRoute(categoryRoute);
           final categoryColor = _getCategoryColor(categoryRoute);
           
-          return UserPostPage(
-            postId: postId,
-            categoryColor: categoryColor,
-            firestoreCollection: collection,
+          return noTransitionPage(
+            key: state.pageKey,
+            child: UserPostPage(
+              postId: postId,
+              categoryColor: categoryColor,
+              firestoreCollection: collection,
+            ),
           );
         },
       ),
