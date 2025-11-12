@@ -52,6 +52,7 @@ class SlidingDrawerState extends State<SlidingDrawer> {
   late bool _opened; // Will be initialized based on global state or initialOpen
   final ValueNotifier<bool> _isOpenNotifier = ValueNotifier<bool>(false);
   bool _isInitialBuild = true; // Track if this is the first build
+  ValueNotifier<double>? _liveDrawerWidth; // Live width during dragging (null when not dragging)
 
   bool get isOpen => _opened;
 
@@ -89,9 +90,50 @@ class SlidingDrawerState extends State<SlidingDrawer> {
     DrawerState.setOpen(_opened);
   }
 
+  // Callback for resize handle to update live width during drag
+  void _onResizeDragStart(double startWidth) {
+    // Create the notifier and trigger rebuild synchronously
+    _liveDrawerWidth = ValueNotifier<double>(startWidth);
+    // Trigger rebuild immediately to set up ValueListenableBuilder
+    setState(() {});
+  }
+
+  // Callback for resize handle to update live width during drag
+  void _onResizeDragUpdate(double newWidth) {
+    if (_liveDrawerWidth != null) {
+      // Update the value - this will trigger ValueListenableBuilder to rebuild
+      // Always update to ensure real-time responsiveness during drag
+      _liveDrawerWidth!.value = newWidth;
+    } else {
+      // If notifier doesn't exist yet, create it (shouldn't happen, but safety check)
+      _liveDrawerWidth = ValueNotifier<double>(newWidth);
+      setState(() {});
+    }
+  }
+
+  // Callback for resize handle when drag ends - commit to provider
+  void _onResizeDragEnd(double finalWidth, DrawerWidthProvider provider) {
+    if (_liveDrawerWidth != null) {
+      _liveDrawerWidth!.dispose();
+      _liveDrawerWidth = null;
+      setState(() {}); // Trigger rebuild to switch back to provider-based layout
+    }
+    provider.setDrawerWidth(finalWidth);
+  }
+
+  // Callback for resize handle when drag is cancelled
+  void _onResizeDragCancel() {
+    if (_liveDrawerWidth != null) {
+      _liveDrawerWidth!.dispose();
+      _liveDrawerWidth = null;
+      setState(() {}); // Trigger rebuild to switch back to provider-based layout
+    }
+  }
+
   @override
   void dispose() {
     _isOpenNotifier.dispose();
+    _liveDrawerWidth?.dispose();
     super.dispose();
   }
 
@@ -117,48 +159,121 @@ class SlidingDrawerState extends State<SlidingDrawer> {
     
     // Get drawer width from provider
     final widthProvider = Provider.of<DrawerWidthProvider>(context);
-    final drawerWidth = widthProvider.drawerWidth;
+    final baseDrawerWidth = widthProvider.drawerWidth;
 
+    // If dragging, use ValueListenableBuilder to listen to live width updates
+    // Otherwise, build directly with provider width
+    final liveWidthNotifier = _liveDrawerWidth;
+    if (liveWidthNotifier != null) {
+      // Use ValueListenableBuilder to listen to real-time updates
+      return ValueListenableBuilder<double>(
+        valueListenable: liveWidthNotifier,
+        builder: (context, liveWidth, child) {
+          // Rebuild the layout with the new live width
+          return _buildDrawerLayout(
+            context,
+            width,
+            height,
+            headerTotalHeight,
+            contentHeight,
+            liveWidth,
+            true, // isDragging
+            false, // shouldAnimate
+          );
+        },
+      );
+    } else {
+      return _buildDrawerLayout(
+        context,
+        width,
+        height,
+        headerTotalHeight,
+        contentHeight,
+        baseDrawerWidth,
+        false, // isDragging
+        !_isInitialBuild, // shouldAnimate
+      );
+    }
+  }
+
+  Widget _buildDrawerLayout(
+    BuildContext context,
+    double width,
+    double height,
+    double headerTotalHeight,
+    double contentHeight,
+    double drawerWidth,
+    bool isDragging,
+    bool shouldAnimate,
+  ) {
     return SizedBox(
       width: width,
       height: height,
       child: Stack(
         children: [
           // Drawer - positioned below header area (accounting for SafeArea)
-          AnimatedPositioned(
-            width: drawerWidth,
-            height: contentHeight,
-            top: headerTotalHeight,
-            left: _opened ? 0 : -drawerWidth,
-            duration: _isInitialBuild && _opened 
-                ? Duration.zero 
-                : Duration(milliseconds: widget.animationDuration),
-            curve: widget.animationCurve,
-            child: Container(
-              color: Colors.transparent,
-              child: widget.drawer,
-            ),
-          ),
+          // Use Positioned when dragging for instant updates, AnimatedPositioned otherwise
+          isDragging
+              ? Positioned(
+                  width: drawerWidth,
+                  height: contentHeight,
+                  top: headerTotalHeight,
+                  left: _opened ? 0 : -drawerWidth,
+                  child: Container(
+                    color: Colors.transparent,
+                    child: widget.drawer,
+                  ),
+                )
+              : AnimatedPositioned(
+                  width: drawerWidth,
+                  height: contentHeight,
+                  top: headerTotalHeight,
+                  left: _opened ? 0 : -drawerWidth,
+                  duration: shouldAnimate 
+                      ? Duration(milliseconds: widget.animationDuration)
+                      : Duration.zero,
+                  curve: widget.animationCurve,
+                  child: Container(
+                    color: Colors.transparent,
+                    child: widget.drawer,
+                  ),
+                ),
           // Resize handle - only visible when drawer is open
           if (_opened)
             _DrawerResizeHandle(
               top: headerTotalHeight,
               height: contentHeight,
+              currentWidth: drawerWidth,
+              onDragStart: _onResizeDragStart,
+              onDragUpdate: _onResizeDragUpdate,
+              onDragEnd: _onResizeDragEnd,
+              onDragCancel: _onResizeDragCancel,
             ),
           // Main content - constrained to fit between drawer and right edge
-          AnimatedPositioned(
-            height: height,
-            top: 0,
-            left: _opened ? drawerWidth : 0,
-            right: 0, // Fixed to right edge of screen - content will be squished when drawer is open
-            duration: _isInitialBuild && _opened 
-                ? Duration.zero 
-                : Duration(milliseconds: widget.animationDuration),
-            curve: widget.animationCurve,
-            child: ClipRect(
-              child: widget.child,
-            ),
-          ),
+          // Use Positioned when dragging for instant updates, AnimatedPositioned otherwise
+          isDragging
+              ? Positioned(
+                  height: height,
+                  top: 0,
+                  left: _opened ? drawerWidth : 0,
+                  right: 0,
+                  child: ClipRect(
+                    child: widget.child,
+                  ),
+                )
+              : AnimatedPositioned(
+                  height: height,
+                  top: 0,
+                  left: _opened ? drawerWidth : 0,
+                  right: 0,
+                  duration: shouldAnimate
+                      ? Duration(milliseconds: widget.animationDuration)
+                      : Duration.zero,
+                  curve: widget.animationCurve,
+                  child: ClipRect(
+                    child: widget.child,
+                  ),
+                ),
         ],
       ),
     );
@@ -169,10 +284,20 @@ class SlidingDrawerState extends State<SlidingDrawer> {
 class _DrawerResizeHandle extends StatefulWidget {
   final double top;
   final double height;
+  final double currentWidth;
+  final Function(double) onDragStart;
+  final Function(double) onDragUpdate;
+  final Function(double, DrawerWidthProvider) onDragEnd;
+  final VoidCallback onDragCancel;
 
   const _DrawerResizeHandle({
     required this.top,
     required this.height,
+    required this.currentWidth,
+    required this.onDragStart,
+    required this.onDragUpdate,
+    required this.onDragEnd,
+    required this.onDragCancel,
   });
 
   @override
@@ -188,87 +313,96 @@ class _DrawerResizeHandleState extends State<_DrawerResizeHandle> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final widthProvider = Provider.of<DrawerWidthProvider>(context);
-
+    final widthProvider = Provider.of<DrawerWidthProvider>(context, listen: false);
+    
     return Positioned(
-      left: widthProvider.drawerWidth - 3,
+      left: widget.currentWidth - 5,
       top: widget.top,
       height: widget.height,
-      width: 6, // Wider hit area for easier interaction
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onPanStart: (details) {
-          setState(() {
-            _isDragging = true;
-            _dragStartX = details.globalPosition.dx;
-            _dragStartWidth = widthProvider.drawerWidth;
-          });
-        },
-        onPanUpdate: (details) {
-          if (_isDragging) {
-            final deltaX = details.globalPosition.dx - _dragStartX;
-            final newWidth = (_dragStartWidth + deltaX).clamp(
-              widthProvider.minWidth,
-              widthProvider.maxWidth,
-            );
-            widthProvider.setDrawerWidth(newWidth);
-          }
-        },
-        onPanEnd: (details) {
-          setState(() {
-            _isDragging = false;
-            _isHovering = false;
-          });
-        },
-        onPanCancel: () {
-          setState(() {
-            _isDragging = false;
-            _isHovering = false;
-          });
-        },
-        child: MouseRegion(
-          cursor: SystemMouseCursors.resizeColumn,
-          onEnter: (_) {
+      width: 10, // Wider hit area for easier dragging
+      child: MouseRegion(
+        cursor: SystemMouseCursors.resizeColumn,
+        onEnter: (_) {
+          if (!_isDragging) {
             setState(() {
               _isHovering = true;
             });
+          }
+        },
+        onExit: (_) {
+          if (!_isDragging) {
+            setState(() {
+              _isHovering = false;
+            });
+          }
+        },
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onPanStart: (details) {
+            setState(() {
+              _isDragging = true;
+              _dragStartX = details.globalPosition.dx;
+              _dragStartWidth = widget.currentWidth;
+            });
+            widget.onDragStart(_dragStartWidth);
           },
-          onExit: (_) {
-            if (!_isDragging) {
-              setState(() {
-                _isHovering = false;
-              });
+          onPanUpdate: (details) {
+            if (_isDragging) {
+              final deltaX = details.globalPosition.dx - _dragStartX;
+              final newWidth = (_dragStartWidth + deltaX).clamp(
+                widthProvider.minWidth,
+                widthProvider.maxWidth,
+              );
+              // Call update immediately - this should trigger real-time updates via ValueNotifier
+              widget.onDragUpdate(newWidth);
             }
+          },
+          onPanEnd: (details) {
+            if (_isDragging) {
+              final deltaX = details.globalPosition.dx - _dragStartX;
+              final finalWidth = (_dragStartWidth + deltaX).clamp(
+                widthProvider.minWidth,
+                widthProvider.maxWidth,
+              );
+              widget.onDragEnd(finalWidth, widthProvider);
+            }
+            setState(() {
+              _isDragging = false;
+              _isHovering = false;
+            });
+          },
+          onPanCancel: () {
+            widget.onDragCancel();
+            setState(() {
+              _isDragging = false;
+              _isHovering = false;
+            });
           },
           child: Container(
             color: Colors.transparent,
-            child: Center(
-              child: Container(
-                width: _isHovering || _isDragging ? 3 : 2,
-                height: double.infinity,
-                margin: EdgeInsets.symmetric(vertical: _isHovering || _isDragging ? 4 : 8),
-                decoration: BoxDecoration(
-                  color: _isHovering || _isDragging
-                      ? (isDark 
-                          ? AppColors.primaryGreenLight.withOpacity(0.9)
-                          : AppColors.primaryGreen.withOpacity(0.9))
-                      : (isDark 
-                          ? AppColors.borderDark.withOpacity(0.4)
-                          : AppColors.borderLight.withOpacity(0.5)),
-                  borderRadius: BorderRadius.circular(1.5),
-                  boxShadow: _isHovering || _isDragging
-                      ? [
-                          BoxShadow(
-                            color: (isDark 
-                                ? AppColors.primaryGreenLight 
-                                : AppColors.primaryGreen).withOpacity(0.4),
-                            blurRadius: 6,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
+            child: Stack(
+              children: [
+                // Expanded hit area (transparent but draggable - covers full width)
+                Container(
+                  width: double.infinity,
+                  height: double.infinity,
+                  color: Colors.transparent,
                 ),
-              ),
+                // Visible drag handle indicator
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    width: 1,
+                    margin: EdgeInsets.symmetric(vertical: 0),
+                    decoration: BoxDecoration(
+                      color: isDark 
+                          ? Colors.grey.withOpacity(0.4)
+                          : Colors.grey.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(0.5),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
