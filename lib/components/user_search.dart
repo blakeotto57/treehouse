@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:treehouse/theme/theme.dart';
@@ -75,13 +76,7 @@ class _UserSearchState extends State<UserSearch> {
       _controller.text = username;
     });
     _removeOverlay();
-    Navigator.of(context).push(
-      PageRouteBuilder(
-    pageBuilder: (context, animation1, animation2) => OtherUsersProfilePage(username: username),
-    transitionDuration: Duration.zero,
-    reverseTransitionDuration: Duration.zero,
-  ),
-    );
+    context.go('/profile/$username');
   }
 
   void _onSearchSubmitted(String query) {

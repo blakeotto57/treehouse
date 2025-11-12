@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/components/professional_navbar.dart';
@@ -193,7 +194,8 @@ class _ExplorePageState extends State<ExplorePage> {
                         setState(() => _isPosting = true);
                         final user = FirebaseAuth.instance.currentUser;
                         if (user == null) return;
-                        await FirebaseFirestore.instance.collection('bulletin_posts').add({
+                        // Create the post and get the document ID
+                        final docRef = await FirebaseFirestore.instance.collection('bulletin_posts').add({
                           'message': message,
                           'timestamp': Timestamp.now(),
                           'userEmail': user.email,
@@ -204,6 +206,8 @@ class _ExplorePageState extends State<ExplorePage> {
                         setState(() => _isPosting = false);
                         Navigator.pop(context);
                         _checkCanPost();
+                        // Navigate to the new post URL
+                        context.go('/post/${docRef.id}');
                       },
                 child: _isPosting
                     ? const SizedBox(
@@ -727,8 +731,7 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _sharePost() {
-    // Generate post URL based on your app's routing
-    // Adjust the domain/URL structure as needed for your deployment
+    // Generate post URL for bulletin posts
     final baseUrl = Uri.base.origin;
     final postUrl = '$baseUrl/post/${widget.postId}';
     Clipboard.setData(ClipboardData(text: postUrl));
@@ -745,18 +748,7 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _navigateToComments() {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation1, animation2) => UserPostPage(
-          postId: widget.postId,
-          categoryColor: AppColors.primaryGreen,
-          firestoreCollection: 'bulletin_posts',
-        ),
-        transitionDuration: const Duration(milliseconds: 200),
-        reverseTransitionDuration: const Duration(milliseconds: 200),
-      ),
-    );
+    context.go('/post/${widget.postId}');
   }
 
   @override

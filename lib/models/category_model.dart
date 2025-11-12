@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:treehouse/category_pages/personal_care.dart';
 import 'package:treehouse/category_pages/academics.dart';
@@ -40,14 +41,7 @@ class CategoryModel {
           icon: Icons.person,
           boxColor: Color.fromRGBO(178, 129, 243, 1),
           onTap: (context) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => PersonalCarePage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
+            context.go('/category/personal-care');
           }),
     );
 
@@ -65,14 +59,7 @@ class CategoryModel {
           icon: Icons.food_bank,
           boxColor: Color.fromRGBO(90, 124, 239, 1),
           onTap: (context) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => FoodSellersPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
+            context.go('/category/food');
           }),
     );
 
@@ -90,14 +77,7 @@ class CategoryModel {
           icon: Icons.camera,
           boxColor: Color.fromRGBO(40, 147, 134, 1),
           onTap: (context) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => PhotographySellersPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
+            context.go('/category/photography');
           }),
     );
 
@@ -115,14 +95,7 @@ class CategoryModel {
           icon: Icons.school,
           boxColor: Color.fromRGBO(238, 138, 96, 1),
           onTap: (context) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => AcademicsSellersPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
+            context.go('/category/academics');
           }),
     );
 
@@ -140,14 +113,7 @@ class CategoryModel {
           icon: Icons.computer,
           boxColor: Color.fromRGBO(255, 64, 129, 1),
           onTap: (context) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => TechnicalServicesSellersPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
+            context.go('/category/technical-services');
           }),
     );
 
@@ -165,14 +131,7 @@ class CategoryModel {
           icon: Icons.local_shipping,
           boxColor: Color.fromRGBO(255, 193, 7, 1),
           onTap: (context) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => ErrandsMovingSellersPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
+            context.go('/category/errands-moving');
           }),
     );
 
@@ -190,14 +149,7 @@ class CategoryModel {
           icon: Icons.pets,
           boxColor: Color.fromRGBO(76, 175, 80, 1),
           onTap: (context) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => PetCareSellersPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
+            context.go('/category/pet-care');
           }),
     );
 
@@ -215,14 +167,7 @@ class CategoryModel {
           icon: Icons.cleaning_services,
           boxColor: Color.fromRGBO(191, 84, 210, 1),
           onTap: (context) {
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => CleaningSellersPage(),
-                transitionDuration: Duration.zero,
-                reverseTransitionDuration: Duration.zero,
-              ),
-            );
+            context.go('/category/cleaning');
           }),
     );
 

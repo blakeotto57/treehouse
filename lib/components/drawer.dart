@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/messages_page.dart';
@@ -8,6 +9,7 @@ import 'package:treehouse/pages/user_profile.dart';
 import 'package:treehouse/models/user_post_page.dart';
 import 'package:treehouse/theme/theme.dart';
 import 'package:treehouse/theme/drawer_width_provider.dart';
+import 'package:treehouse/router/app_router.dart';
 
 Widget customDrawer(BuildContext context) {
   return Consumer<DrawerWidthProvider>(
@@ -94,19 +96,13 @@ class _TriagedDrawerContentState extends State<_TriagedDrawerContent> {
       _selectedCategory = category;
       _selectedPostId = postId;
     });
-    // Navigate to the post page without closing drawer
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation1, animation2) => UserPostPage(
-          postId: postId,
-          categoryColor: _getCategoryColor(category),
-          firestoreCollection: firestoreCollection,
-        ),
-        transitionDuration: const Duration(milliseconds: 200),
-        reverseTransitionDuration: const Duration(milliseconds: 200),
-      ),
-    );
+    // Navigate to the post page using go_router
+    if (firestoreCollection == 'bulletin_posts') {
+      context.go('/post/$postId');
+    } else {
+      final categoryRoute = AppRouter.getCategoryRouteName(firestoreCollection);
+      context.go('/forum/$categoryRoute/$postId');
+    }
   }
 
   Color _getCategoryColor(String categoryName) {

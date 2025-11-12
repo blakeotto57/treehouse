@@ -3,10 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treehouse/models/other_users_profile.dart';
 import 'package:treehouse/models/user_post_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
 import 'package:treehouse/theme/theme.dart';
+import 'package:treehouse/router/app_router.dart';
 
 class UserPost extends StatelessWidget {
   final String message;
@@ -74,18 +76,13 @@ class UserPost extends StatelessWidget {
           ),
           child: InkWell(
             onTap: () {
-              Navigator.push(
-                context,
-                PageRouteBuilder(
-                  pageBuilder: (context, animation1, animation2) => UserPostPage(
-                    postId: documentId,
-                    categoryColor: forumIconColor,
-                    firestoreCollection: category,
-                  ),
-                  transitionDuration: Duration.zero,
-                  reverseTransitionDuration: Duration.zero,
-                ),
-              );
+              // Navigate to forum post if it's a category forum, otherwise to bulletin post
+              if (category == 'bulletin_posts') {
+                context.go('/post/$documentId');
+              } else {
+                final categoryRoute = AppRouter.getCategoryRouteName(category);
+                context.go('/forum/$categoryRoute/$documentId');
+              }
             },
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -97,15 +94,7 @@ class UserPost extends StatelessWidget {
                       // User initial circle
                       InkWell(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            PageRouteBuilder(
-                              pageBuilder: (context, animation1, animation2) =>
-                                  OtherUsersProfilePage(username: user),
-                              transitionDuration: Duration.zero,
-                              reverseTransitionDuration: Duration.zero,
-                            ),
-                          );
+                          context.go('/profile/$user');
                         },
                         borderRadius: BorderRadius.circular(20),
                         child: FutureBuilder<QuerySnapshot>(
@@ -329,8 +318,15 @@ class UserPost extends StatelessWidget {
   }
 
   void _showShareLinkDialog(BuildContext context) {
-    // Create a link for this specific post using documentId instead of title
-    final String postLink = "https://treehouse.app/post/$documentId";
+    // Create a link for this specific post using documentId
+    final String baseUrl = Uri.base.origin;
+    final String postLink;
+    if (category == 'bulletin_posts') {
+      postLink = "$baseUrl/post/$documentId";
+    } else {
+      final categoryRoute = AppRouter.getCategoryRouteName(category);
+      postLink = "$baseUrl/forum/$categoryRoute/$documentId";
+    }
     
     showDialog(
       context: context,
@@ -391,7 +387,14 @@ class UserPost extends StatelessWidget {
   }
 
   void _showSendToUserDialog(BuildContext context) {
-    final postUrl = "https://treehouse.app/post/$documentId";
+    final baseUrl = Uri.base.origin;
+    final String postUrl;
+    if (category == 'bulletin_posts') {
+      postUrl = "$baseUrl/post/$documentId";
+    } else {
+      final categoryRoute = AppRouter.getCategoryRouteName(category);
+      postUrl = "$baseUrl/forum/$categoryRoute/$documentId";
+    }
     final postTitle = title;
     final theme = Theme.of(context);
     final Color accent = forumIconColor;

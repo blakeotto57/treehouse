@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treehouse/theme/theme.dart';
 import 'package:treehouse/pages/landing_page.dart';
 
@@ -15,28 +16,8 @@ class LandingHeader extends StatelessWidget {
   });
 
   void navigateToHome(BuildContext context) {
-    // Check if we're already on the landing page to avoid unnecessary navigation
-    final currentRoute = ModalRoute.of(context)?.settings.name;
-    if (currentRoute == '/' || currentRoute == '/landing') {
-      return; // Already on landing page, don't navigate
-    }
-    
-    // Use pushReplacement with a smooth fade transition to avoid jumping
-    Navigator.pushReplacement(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const LandingPage(),
-        transitionDuration: const Duration(milliseconds: 100),
-        reverseTransitionDuration: const Duration(milliseconds: 100),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          // Fade transition to avoid visual jump
-          return FadeTransition(
-            opacity: animation,
-            child: child,
-          );
-        },
-      ),
-    );
+    // Navigate to landing page using go_router
+    context.go('/landing');
   }
 
   @override

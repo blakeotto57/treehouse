@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/components/user_post.dart';
 import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/theme/theme.dart';
+import 'package:treehouse/router/app_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:io';
@@ -429,7 +431,8 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                               .get();
                           final username =
                               userDoc.data()?['username'] ?? 'Unknown';
-                          await FirebaseFirestore.instance
+                          // Create the post and get the document ID
+                          final docRef = await FirebaseFirestore.instance
                               .collection(widget.firestoreCollection)
                               .add({
                             "username": username,
@@ -446,6 +449,9 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
                           uploadedImages.clear();
                           setState(() => posting = false);
                           Navigator.pop(context);
+                          // Navigate to the new post URL
+                          final categoryRoute = AppRouter.getCategoryRouteName(widget.firestoreCollection);
+                          context.go('/forum/$categoryRoute/${docRef.id}');
                         }
                       : null, // Disable button if titleController is empty
                   child: posting

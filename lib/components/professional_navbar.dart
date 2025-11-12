@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:treehouse/pages/explore_page.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
@@ -150,7 +151,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                 cursor: SystemMouseCursors.click,
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamedAndRemoveUntil(context, '/explore', (route) => false);
+                    context.go('/explore');
                   },
                   child: Row(
                     children: [
@@ -187,14 +188,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                 // Explore button
                 TextButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation1, animation2) => const ExplorePage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
+                    context.go('/explore');
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -213,14 +207,7 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
                 // Messages button
                 TextButton(
                   onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation1, animation2) => MessagesPage(),
-                        transitionDuration: Duration.zero,
-                        reverseTransitionDuration: Duration.zero,
-                      ),
-                    );
+                    context.go('/messages');
                   },
                   style: TextButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -514,14 +501,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
           isDark: widget.isDark,
           onTap: () {
             Navigator.of(context).pop();
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => UserProfilePage(),
-                transitionDuration: const Duration(milliseconds: 200),
-                reverseTransitionDuration: const Duration(milliseconds: 200),
-              ),
-            );
+            context.go('/profile');
           },
         ),
         _MenuItem(
@@ -530,14 +510,7 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
           isDark: widget.isDark,
           onTap: () {
             Navigator.of(context).pop();
-            Navigator.push(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation1, animation2) => const UserSettingsPage(),
-                transitionDuration: const Duration(milliseconds: 200),
-                reverseTransitionDuration: const Duration(milliseconds: 200),
-              ),
-            );
+            context.go('/settings');
           },
         ),
         // Expandable Theme Section
