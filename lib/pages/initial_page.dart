@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:treehouse/pages/landing_page.dart';
 import 'package:treehouse/pages/explore_page.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class InitialPage extends StatelessWidget {
   const InitialPage({super.key});
@@ -20,8 +21,9 @@ class InitialPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {

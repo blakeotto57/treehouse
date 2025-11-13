@@ -13,6 +13,7 @@ import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/models/category_model.dart';
 import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/components/professional_navbar.dart';
+import 'package:treehouse/theme/theme.dart';
 import 'dart:io' show File;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:typed_data';
@@ -313,8 +314,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pastelGreen = const Color(0xFFF5FBF7);
-    final darkBackground = const Color(0xFF181818);
 
     final navbar = ProfessionalNavbar(drawerKey: _drawerKey);
     final headerHeight = navbar.preferredSize.height;
@@ -322,7 +321,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     final headerTotalHeight = topPadding + headerHeight;
     
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Stack(
         children: [
           // Sliding drawer and content - full screen

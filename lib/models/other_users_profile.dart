@@ -6,6 +6,7 @@ import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/pages/messages_page.dart';
 import 'package:treehouse/components/profile_avatar.dart';
+import 'package:treehouse/theme/theme.dart';
 
 class OtherUsersProfilePage extends StatefulWidget {
   final String username;
@@ -143,8 +144,6 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final pastelGreen = const Color(0xFFF5FBF7);
-    final darkBackground = const Color(0xFF181818);
     final currentUsername = FirebaseAuth.instance.currentUser?.displayName;
     final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
 
@@ -152,7 +151,7 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
       key: _drawerKey,
       drawer: customDrawer(context),
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight,
         drawer: customDrawer(context),
         appBar: ProfessionalNavbar(drawerKey: _drawerKey),
         body: Stack(

@@ -292,7 +292,7 @@ class _DrawerContainer extends StatelessWidget {
     
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
         border: Border(
           right: BorderSide(
             color: isDark 

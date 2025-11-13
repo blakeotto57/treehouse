@@ -477,8 +477,13 @@ class _CategoryForumPageState extends State<CategoryForumPage> {
     final topPadding = MediaQuery.of(context).padding.top;
     final headerTotalHeight = topPadding + headerHeight;
 
+    // Match the header background color exactly
+    final background = isDark 
+        ? AppColors.backgroundDark 
+        : AppColors.backgroundLight;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: background,
       body: Stack(
         children: [
           // Sliding drawer and content - full screen

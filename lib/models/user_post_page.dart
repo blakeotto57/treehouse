@@ -22,8 +22,6 @@ class UserPostPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final pastelGreen = const Color(0xFFF5FBF7);
-    final darkBackground = const Color(0xFF181818);
 
     final GlobalKey<SlidingDrawerState> _drawerKey =
         GlobalKey<SlidingDrawerState>();
@@ -34,7 +32,7 @@ class UserPostPage extends StatelessWidget {
     final headerTotalHeight = topPadding + headerHeight;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Stack(
         children: [
           // Sliding drawer and content - full screen

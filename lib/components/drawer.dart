@@ -120,8 +120,8 @@ class _TriagedDrawerContentState extends State<_TriagedDrawerContent> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,19 +244,35 @@ class _ExpandableCategorySection extends StatelessWidget {
             child: InkWell(
               onTap: onCategoryTap,
               borderRadius: BorderRadius.circular(8),
+              hoverColor: isDark 
+                  ? AppColors.cardDark.withOpacity(0.5)
+                  : AppColors.cardLight.withOpacity(0.3),
+              splashColor: isDark 
+                  ? AppColors.primaryGreenLight.withOpacity(0.2)
+                  : AppColors.primaryGreen.withOpacity(0.1),
+              highlightColor: isDark 
+                  ? AppColors.primaryGreenLight.withOpacity(0.1)
+                  : AppColors.primaryGreen.withOpacity(0.05),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   color: isExpanded
                       ? (isDark 
-                          ? AppColors.cardDark.withOpacity(0.5)
+                          ? AppColors.cardDark.withOpacity(0.7)
                           : AppColors.cardLight.withOpacity(0.5))
                       : Colors.transparent,
                 ),
                 child: Row(
                   children: [
-                    // Chevron Icon (for visual indication of expandable state)
+                    // Category Icon
+                    Icon(
+                      icon,
+                      size: 14,
+                      color: iconColor,
+                    ),
+                    const SizedBox(width: 8),
+                    // Chevron Icon (for visual indication of expandable state) - moved to left of text
                     AnimatedRotation(
                       turns: isExpanded ? 0.25 : 0,
                       duration: const Duration(milliseconds: 200),
@@ -268,21 +284,7 @@ class _ExpandableCategorySection extends StatelessWidget {
                             : AppColors.textSecondaryLight,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    // Category Icon
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: iconColor.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Icon(
-                        icon,
-                        size: 14,
-                        color: iconColor,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 4),
                     // Category Name
                     Expanded(
                       child: Text(
@@ -334,7 +336,7 @@ class _ExpandableCategorySection extends StatelessWidget {
                             style: TextStyle(
                               fontSize: 11,
                               color: isDark 
-                                  ? AppColors.textSecondaryDark 
+                                  ? AppColors.textSecondaryDark.withOpacity(0.8)
                                   : AppColors.textSecondaryLight,
                               fontStyle: FontStyle.italic,
                             ),
@@ -372,6 +374,15 @@ class _ExpandableCategorySection extends StatelessWidget {
                               child: InkWell(
                                 onTap: onCategoryTap,
                                 borderRadius: BorderRadius.circular(6),
+                                hoverColor: isDark 
+                                    ? AppColors.cardDark.withOpacity(0.4)
+                                    : AppColors.cardLight.withOpacity(0.3),
+                                splashColor: isDark 
+                                    ? iconColor.withOpacity(0.2)
+                                    : iconColor.withOpacity(0.1),
+                                highlightColor: isDark 
+                                    ? iconColor.withOpacity(0.1)
+                                    : iconColor.withOpacity(0.05),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
                                   child: Row(
@@ -380,14 +391,18 @@ class _ExpandableCategorySection extends StatelessWidget {
                                       Icon(
                                         Icons.list_outlined,
                                         size: 12,
-                                        color: iconColor,
+                                        color: isDark 
+                                            ? AppColors.primaryGreenLight
+                                            : iconColor,
                                       ),
                                       const SizedBox(width: 4),
                                       Text(
                                         'View all posts',
                                         style: TextStyle(
                                           fontSize: 11,
-                                          color: iconColor,
+                                          color: isDark 
+                                              ? AppColors.primaryGreenLight
+                                              : iconColor,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -395,7 +410,9 @@ class _ExpandableCategorySection extends StatelessWidget {
                                       Icon(
                                         Icons.chevron_right,
                                         size: 12,
-                                        color: iconColor,
+                                        color: isDark 
+                                            ? AppColors.primaryGreenLight
+                                            : iconColor,
                                       ),
                                     ],
                                   ),
@@ -447,6 +464,15 @@ class _PostListItem extends StatelessWidget {
           child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(6),
+        hoverColor: isDark 
+            ? AppColors.cardDark.withOpacity(0.4)
+            : AppColors.cardLight.withOpacity(0.3),
+        splashColor: isDark 
+            ? AppColors.primaryGreenLight.withOpacity(0.2)
+            : iconColor.withOpacity(0.1),
+        highlightColor: isDark 
+            ? AppColors.primaryGreenLight.withOpacity(0.1)
+            : iconColor.withOpacity(0.05),
         child: Semantics(
           button: true,
           selected: isSelected,
@@ -458,12 +484,16 @@ class _PostListItem extends StatelessWidget {
               borderRadius: BorderRadius.circular(6),
               color: isSelected
                   ? (isDark 
-                      ? AppColors.primaryGreenDark.withOpacity(0.3)
+                      ? AppColors.primaryGreenLight.withOpacity(0.15)
                       : AppColors.primaryGreenLight.withOpacity(0.2))
-                  : Colors.transparent,
+                  : (isDark 
+                      ? Colors.transparent
+                      : Colors.transparent),
               border: isSelected
                   ? Border.all(
-                      color: iconColor.withOpacity(0.4),
+                      color: isDark 
+                          ? AppColors.primaryGreenLight.withOpacity(0.5)
+                          : iconColor.withOpacity(0.4),
                       width: 1.5,
                     )
                   : null,
@@ -475,7 +505,9 @@ class _PostListItem extends StatelessWidget {
                   Icons.description_outlined,
                   size: 14,
                   color: isSelected 
-                      ? iconColor 
+                      ? (isDark 
+                          ? AppColors.primaryGreenLight
+                          : iconColor)
                       : (isDark 
                           ? AppColors.textSecondaryDark 
                           : AppColors.textSecondaryLight),
@@ -493,7 +525,7 @@ class _PostListItem extends StatelessWidget {
                               ? AppColors.primaryGreenLight 
                               : AppColors.primaryGreenDark)
                           : (isDark 
-                              ? AppColors.textPrimaryDark 
+                              ? AppColors.textPrimaryDark.withOpacity(0.9)
                               : AppColors.textPrimaryLight),
                     ),
                     maxLines: 1,
@@ -507,13 +539,14 @@ class _PostListItem extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
                       color: isDark 
-                          ? AppColors.cardDark 
+                          ? AppColors.surfaceDark.withOpacity(0.8)
                           : AppColors.cardLight,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isDark 
-                            ? AppColors.borderDark.withOpacity(0.3)
+                            ? AppColors.borderDark.withOpacity(0.5)
                             : AppColors.borderLight.withOpacity(0.5),
+                        width: 1,
                       ),
                     ),
                     child: Text(
@@ -522,7 +555,7 @@ class _PostListItem extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w600,
                         color: isDark 
-                            ? AppColors.textSecondaryDark 
+                            ? AppColors.textPrimaryDark.withOpacity(0.8)
                             : AppColors.textSecondaryLight,
                       ),
                     ),

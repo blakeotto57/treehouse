@@ -287,7 +287,7 @@ class _ExplorePageState extends State<ExplorePage> {
     final headerTotalHeight = topPadding + headerHeight;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
       body: Stack(
         children: [
           // Sliding drawer and content - full screen

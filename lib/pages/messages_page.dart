@@ -282,7 +282,7 @@ class _MessagesPageState extends State<MessagesPage> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor = Colors.white;
+    final backgroundColor = isDarkMode ? AppColors.backgroundDark : AppColors.backgroundLight;
     final cardColor = isDarkMode ? AppColors.cardDark : AppColors.cardLight;
     final dividerColor = isDarkMode ? AppColors.borderDark : AppColors.borderLight;
     final textColor = isDarkMode ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
@@ -350,7 +350,7 @@ class _MessagesPageState extends State<MessagesPage> {
                   children: [
                                           // Messages title row with notification icon
                                           Padding(
-                                            padding: EdgeInsets.all(10),
+                                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                             child: Row(
                                               mainAxisAlignment: MainAxisAlignment.center,
                                               children: [
@@ -358,11 +358,11 @@ class _MessagesPageState extends State<MessagesPage> {
                                                   "Messages",
                                                   style: TextStyle(
                                                     fontWeight: FontWeight.bold,
-                                                    fontSize: 22,
-                                                    color: Color(0xFF222222),
+                                                    fontSize: 16,
+                                                    color: textColor,
                                                   ),
                                                 ),
-                                                SizedBox(width: 20),
+                                                SizedBox(width: 6),
                                                 GestureDetector(
                                                   onTap: _showMessageRequestsDialog,
                                                   child: Stack(
@@ -394,8 +394,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                             color: dividerColor,
                                             height: 1,
                                             thickness: 1,
-                                            indent: 16,
-                                            endIndent: 16,
+                                            indent: 8,
+                                            endIndent: 8,
                                           ),
                                           Expanded(
                                             child: StreamBuilder<List<Map<String, dynamic>>>(
@@ -429,8 +429,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                                     color: dividerColor,
                                                     height: 1,
                                                     thickness: 1,
-                                                    indent: 16,
-                                                    endIndent: 16,
+                                                    indent: 8,
+                                                    endIndent: 8,
                                                   ),
                                                   itemBuilder: (context, index) {
                                                     final user = users[index];
@@ -469,7 +469,7 @@ class _MessagesPageState extends State<MessagesPage> {
                                                         },
                                                         child: Padding(
                                                           padding: const EdgeInsets.symmetric(
-                                                              horizontal: 12, vertical: 8),
+                                                              horizontal: 6, vertical: 4),
                                                           child: Row(
                                                             crossAxisAlignment:
                                                                 CrossAxisAlignment.center,
@@ -477,8 +477,14 @@ class _MessagesPageState extends State<MessagesPage> {
                                                               // 3-dot icon
                                                               IconButton(
                                                                 icon: Icon(Icons.more_vert,
-                                                                    color: Color(0xFF386A53)),
+                                                                    color: Color(0xFF386A53),
+                                                                    size: 16),
                                                                 tooltip: "More options",
+                                                                padding: EdgeInsets.zero,
+                                                                constraints: BoxConstraints(
+                                                                  minWidth: 20,
+                                                                  minHeight: 20,
+                                                                ),
                                                                 onPressed: () {
                                                                   showDialog(
                                                                     context: context,
@@ -592,10 +598,10 @@ class _MessagesPageState extends State<MessagesPage> {
                                                                 photoUrl: profileUrl,
                                                                 userEmail: email,
                                                                 displayName: username,
-                                                                radius: 24,
+                                                                radius: 16,
                                                                 showOnlineStatus: true,
                                                               ),
-                                                              const SizedBox(width: 12),
+                                                              const SizedBox(width: 6),
                                                               // Username and last message
                                                               Expanded(
                                                                 child: Column(
@@ -610,15 +616,15 @@ class _MessagesPageState extends State<MessagesPage> {
                                                                       username,
                                                                       style: TextStyle(
                                                                         fontWeight:
-                                                                            FontWeight.bold,
-                                                                        fontSize: 16,
+                                                                            FontWeight.w600,
+                                                                        fontSize: 12,
                                                                         color: textColor,
                                                                       ),
                                                                       maxLines: 1,
                                                                       overflow: TextOverflow
                                                                           .ellipsis,
                                                                     ),
-                                                                    const SizedBox(height: 2),
+                                                                    const SizedBox(height: 1),
                                                                     Text(
                                                                       "$lastSender: $lastMessageText",
                                                                       style: TextStyle(
@@ -626,7 +632,7 @@ class _MessagesPageState extends State<MessagesPage> {
                                                                             ? Colors.grey[400]
                                                                             : Colors
                                                                                 .grey[600],
-                                                                        fontSize: 12,
+                                                                        fontSize: 10,
                                                                       ),
                                                                       maxLines: 1,
                                                                       overflow: TextOverflow
@@ -668,30 +674,17 @@ class _MessagesPageState extends State<MessagesPage> {
                 ),
                 child: Column(
                   children: [
-                    // Back Button
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.arrow_back,
-                                color: Color(0xFF386A53)),
-                            onPressed: () {
-                              setState(() {
-                                selectedUserEmail = null;
-                              });
-                            },
-                          ),
-                          Text(
-                            selectedUserName ?? "Chat",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                              color: Color(0xFF386A53),
-                            ),
-                          ),
-                        ],
-                      ),
+                    // Chat Header
+                    _ChatHeader(
+                      key: ValueKey('chat_header_${selectedUserEmail}'),
+                      receiverEmail: selectedUserEmail!,
+                      onBack: () {
+                        setState(() {
+                          selectedUserEmail = null;
+                        });
+                      },
+                      showBackButton: true,
+                      onDeleteChat: () => _deleteChat(selectedUserEmail!),
                     ),
                     Expanded(
                       child: Column(
@@ -734,14 +727,14 @@ class _MessagesPageState extends State<MessagesPage> {
                             children: [
                               // Left: Conversations List
                               Container(
-                                width: 320,
+                                width: 180,
                                 color: cardColor,
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     // Messages title row with notification icon
                                     Padding(
-                                      padding: EdgeInsets.all(10),
+                                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
@@ -749,11 +742,11 @@ class _MessagesPageState extends State<MessagesPage> {
                                             "Messages",
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 22,
-                                              color: Color(0xFF222222),
+                                              fontSize: 16,
+                                              color: textColor,
                                             ),
                                           ),
-                                          SizedBox(width: 20),
+                                          SizedBox(width: 6),
                                           GestureDetector(
                                             onTap: _showMessageRequestsDialog,
                                             child: Stack(
@@ -785,8 +778,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                       color: dividerColor,
                                       height: 1,
                                       thickness: 1,
-                                      indent: 16,
-                                      endIndent: 16,
+                                      indent: 8,
+                                      endIndent: 8,
                                     ),
                                     Expanded(
                                       child: StreamBuilder<List<Map<String, dynamic>>>(
@@ -819,8 +812,8 @@ class _MessagesPageState extends State<MessagesPage> {
                                               color: dividerColor,
                                               height: 1,
                                               thickness: 1,
-                                              indent: 16,
-                                              endIndent: 16,
+                                              indent: 8,
+                                              endIndent: 8,
                                             ),
                                             itemBuilder: (context, index) {
                                               final user = users[index];
@@ -853,7 +846,7 @@ class _MessagesPageState extends State<MessagesPage> {
                                                   },
                                                   child: Padding(
                                                     padding: const EdgeInsets.symmetric(
-                                                        horizontal: 12, vertical: 8),
+                                                        horizontal: 6, vertical: 4),
                                                     child: Row(
                                                       crossAxisAlignment:
                                                           CrossAxisAlignment.center,
@@ -861,8 +854,14 @@ class _MessagesPageState extends State<MessagesPage> {
                                                         // 3-dot icon
                                                         IconButton(
                                                           icon: Icon(Icons.more_vert,
-                                                              color: Color(0xFF386A53)),
+                                                              color: Color(0xFF386A53),
+                                                              size: 16),
                                                           tooltip: "More options",
+                                                          padding: EdgeInsets.zero,
+                                                          constraints: BoxConstraints(
+                                                            minWidth: 20,
+                                                            minHeight: 20,
+                                                          ),
                                                           onPressed: () {
                                                             showDialog(
                                                               context: context,
@@ -961,10 +960,10 @@ class _MessagesPageState extends State<MessagesPage> {
                                                           photoUrl: profileUrl,
                                                           userEmail: email,
                                                           displayName: username,
-                                                          radius: 24,
+                                                          radius: 16,
                                                           showOnlineStatus: true,
                                                         ),
-                                                        const SizedBox(width: 12),
+                                                        const SizedBox(width: 6),
                                                         // Username and last message
                                                         Expanded(
                                                           child: Column(
@@ -976,22 +975,22 @@ class _MessagesPageState extends State<MessagesPage> {
                                                               Text(
                                                                 username,
                                                                 style: TextStyle(
-                                                                  fontWeight: FontWeight.bold,
-                                                                  fontSize: 16,
+                                                                  fontWeight: FontWeight.w600,
+                                                                  fontSize: 12,
                                                                   color: textColor,
                                                                 ),
                                                                 maxLines: 1,
                                                                 overflow:
                                                                     TextOverflow.ellipsis,
                                                               ),
-                                                              const SizedBox(height: 2),
+                                                              const SizedBox(height: 1),
                                                               Text(
                                                                 "$lastSender: $lastMessageText",
                                                                 style: TextStyle(
                                                                   color: isDarkMode
                                                                       ? Colors.grey[400]
                                                                       : Colors.grey[600],
-                                                                  fontSize: 12,
+                                                                  fontSize: 10,
                                                                 ),
                                                                 maxLines: 1,
                                                                 overflow:
@@ -1030,6 +1029,14 @@ class _MessagesPageState extends State<MessagesPage> {
                                         color: backgroundColor,
                                         child: Column(
                                           children: [
+                                            // Chat Header
+                                            _ChatHeader(
+                                              key: ValueKey('chat_header_${selectedUserEmail}'),
+                                              receiverEmail: selectedUserEmail!,
+                                              onBack: null,
+                                              showBackButton: false,
+                                              onDeleteChat: () => _deleteChat(selectedUserEmail!),
+                                            ),
                                             Expanded(
                                               child: Column(
                                                 children: [
@@ -1065,6 +1072,235 @@ class _MessagesPageState extends State<MessagesPage> {
                             ],
                           );
     }
+  }
+}
+
+// Chat header widget with profile picture, name, and options
+class _ChatHeader extends StatefulWidget {
+  final String receiverEmail;
+  final VoidCallback? onBack;
+  final bool showBackButton;
+  final VoidCallback onDeleteChat;
+
+  const _ChatHeader({
+    required this.receiverEmail,
+    this.onBack,
+    required this.showBackButton,
+    required this.onDeleteChat,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<_ChatHeader> createState() => _ChatHeaderState();
+}
+
+class _ChatHeaderState extends State<_ChatHeader> {
+  late Future<DocumentSnapshot> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userFuture = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.receiverEmail)
+        .get();
+  }
+
+  @override
+  void didUpdateWidget(_ChatHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.receiverEmail != widget.receiverEmail) {
+      _userFuture = FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.receiverEmail)
+          .get();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
+    final textColor = isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight;
+    final dividerColor = isDark ? AppColors.borderDark.withOpacity(0.3) : AppColors.borderLight.withOpacity(0.5);
+
+    return FutureBuilder<DocumentSnapshot>(
+      future: _userFuture,
+      builder: (context, snapshot) {
+        String? profileUrl;
+        String displayName = 'Chat';
+        String? username;
+
+        if (snapshot.hasData && snapshot.data!.exists) {
+          final userData = snapshot.data!.data() as Map<String, dynamic>?;
+          profileUrl = userData?['profileImageUrl'] as String?;
+          username = userData?['username'] as String?;
+          
+          if (username != null && username.isNotEmpty) {
+            displayName = username;
+          } else if (widget.receiverEmail.isNotEmpty) {
+            displayName = widget.receiverEmail.split('@')[0];
+          }
+        } else if (widget.receiverEmail.isNotEmpty) {
+          displayName = widget.receiverEmail.split('@')[0];
+        }
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: backgroundColor,
+            border: Border(
+              bottom: BorderSide(
+                color: dividerColor,
+                width: 1,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              // Back button (mobile only)
+              if (widget.showBackButton && widget.onBack != null)
+                IconButton(
+                  icon: Icon(
+                    Icons.arrow_back,
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                  ),
+                  onPressed: widget.onBack,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              if (widget.showBackButton && widget.onBack != null)
+                const SizedBox(width: 8),
+              // Profile picture
+              ProfileAvatar(
+                photoUrl: profileUrl,
+                userEmail: widget.receiverEmail,
+                displayName: displayName,
+                radius: 20,
+                showOnlineStatus: true,
+              ),
+              const SizedBox(width: 12),
+              // User name
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      displayName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                        color: textColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              // Info button
+              IconButton(
+                icon: Icon(
+                  Icons.info_outline,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  size: 22,
+                ),
+                onPressed: () {
+                  // TODO: Show chat info dialog
+                },
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: 4),
+              // More options button
+              PopupMenuButton<String>(
+                icon: Icon(
+                  Icons.more_vert,
+                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                  size: 20,
+                ),
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        final isDark = Theme.of(context).brightness == Brightness.dark;
+                        return AlertDialog(
+                          backgroundColor: isDark ? AppColors.cardDark : AppColors.cardLight,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          title: Text(
+                            "Delete Chat",
+                            style: TextStyle(
+                              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          content: Text(
+                            "Are you sure you want to delete this chat? This action cannot be undone.",
+                            style: TextStyle(
+                              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text(
+                                "Cancel",
+                                style: TextStyle(
+                                  color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondaryLight,
+                                ),
+                              ),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.errorRed,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                                widget.onDeleteChat();
+                              },
+                              child: const Text("Delete"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem<String>(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_outline,
+                          color: isDark ? AppColors.errorRed : AppColors.errorRed,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Delete Chat",
+                          style: TextStyle(
+                            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimaryLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

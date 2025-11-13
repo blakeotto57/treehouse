@@ -104,7 +104,7 @@ class _FeedbackPageState extends State<FeedbackPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = Colors.white;
+    final background = isDark ? AppColors.backgroundDark : AppColors.backgroundLight;
     final cardColor = isDark ? AppColors.cardDark : AppColors.cardLight;
     final accent = isDark ? AppColors.primaryGreenLight : AppColors.primaryGreen;
     final GlobalKey<SlidingDrawerState> _drawerKey = GlobalKey<SlidingDrawerState>();
