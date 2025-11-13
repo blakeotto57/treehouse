@@ -9,6 +9,7 @@ import 'package:treehouse/models/user_post_page.dart';
 import 'package:treehouse/auth/chat_service.dart';
 import 'package:treehouse/theme/theme.dart';
 import 'package:treehouse/router/app_router.dart';
+import 'package:treehouse/components/profile_avatar.dart';
 
 class UserPost extends StatelessWidget {
   final String message;
@@ -105,52 +106,21 @@ class UserPost extends StatelessWidget {
                               .get(),
                           builder: (context, userSnapshot) {
                             String? photoUrl;
+                            String? userEmail;
                             if (userSnapshot.hasData &&
                                 userSnapshot.data!.docs.isNotEmpty) {
                               final userData = userSnapshot.data!.docs.first
                                   .data() as Map<String, dynamic>;
                               photoUrl = userData['profileImageUrl'] as String?;
+                              userEmail = userData['email'] as String?;
                             }
-                            return Container(
-                              width: 40,
-                              height: 40,
-                              decoration: BoxDecoration(
-                                color: forumIconColor,
-                                shape: BoxShape.circle,
-                              ),
-                              child: photoUrl != null && photoUrl.isNotEmpty
-                                  ? ClipOval(
-                                      child: Image.network(
-                                        photoUrl,
-                                        fit: BoxFit.cover,
-                                        errorBuilder: (context, error, stackTrace) {
-                                          return Center(
-                                            child: Text(
-                                              user.isNotEmpty
-                                                  ? user[0].toUpperCase()
-                                                  : '?',
-                                              style: const TextStyle(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    )
-                                  : Center(
-                                      child: Text(
-                                        user.isNotEmpty
-                                            ? user[0].toUpperCase()
-                                            : '?',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                    ),
+                            return ProfileAvatar(
+                              photoUrl: photoUrl,
+                              userEmail: userEmail,
+                              displayName: user,
+                              radius: 20,
+                              showOnlineStatus: true,
+                              backgroundColor: forumIconColor,
                             );
                           },
                         ),
@@ -574,20 +544,12 @@ class UserPost extends StatelessWidget {
                                           final username = user['username'] as String? ?? userEmail;
                                           final profileImageUrl = user['profileImageUrl'] as String?;
                                           return ListTile(
-                                            leading: CircleAvatar(
-                                              backgroundColor: accent.withOpacity(0.15),
-                                              backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
-                                                  ? NetworkImage(profileImageUrl)
-                                                  : null,
-                                              child: profileImageUrl == null || profileImageUrl.isEmpty
-                                                  ? Text(
-                                                      username.isNotEmpty ? username[0].toUpperCase() : '?',
-                                                      style: TextStyle(
-                                                        color: accent,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                    )
-                                                  : null,
+                                            leading: ProfileAvatar(
+                                              photoUrl: profileImageUrl,
+                                              userEmail: userEmail,
+                                              displayName: username,
+                                              radius: 20,
+                                              showOnlineStatus: true,
                                             ),
                                             title: Text(
                                               username,
@@ -644,20 +606,12 @@ class UserPost extends StatelessWidget {
                                     final username = user['username'] as String? ?? userEmail;
                                     final profileImageUrl = user['profileImageUrl'] as String?;
                                     return ListTile(
-                                      leading: CircleAvatar(
-                                        backgroundColor: accent.withOpacity(0.15),
-                                        backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
-                                            ? NetworkImage(profileImageUrl)
-                                            : null,
-                                        child: profileImageUrl == null || profileImageUrl.isEmpty
-                                            ? Text(
-                                                username.isNotEmpty ? username[0].toUpperCase() : '?',
-                                                style: TextStyle(
-                                                  color: accent,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              )
-                                            : null,
+                                      leading: ProfileAvatar(
+                                        photoUrl: profileImageUrl,
+                                        userEmail: userEmail,
+                                        displayName: username,
+                                        radius: 20,
+                                        showOnlineStatus: true,
                                       ),
                                       title: Text(
                                         username,

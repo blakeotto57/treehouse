@@ -5,6 +5,7 @@ import 'package:treehouse/components/drawer.dart';
 import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/pages/messages_page.dart';
+import 'package:treehouse/components/profile_avatar.dart';
 
 class OtherUsersProfilePage extends StatefulWidget {
   final String username;
@@ -203,18 +204,12 @@ class _OtherUsersProfilePageState extends State<OtherUsersProfilePage> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                CircleAvatar(
+                                ProfileAvatar(
+                                  photoUrl: profileImageUrl,
+                                  userEmail: userData['email'] as String?,
+                                  displayName: userData['username'] ?? '',
                                   radius: 48,
-                                  backgroundColor: Colors.green[800],
-                                  backgroundImage: profileImageUrl != null &&
-                                          profileImageUrl.isNotEmpty
-                                      ? NetworkImage(profileImageUrl)
-                                      : null,
-                                  child: profileImageUrl == null ||
-                                          profileImageUrl.isEmpty
-                                      ? const Icon(Icons.person,
-                                          size: 48, color: Colors.white)
-                                      : null,
+                                  showOnlineStatus: true,
                                 ),
                                 const SizedBox(height: 10),
                                 Text(

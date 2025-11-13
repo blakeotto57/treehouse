@@ -9,6 +9,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:treehouse/router/app_router.dart';
+import 'package:treehouse/components/presence_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding
@@ -35,7 +36,9 @@ void main() async {
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
         ChangeNotifierProvider(create: (context) => DrawerWidthProvider()),
       ],
-      child: const MyApp(),
+      child: PresenceWrapper(
+        child: const MyApp(),
+      ),
     ),
   ); // Run the app after Firebase is initialized
 }

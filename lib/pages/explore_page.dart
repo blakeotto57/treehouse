@@ -9,6 +9,7 @@ import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/components/professional_navbar.dart';
 import 'package:treehouse/theme/theme.dart';
 import 'package:treehouse/models/user_post_page.dart';
+import 'package:treehouse/components/profile_avatar.dart';
 
 class ExplorePage extends StatefulWidget {
   const ExplorePage({Key? key}) : super(key: key);
@@ -842,26 +843,12 @@ class _PostCardState extends State<PostCard> {
                         child: Row(
                           children: [
                             // Profile picture
-                            CircleAvatar(
+                            ProfileAvatar(
+                              photoUrl: profileImageUrl,
+                              userEmail: widget.userEmail,
+                              displayName: username,
                               radius: 16,
-                              backgroundColor: isDark 
-                                  ? AppColors.cardDark 
-                                  : Colors.grey.shade200,
-                              backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
-                                  ? NetworkImage(profileImageUrl)
-                                  : null,
-                              child: profileImageUrl == null || profileImageUrl.isEmpty
-                                  ? Text(
-                                      initials.isNotEmpty ? initials : '?',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: isDark 
-                                            ? AppColors.primaryGreenLight 
-                                            : AppColors.primaryGreen,
-                                      ),
-                                    )
-                                  : null,
+                              showOnlineStatus: true,
                             ),
                             const SizedBox(width: 8),
                             // Username and time

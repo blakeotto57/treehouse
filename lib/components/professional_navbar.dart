@@ -11,6 +11,9 @@ import 'package:treehouse/pages/user_settings.dart';
 import 'package:treehouse/auth/login_page.dart';
 import 'package:treehouse/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:treehouse/components/profile_avatar.dart';
+import 'package:treehouse/auth/presence_service.dart';
 
 class ProfessionalNavbar extends StatefulWidget implements PreferredSizeWidget {
   final GlobalKey<SlidingDrawerState>? drawerKey;
@@ -290,26 +293,13 @@ class _ProfessionalNavbarState extends State<ProfessionalNavbar> {
               key: _profileKey,
               padding: EdgeInsets.zero,
               alignment: Alignment.center,
-              child: CircleAvatar(
+              child: ProfileAvatar(
+                photoUrl: photoUrl,
+                userEmail: userEmail,
+                displayName: fullName.isNotEmpty ? fullName : displayName,
                 radius: 14,
-                backgroundColor: isDark 
-                    ? AppColors.cardDark 
-                    : AppColors.backgroundLight,
-                backgroundImage: photoUrl != null && photoUrl.isNotEmpty
-                    ? NetworkImage(photoUrl)
-                    : null,
-                child: (photoUrl == null || photoUrl.isEmpty)
-                    ? Text(
-                        initials.isNotEmpty ? initials : '?',
-                        style: TextStyle(
-                          color: isDark 
-                              ? AppColors.primaryGreenLight 
-                              : AppColors.primaryGreen,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
-                      )
-                    : null,
+                showOnlineStatus: false, // Don't show status for current user's own avatar
+                isCurrentUser: true,
               ),
             ),
           ),
@@ -433,26 +423,13 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              CircleAvatar(
+              ProfileAvatar(
+                photoUrl: widget.photoUrl,
+                userEmail: widget.userEmail,
+                displayName: widget.userName,
                 radius: 14,
-                backgroundColor: widget.isDark 
-                    ? AppColors.cardDark 
-                    : AppColors.backgroundLight,
-                backgroundImage: widget.photoUrl != null && widget.photoUrl!.isNotEmpty
-                    ? NetworkImage(widget.photoUrl!)
-                    : null,
-                child: (widget.photoUrl == null || widget.photoUrl!.isEmpty)
-                    ? Text(
-                        widget.initials.isNotEmpty ? widget.initials : '?',
-                        style: TextStyle(
-                          color: widget.isDark 
-                              ? AppColors.primaryGreenLight 
-                              : AppColors.primaryGreen,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      )
-                    : null,
+                showOnlineStatus: false, // Don't show status in popup
+                isCurrentUser: true,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -571,6 +548,52 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
               ? Colors.grey.withOpacity(0.2)
               : Colors.grey.withOpacity(0.3),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          child: Center(
+            child: ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                const url = 'https://ko-fi.com/treehouseconnect';
+                if (await canLaunchUrl(Uri.parse(url))) {
+                  await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                } else {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Could not launch Ko-fi!')),
+                    );
+                  }
+                }
+              },
+              icon: Image.network(
+                'https://storage.ko-fi.com/cdn/cup-border.png',
+                height: 18,
+                width: 18,
+                errorBuilder: (context, error, stackTrace) => const Icon(Icons.favorite, size: 18),
+              ),
+              label: const Text(
+                'Buy me a Ko-fi',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF5E5B),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 0,
+              ),
+            ),
+          ),
+        ),
+        Divider(
+          height: 1,
+          thickness: 0.5,
+          color: widget.isDark 
+              ? Colors.grey.withOpacity(0.2)
+              : Colors.grey.withOpacity(0.3),
+        ),
         _MenuItem(
           icon: Icons.logout,
           label: 'Log out',
@@ -587,7 +610,9 @@ class _ProfilePopupContentState extends State<_ProfilePopupContent> {
     );
   }
 
-  void _handleLogout(BuildContext context) {
+  void _handleLogout(BuildContext context) async {
+    // Set user offline before signing out
+    await PresenceService().setOffline();
     FirebaseAuth.instance.signOut();
     Navigator.of(context).pushAndRemoveUntil(
       PageRouteBuilder(

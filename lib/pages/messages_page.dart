@@ -14,6 +14,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:treehouse/components/slidingdrawer.dart';
 import 'package:treehouse/theme/theme.dart';
+import 'package:treehouse/components/profile_avatar.dart';
 
 class MessagesPage extends StatefulWidget {
   final String? initialSelectedUserEmail; // Add this
@@ -111,10 +112,12 @@ class _MessagesPageState extends State<MessagesPage> {
                             children: [
                               Row(
                                 children: [
-                                  CircleAvatar(
-                                    backgroundImage: user['profileImageUrl'] != null ? NetworkImage(user['profileImageUrl']) : null,
-                                    backgroundColor: Colors.grey[400],
-                                    child: user['profileImageUrl'] == null ? Icon(Icons.person, color: Colors.white) : null,
+                                  ProfileAvatar(
+                                    photoUrl: user['profileImageUrl'],
+                                    userEmail: user['email'],
+                                    displayName: user['username'] ?? user['name'],
+                                    radius: 20,
+                                    showOnlineStatus: true,
                                   ),
                                   SizedBox(width: 10),
                                   Expanded(
@@ -585,18 +588,12 @@ class _MessagesPageState extends State<MessagesPage> {
                                                                 },
                                                               ),
                                                               // Avatar
-                                                              CircleAvatar(
+                                                              ProfileAvatar(
+                                                                photoUrl: profileUrl,
+                                                                userEmail: email,
+                                                                displayName: username,
                                                                 radius: 24,
-                                                                backgroundImage: profileUrl !=
-                                                                        null
-                                                                    ? NetworkImage(profileUrl)
-                                                                    : null,
-                                                                backgroundColor:
-                                                                    Colors.grey[300],
-                                                                child: profileUrl == null
-                                                                    ? const Icon(Icons.person,
-                                                                        color: Colors.white)
-                                                                    : null,
+                                                                showOnlineStatus: true,
                                                               ),
                                                               const SizedBox(width: 12),
                                                               // Username and last message
@@ -960,16 +957,12 @@ class _MessagesPageState extends State<MessagesPage> {
                                                           },
                                                         ),
                                                         // Avatar
-                                                        CircleAvatar(
+                                                        ProfileAvatar(
+                                                          photoUrl: profileUrl,
+                                                          userEmail: email,
+                                                          displayName: username,
                                                           radius: 24,
-                                                          backgroundImage: profileUrl != null
-                                                              ? NetworkImage(profileUrl)
-                                                              : null,
-                                                          backgroundColor: Colors.grey[300],
-                                                          child: profileUrl == null
-                                                              ? const Icon(Icons.person,
-                                                                  color: Colors.white)
-                                                              : null,
+                                                          showOnlineStatus: true,
                                                         ),
                                                         const SizedBox(width: 12),
                                                         // Username and last message
